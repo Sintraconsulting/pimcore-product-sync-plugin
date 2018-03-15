@@ -1,0 +1,7 @@
+services:
+    
+    Magento2PimcoreBundle\EventListener\Magento2PimcoreObjectListener:
+        tags:
+            - { name: kernel.event_listener, event: pimcore.dataobject.postAdd, method: onPostAdd }
+            - { name: kernel.event_listener, event: pimcore.dataobject.postUpdate, method: onPostUpdate }
+            - { name: kernel.event_listener, event: pimcore.dataobject.postDelete, method: onPostDelete }

@@ -1,0 +1,3 @@
+magento2_pimcore_homepage:
+    path:     /
+    defaults: { _controller: Magento2PimcoreBundle:Default:index }

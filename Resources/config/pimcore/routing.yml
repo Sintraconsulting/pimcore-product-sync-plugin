@@ -1,0 +1,5 @@
+magento2_pimcore:
+    resource: "@Magento2PimcoreBundle/Controller/"
+    type:     annotation
+    prefix:   /
+

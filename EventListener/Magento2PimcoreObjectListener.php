@@ -6,7 +6,9 @@ use Pimcore\Event\Model\ElementEventInterface;
 use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
+use Pimcore\Model\DataObject\Product;
 use Magento2PimcoreBundle\EventListener\Magento2PimcoreCategoryListener;
+use Magento2PimcoreBundle\EventListener\Magento2PimcoreProductListener;
 
 class Magento2PimcoreObjectListener {
      
@@ -59,6 +61,10 @@ class Magento2PimcoreObjectListener {
                 case "product":
                     Logger::debug("Magento2PimcoreObjectListener - Update Product");
                     
+                    $productListener = new Magento2PimcoreProductListener();
+                    $product = Product::getById($obj->getId());
+                    $productListener->onPostUpdate($product);
+                    
                     break;
 
                 default:
@@ -86,6 +92,9 @@ class Magento2PimcoreObjectListener {
                 
                 case "product":
                     Logger::debug("Magento2PimcoreObjectListener - Delete Product");
+                    
+                    $productListener = new Magento2PimcoreProductListener();
+                    $productListener->onPostDelete($obj);
                     
                     break;
 

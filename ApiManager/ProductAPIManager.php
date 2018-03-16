@@ -8,6 +8,7 @@
 
 namespace Magento2PimcoreBundle\ApiManager;
 
+use Pimcore\Logger;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body18;
 
@@ -43,7 +44,7 @@ class ProductAPIManager extends AbstractAPIManager {
             $result = $productInstance->catalogProductRepositoryV1SavePost($productBody);
             return $result;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            Logger::err($e->getMessage());
         }
     }
     
@@ -56,7 +57,7 @@ class ProductAPIManager extends AbstractAPIManager {
             $result = $productInstance->catalogProductRepositoryV1DeleteByIdDelete($sku);
             return $result;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            Logger::err($e->getMessage());
         }
     }
     
@@ -73,7 +74,41 @@ class ProductAPIManager extends AbstractAPIManager {
             $result = $productInstance->catalogProductRepositoryV1GetGet($sku, $editMode, $storeId, $forceReload);
             return $result;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            Logger::err($e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Search Product with search condition
+     * @param $field field used for research
+     * @param $value the field value 
+     * @param $conditionType condition on the field value. Available conditions:
+     * - eq:         Equals.
+     * - finset:     A value within a set of values
+     * - gt:         Greater than
+     * - gteq:       Greater than or equal
+     * - in:         In. The value can contain a comma-separated list of values.
+     * - like:       Like. The value can contain the SQL wildcard characters when like is specified.
+     * - lt:         Less than
+     * - lteq:       Less than or equal
+     * - moreq:      More or equal
+     * - neq:        Not equal
+     * - nin:        Not in. The value can contain a comma-separated list of values.
+     * - notnull:    Not null
+     * - null:       Null
+     */
+    public function searchProducts($field, $value, $conditionType = null) {
+        $apiClient = $this->getApiInstance();
+
+        $productInstance = new CatalogProductRepositoryV1Api($apiClient);
+
+        try {
+            $result = $productInstance->catalogProductRepositoryV1GetListGet($field, $value, $conditionType);
+            return $result;
+        } catch (Exception $e) {
+            Logger::err($e->getMessage());
+            return false;
         }
     }
     
@@ -89,7 +124,7 @@ class ProductAPIManager extends AbstractAPIManager {
             $result = $productInstance->catalogProductRepositoryV1SavePut($sku, $productBody);
             return $result;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            Logger::err($e->getMessage());
         }
     }
 }

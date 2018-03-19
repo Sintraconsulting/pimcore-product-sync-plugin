@@ -8,6 +8,10 @@
 
 namespace Magento2PimcoreBundle\Utils;
 
+use Pimcore\Db;
+use Pimcore\Logger;
+use Pimcore\Model\DataObject\Objectbrick;
+
 /**
  * Utils for mapping Pimcore Objects to Magento2 Objects
  *

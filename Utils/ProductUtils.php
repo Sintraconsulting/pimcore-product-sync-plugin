@@ -4,9 +4,6 @@ namespace Magento2PimcoreBundle\Utils;
 
 use Magento2PimcoreBundle\Utils\MagentoUtils;
 
-use Pimcore\Db;
-use Pimcore\Logger;
-use Pimcore\Model\DataObject\Objectbrick;
 use Pimcore\Model\DataObject\Product;
 
 /**
@@ -28,11 +25,10 @@ class ProductUtils extends MagentoUtils{
     public function toMagento2Product(Product $product){
         
         $magento2Product = array();
-        $magento2Product["attribute_set_id"] = 4;
         
-        $extensionAttributes = array();
-        $extensionAttributes["stock_item"] = array();
-        $magento2Product["extension_attributes"] = $extensionAttributes;
+        $magento2Product["extension_attributes"] = array(
+            "stock_item" => array()
+        );
         
         $magento2Product["custom_attributes"] = array();
         

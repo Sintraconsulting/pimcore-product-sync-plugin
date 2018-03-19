@@ -8,7 +8,7 @@ use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\MultiSelectO
 /**
  * Dynamic Options Provider for Product's category_ids field 
  *
- * @author Utente
+ * @author Marco Guiducci
  */
 class ProductCategoryOptionsProvider implements MultiSelectOptionsProviderInterface{
 

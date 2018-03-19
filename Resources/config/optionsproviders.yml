@@ -3,3 +3,7 @@ services:
     optionsproviders.productcategoryoptionsprovider:
         class: Magento2PimcoreBundle\OptionsProviders\ProductCategoryOptionsProvider
         public: true
+    
+    optionsproviders.productattributesetoptionsprovider:
+        class: Magento2PimcoreBundle\OptionsProviders\ProductAttributeSetOptionsProvider
+        public: true

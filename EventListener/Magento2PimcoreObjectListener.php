@@ -11,35 +11,6 @@ use Magento2PimcoreBundle\EventListener\Magento2PimcoreCategoryListener;
 use Magento2PimcoreBundle\EventListener\Magento2PimcoreProductListener;
 
 class Magento2PimcoreObjectListener {
-     
-    public function onPostAdd (ElementEventInterface $e) {
-       
-        if ($e instanceof DataObjectEvent) {
-            // do something with the object
-            $obj = $e->getObject();
-            
-            $className = $obj->o_className;
-            switch ($className) {
-                case "category":
-                    Logger::debug("Magento2PimcoreObjectListener - Add Catgegory");
-                    
-                    $categoryListener = new Magento2PimcoreCategoryListener();
-                    $category = Category::getById($obj->getId());
-                    $categoryListener->onPostAdd($category);
-
-                    break;
-                
-                case "product":
-                    Logger::debug("Magento2PimcoreObjectListener - Add Product");
-                    
-                    break;
-
-                default:
-                    Logger::debug("Magento2PimcoreObjectListener - Class '".$className."' is not Managed for Add");
-                    break;
-            }
-        }
-    }
     
     public function onPostUpdate (ElementEventInterface $e) {
        

@@ -9,10 +9,6 @@ use Magento2PimcoreBundle\Utils\ProductUtils;
 
 class Magento2PimcoreProductListener {
 
-    public function onPostAdd(Product $product) {
-        
-    }
-
     public function onPostUpdate(Product $product) {
         $apiManager = ProductAPIManager::getInstance();
         

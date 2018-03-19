@@ -9,10 +9,6 @@ use Magento2PimcoreBundle\Utils\CategoryUtils;
 
 class Magento2PimcoreCategoryListener {
 
-    public function onPostAdd(Category $category) {
-        
-    }
-
     public function onPostUpdate(Category $category) {
         $apiManager = CategoryAPIManager::getInstance();
         

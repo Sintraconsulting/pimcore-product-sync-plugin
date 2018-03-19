@@ -2,6 +2,7 @@
 
 namespace Magento2PimcoreBundle\Utils;
 
+use Magento2PimcoreBundle\Utils\MagentoUtils;
 use Pimcore\Model\DataObject\Category;
 
 /**
@@ -9,7 +10,7 @@ use Pimcore\Model\DataObject\Category;
  *
  * @author Marco Guiducci
  */
-class CategoryUtils {
+class CategoryUtils extends MagentoUtils{
 
     private static $instance;
 
@@ -24,6 +25,7 @@ class CategoryUtils {
         $parentCategory = Category::getById($category->getParentId());
         
         $magento2Category = array();
+        $magento2Category["custom_attributes"] = array();
         
         $magentoId = $category->magentoid;
         if($magentoId != null && !empty($magentoId)){
@@ -33,40 +35,18 @@ class CategoryUtils {
         $parentMagentoId = $parentCategory->magentoid;
         $magento2Category["parent_id"] = ($parentMagentoId != null && !empty($parentMagentoId)) ? $parentMagentoId : "";
         
-        $magento2Category["name"] = $category->name;
-        $magento2Category["is_active"] = $category->is_active;
-        $magento2Category["include_in_menu"] = $category->include_in_menu;
-        
-        $customAttributes = array();
+        $fieldDefinitions = $category->getClass()->getFieldDefinitions();
+        foreach ($fieldDefinitions as $fieldDefinition) {
+            $fieldName = $fieldDefinition->getName();
+            
+            if($fieldName != "magentoid"){
+                $fieldType = $fieldDefinition->getFieldtype();
+                $fieldValue = $category->getValueForFieldName($fieldName);
 
-        $customAttributes[] = array(
-            "attribute_code" => "display_mode",
-            "value" => $category->display_mode
-        );
-        
-        $customAttributes[] = array(
-            "attribute_code" => "is_anchor",
-            "value" => $category->is_anchor
-        );
-        
-        /**
-         * Add localized fields
-         * TO-DO - manage multi languages
-         */
-        $localizedFields = $category->getLocalizedfields();
-        $items = $localizedFields->getItems();
-        $fields = $items["en"];
-        
-        foreach ($fields as $fieldname => $fieldvalue) {
-            if(!empty($fieldvalue)){
-                $customAttributes[] = array(
-                    "attribute_code" => $fieldname,
-                    "value" => $fieldvalue
-                );
+                $this->mapField($magento2Category, $fieldName, $fieldType, $fieldValue, $category->getClassId());
             }
+            
         }
-        
-        $magento2Category["custom_attributes"] = $customAttributes;
         
         return $magento2Category;
         

@@ -1,0 +1,5 @@
+services:
+    
+    optionsproviders.productcategoryoptionsprovider:
+        class: Magento2PimcoreBundle\OptionsProviders\ProductCategoryOptionsProvider
+        public: true

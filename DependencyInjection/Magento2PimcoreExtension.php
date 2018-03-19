@@ -25,5 +25,6 @@ class Magento2PimcoreExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yml');
         $loader->load('eventlistener.yml');
+        $loader->load('optionsproviders.yml');
     }
 }

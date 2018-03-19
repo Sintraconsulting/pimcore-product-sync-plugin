@@ -34,18 +34,6 @@ class ProductUtils {
         
         $magento2Product["custom_attributes"] = array();
         
-        //categories
-        $categoryIds = array();
-        $categories = $product->getCategory_ids();
-        foreach ($categories as $category) {
-            $categoryIds[] = $category->magentoid;
-        }
-        
-        $magento2Product["custom_attributes"][] = array(
-            "attribute_code" => "category_ids",
-            "value" => $categoryIds
-        );
-        
         $fieldDefinitions = $product->getClass()->getFieldDefinitions();
         foreach ($fieldDefinitions as $fieldDefinition) {
             $fieldname = $fieldDefinition->getName();

@@ -2,7 +2,9 @@
 
 namespace Magento2PimcoreBundle\Utils;
 
+use Pimcore\Db;
 use Pimcore\Logger;
+use Pimcore\Model\DataObject\Objectbrick;
 use Pimcore\Model\DataObject\Product;
 
 /**
@@ -24,82 +26,106 @@ class ProductUtils {
     public function toMagento2Product(Product $product){
         
         $magento2Product = array();
-        
-        $magento2Product["sku"] = $product->sku;
-        $magento2Product["name"] = $product->name;
-        $magento2Product["price"] = floatval($product->getPrice()->value);
-        $magento2Product["weight"] = floatval($product->weight);
-        $magento2Product["status"] = $product->status;
-        
         $magento2Product["attribute_set_id"] = 4;
         
-        /**
-         * Add Extension Attributes
-         */
-        
         $extensionAttributes = array();
-        $extensionAttributes["stock_item"] = array(
-            "qty" => $product->qty,
-            "is_in_stock" => $product->is_in_stock,
-        );
-                
+        $extensionAttributes["stock_item"] = array();
         $magento2Product["extension_attributes"] = $extensionAttributes;
         
-        /**
-         * Add custom fields
-         * TO-DO - manage multi languages
-         */
-        $customAttributes = array();
-        
-        //localized fields
-        $localizedFields = $product->getLocalizedfields();
-        $items = $localizedFields->getItems();
-        $fields = $items["en"];
-        
-        foreach ($fields as $fieldname => $fieldvalue) {
-            if(!empty($fieldvalue)){
-                $customAttributes[] = array(
-                    "attribute_code" => $fieldname,
-                    "value" => $fieldvalue
-                );
-            }
-        }
+        $magento2Product["custom_attributes"] = array();
         
         //categories
         $categoryIds = array();
-        $categories = $product->getCategories();
+        $categories = $product->getCategory_ids();
         foreach ($categories as $category) {
             $categoryIds[] = $category->magentoid;
         }
         
-        $customAttributes[] = array(
+        $magento2Product["custom_attributes"][] = array(
             "attribute_code" => "category_ids",
             "value" => $categoryIds
         );
         
-        
-//        //bricks
-//        $attributes = $product->getAttributes();
-//        foreach ($attributes as $attribute) {
-//            Logger::debug(print_r($attribute,true));
-//        }
-        
-        
-        //other custom fields
-        $customAttributes[] = array(
-            "attribute_code" => "tax_class_id",
-            "value" => $product->tax_class_id
-        );
-        
-        $customAttributes[] = array(
-            "attribute_code" => "color",
-            "value" => $product->color
-        );
-        
-        $magento2Product["custom_attributes"] = $customAttributes;
+        $fieldDefinitions = $product->getClass()->getFieldDefinitions();
+        foreach ($fieldDefinitions as $fieldDefinition) {
+            $fieldname = $fieldDefinition->getName();
+            $fieldType = $fieldDefinition->getFieldtype();
+            
+            $fieldValue = $product->getValueForFieldName($fieldname);
+            
+            switch ($fieldType) {
+                case "quantityValue":
+                    $this->insertSingleValue($magento2Product, $fieldname, $fieldValue->value);
+                    break;
+                
+                case "numeric":
+                    $this->insertSingleValue($magento2Product, $fieldname, $fieldValue);
+                    break;
+                
+                case "localizedfields":
+                    $localizedFields = $fieldValue->getItems();
+                    if($localizedFields != null && count($localizedFields) > 0){
+                        $this->insertLocalizedFields($magento2Product, $localizedFields);
+                    }
+                    break;
+                
+                case "objectbricks":
+                    $objectBricks = $fieldValue->getItems();
+                    if($objectBricks != null && count($objectBricks) > 0){
+                        $this->insertObjectBricks($magento2Product, $objectBricks, $product->getClassId());
+                    }
+                    break;
+                
+                case "objects":
+                    break;
+
+                default:
+                    $this->insertSingleValue($magento2Product, $fieldname, $fieldValue);
+                    break;
+            }
+            
+        }
         
         return $magento2Product;
         
+    }
+    
+    private function insertSingleValue(&$magento2Product, $fieldname, $fieldvalue){
+        if(strpos($fieldname, "stock_") === 0){
+            $field = str_replace("stock_", "", $fieldname, $i=1);
+            $magento2Product["extension_attributes"]["stock_item"][$field] = $fieldvalue;
+            
+        }else if(strpos($fieldname, "custom_") === 0){
+            $field = str_replace("custom_", "", $fieldname, $i=1);
+            $magento2Product["custom_attributes"][] = array(
+                "attribute_code" => $field,
+                "value" => $fieldvalue
+            ); 
+            
+        } else{
+            $magento2Product[$fieldname] = $fieldvalue;
+        }
+    }
+    
+    private function insertLocalizedFields(&$magento2Product, $localizedFields){
+        foreach ($localizedFields["en"] as $fieldname => $fieldvalue) {
+            $this->insertSingleValue($magento2Product, "custom_".$fieldname, $fieldvalue);
+        }
+    }
+    
+    private function insertObjectBricks(&$magento2Product, $objectBricks, $classId){
+        foreach ($objectBricks as $objectBrick) {
+            $type = $objectBrick->type;
+
+            $db = Db::get();
+            $brickfields = $db->fetchRow("SELECT * FROM object_brick_query_".$type."_".$classId);
+            
+            foreach ($brickfields as $fieldname => $fieldvalue) {
+                if(!in_array($fieldname, array("o_id", "fieldname"))){
+                    $this->insertSingleValue($magento2Product, "custom_".$fieldname, $fieldvalue);
+                }
+            }
+        }
     }
 
 }

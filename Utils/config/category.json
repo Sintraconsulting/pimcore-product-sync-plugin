@@ -1,0 +1,41 @@
+{
+	"id": "",
+	"parent_id": "",
+	"name": "",
+	"is_active": "",
+	"include_in_menu": "",
+	"custom_attributes": [
+		{
+			"attribute_code": "image",
+			"value": ""
+		},
+		{
+			"attribute_code": "description",
+			"value": ""
+		},
+		{
+			"attribute_code": "display_mode",
+			"value": ""
+		},
+		{
+			"attribute_code": "is_anchor",
+			"value": ""
+		},
+		{
+			"attribute_code": "url_key",
+			"value": ""
+		},
+		{
+			"attribute_code": "meta_title",
+			"value": ""
+		},
+		{
+			"attribute_code": "meta_keywords",
+			"value": ""
+		},
+		{
+			"attribute_code": "meta_description",
+			"value": ""
+		}
+	]
+}

@@ -1,0 +1,52 @@
+{
+	"sku": "",
+	"name": "",
+	"attribute_set_id": "",
+	"price": "",
+	"weight": "",
+	"status": "",
+	"extension_attributes": {
+		"stock_item": {
+			"qty": "",
+			"is_in_stock": ""
+		}
+	},
+	"custom_attributes": [
+		{
+			"attribute_code": "tax_class_id",
+			"value": ""
+		},
+		{
+			"attribute_code": "color",
+			"value": ""
+		},
+		{
+			"attribute_code": "category_ids",
+			"value": ""
+		},
+		{
+			"attribute_code": "description",
+			"value": ""
+		},
+		{
+			"attribute_code": "short_description",
+			"value": ""
+		},
+		{
+			"attribute_code": "url_key",
+			"value": ""
+		},
+		{
+			"attribute_code": "meta_title",
+			"value": ""
+		},
+		{
+			"attribute_code": "meta_keyword",
+			"value": ""
+		},
+		{
+			"attribute_code": "meta_description",
+			"value": ""
+		}
+	]
+}

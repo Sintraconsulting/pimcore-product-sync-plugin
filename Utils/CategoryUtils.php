@@ -13,6 +13,8 @@ use Pimcore\Model\DataObject\Category;
 class CategoryUtils extends MagentoUtils{
 
     private static $instance;
+    
+    private $configFile = __DIR__.'/config/category.json';
 
     public static function getInstance() {
         if (is_null(self::$instance)) {
@@ -24,8 +26,7 @@ class CategoryUtils extends MagentoUtils{
     public function toMagento2Category(Category $category){
         $parentCategory = Category::getById($category->getParentId());
         
-        $magento2Category = array();
-        $magento2Category["custom_attributes"] = array();
+        $magento2Category = json_decode(file_get_contents($this->configFile), true);
         
         $magentoId = $category->magentoid;
         if($magentoId != null && !empty($magentoId)){

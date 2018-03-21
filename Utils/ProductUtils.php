@@ -14,6 +14,8 @@ use Pimcore\Model\DataObject\Product;
 class ProductUtils extends MagentoUtils{
 
     private static $instance;
+    
+    private $configFile = __DIR__.'/config/product.json';
 
     public static function getInstance() {
         if (is_null(self::$instance)) {
@@ -24,13 +26,7 @@ class ProductUtils extends MagentoUtils{
     
     public function toMagento2Product(Product $product){
         
-        $magento2Product = array();
-        
-        $magento2Product["extension_attributes"] = array(
-            "stock_item" => array()
-        );
-        
-        $magento2Product["custom_attributes"] = array();
+        $magento2Product = json_decode(file_get_contents($this->configFile), true);
         
         $fieldDefinitions = $product->getClass()->getFieldDefinitions();
         foreach ($fieldDefinitions as $fieldDefinition) {
@@ -43,23 +39,6 @@ class ProductUtils extends MagentoUtils{
         
         return $magento2Product;
         
-    }
-    
-    public function insertSingleValue(&$magento2Product, $fieldName, $fieldvalue){
-        if(strpos($fieldName, "stock_") === 0){
-            $field = str_replace("stock_", "", $fieldName, $i=1);
-            $magento2Product["extension_attributes"]["stock_item"][$field] = $fieldvalue;
-            
-        }else if(strpos($fieldName, "custom_") === 0){
-            $field = str_replace("custom_", "", $fieldName, $i=1);
-            $magento2Product["custom_attributes"][] = array(
-                "attribute_code" => $field,
-                "value" => $fieldvalue
-            ); 
-            
-        } else{
-            $magento2Product[$fieldName] = $fieldvalue;
-        }
     }
 
 }

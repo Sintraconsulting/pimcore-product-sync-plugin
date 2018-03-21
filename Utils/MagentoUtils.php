@@ -52,25 +52,36 @@ class MagentoUtils {
         }
     }
 
-    public function insertSingleValue(&$magento2Object, $fieldName, $fieldvalue) {
-        if (strpos($fieldName, "custom_") === 0) {
-            $field = str_replace("custom_", "", $fieldName, $i = 1);
+    private function insertSingleValue(&$magento2Object, $fieldName, $fieldvalue, $isBrick = false) {
+        if($isBrick){
             $magento2Object["custom_attributes"][] = array(
-                "attribute_code" => $field,
+                "attribute_code" => $fieldName,
                 "value" => $fieldvalue
             );
-        } else {
+            return;
+        }
+        
+        if(array_key_exists($fieldName, $magento2Object)){
             $magento2Object[$fieldName] = $fieldvalue;
+        }else if($magento2Object["attribute_code"] == $fieldName){
+            $magento2Object["value"] = $fieldvalue;
+        }else{
+            //recursion
+            foreach ($magento2Object as $key => $field) {
+                if(is_array($field)){
+                    $this->insertSingleValue($magento2Object[$key], $fieldName, $fieldvalue);
+                }
+            }
         }
     }
 
-    public function insertLocalizedFields(&$magento2Object, $localizedFields) {
+    private function insertLocalizedFields(&$magento2Object, $localizedFields) {
         foreach ($localizedFields["en"] as $fieldName => $fieldvalue) {
-            $this->insertSingleValue($magento2Object, "custom_" . $fieldName, $fieldvalue);
+            $this->insertSingleValue($magento2Object, $fieldName, $fieldvalue);
         }
     }
 
-    public function insertObjectBricks(&$magento2Object, $objectBricks, $classId) {
+    private function insertObjectBricks(&$magento2Object, $objectBricks, $classId) {
         foreach ($objectBricks as $objectBrick) {
             $type = $objectBrick->type;
 
@@ -79,7 +90,7 @@ class MagentoUtils {
 
             foreach ($brickfields as $fieldName => $fieldvalue) {
                 if (!in_array($fieldName, array("o_id", "fieldname"))) {
-                    $this->insertSingleValue($magento2Object, "custom_" . $fieldName, $fieldvalue);
+                    $this->insertSingleValue($magento2Object, $fieldName, $fieldvalue, true);
                 }
             }
         }

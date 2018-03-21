@@ -15,26 +15,37 @@ class Magento2PimcoreObjectListener {
     public function onPostUpdate (ElementEventInterface $e) {
        
         if ($e instanceof DataObjectEvent) {
-            // do something with the object
+            
+            Logger::debug("Magento2PimcoreObjectListener - ARGUMENTS: ".print_r($e->getArguments(),true));
+            
+            $saveVersionOnly = $e->hasArgument("saveVersionOnly");
             $obj = $e->getObject();
             
             $className = $obj->o_className;
             switch ($className) {
                 case "category":
-                    Logger::debug("Magento2PimcoreObjectListener - Update Catgegory");
-                    
                     $categoryListener = new Magento2PimcoreCategoryListener();
                     $category = Category::getById($obj->getId());
-                    $categoryListener->onPostUpdate($category);
+                    
+                    if($saveVersionOnly || !$category->isPublished()){
+                        Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
+                    }else{
+                        Logger::debug("Magento2PimcoreObjectListener - Insert or Update Catgegory in Magento");
+                        $categoryListener->onPostUpdate($category);
+                    }
 
                     break;
                 
                 case "product":
-                    Logger::debug("Magento2PimcoreObjectListener - Update Product");
-                    
                     $productListener = new Magento2PimcoreProductListener();
                     $product = Product::getById($obj->getId());
-                    $productListener->onPostUpdate($product);
+                    
+                    if($saveVersionOnly || !$product->isPublished()){
+                        Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
+                    }else{
+                        Logger::debug("Magento2PimcoreObjectListener - Insert or Update Product in Magento");
+                        $productListener->onPostUpdate($product);
+                    }
                     
                     break;
 
@@ -54,7 +65,7 @@ class Magento2PimcoreObjectListener {
             $className = $obj->o_className;
             switch ($className) {
                 case "category":
-                    Logger::debug("Magento2PimcoreObjectListener - Delete Catgegory");
+                    Logger::debug("Magento2PimcoreObjectListener - Delete Catgegory  in Magento");
                     
                     $categoryListener = new Magento2PimcoreCategoryListener();
                     $categoryListener->onPostDelete($obj);
@@ -62,7 +73,7 @@ class Magento2PimcoreObjectListener {
                     break;
                 
                 case "product":
-                    Logger::debug("Magento2PimcoreObjectListener - Delete Product");
+                    Logger::debug("Magento2PimcoreObjectListener - Delete Product  in Magento");
                     
                     $productListener = new Magento2PimcoreProductListener();
                     $productListener->onPostDelete($obj);

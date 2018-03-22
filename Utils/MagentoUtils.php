@@ -86,11 +86,11 @@ class MagentoUtils {
             $type = $objectBrick->type;
 
             $db = Db::get();
-            $brickfields = $db->fetchRow("SELECT * FROM object_brick_query_" . $type . "_" . $classId);
+            $brickfields = $db->fetchRow("SELECT * FROM object_brick_store_" . $type . "_" . $classId);
 
             foreach ($brickfields as $fieldName => $fieldvalue) {
                 if (!in_array($fieldName, array("o_id", "fieldname"))) {
-                    $this->insertSingleValue($magento2Object, $fieldName, $fieldvalue, true);
+                    $this->insertSingleValue($magento2Object, $fieldName, $objectBrick->getValueForFieldName($fieldName), true);
                 }
             }
         }

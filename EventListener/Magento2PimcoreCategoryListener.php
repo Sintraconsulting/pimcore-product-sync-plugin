@@ -21,7 +21,7 @@ class Magento2PimcoreCategoryListener {
         if($magentoId == null || empty($magentoId)){
             $result = $apiManager->createEntity($magento2Category);
             $category->setMagentoid($result["id"]);
-            $category->update();
+            $category->update(true);
         }else{
             $result = $apiManager->updateEntity($magentoId,$magento2Category);
         }

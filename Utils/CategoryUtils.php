@@ -31,10 +31,12 @@ class CategoryUtils extends MagentoUtils{
         $magentoId = $category->magentoid;
         if($magentoId != null && !empty($magentoId)){
             $magento2Category["id"] = $magentoId;
+        }else{
+            unset($magento2Category["id"]);
         }
         
         $parentMagentoId = $parentCategory->magentoid;
-        $magento2Category["parent_id"] = ($parentMagentoId != null && !empty($parentMagentoId)) ? $parentMagentoId : "";
+        $magento2Category["parent_id"] = ($parentMagentoId != null && !empty($parentMagentoId)) ? $parentMagentoId : "1";
         
         $fieldDefinitions = $category->getClass()->getFieldDefinitions();
         foreach ($fieldDefinitions as $fieldDefinition) {

@@ -34,7 +34,11 @@ class Magento2PimcoreCategoryListener {
         
         $magentoId = $category->getMagentoid();
         if($magentoId != null && !empty($magentoId)){
-            $apiManager->deleteEntity($magentoId);
+            $magentoCategory = $apiManager->getEntityByKey($magentoId);
+
+            if($magentoCategory["id"] == $magentoId){
+                $apiManager->deleteEntity($magentoId);
+            }
         }
     }
 

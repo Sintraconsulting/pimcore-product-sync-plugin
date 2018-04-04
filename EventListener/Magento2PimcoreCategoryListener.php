@@ -21,10 +21,15 @@ class Magento2PimcoreCategoryListener {
         if($magentoId == null || empty($magentoId)){
             $result = $apiManager->createEntity($magento2Category);
             $category->setMagentoid($result["id"]);
-            $category->update(true);
+            
         }else{
             $result = $apiManager->updateEntity($magentoId,$magento2Category);
         }
+        
+        $category->setMagento_syncronized(true);
+        $category->setMagento_syncronyzed_at($result["updatedAt"]);
+        
+        $category->update(true);
         
         Logger::debug("UPDATED CATEGORY: ".$result->__toString());
     }

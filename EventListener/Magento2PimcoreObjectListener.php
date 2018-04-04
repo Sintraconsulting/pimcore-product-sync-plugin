@@ -25,6 +25,8 @@ class Magento2PimcoreObjectListener {
                 case "category":
                     $category = Category::getById($objId,true);
                     $this->isPublishedBeforeSave = $category->isPublished();
+                    
+                    $category->setMagento_syncronized(false);
                     break;
                 
                 case "product":
@@ -54,18 +56,21 @@ class Magento2PimcoreObjectListener {
                     $categoryListener = new Magento2PimcoreCategoryListener();
                     $category = Category::getById($objId);
                     
-                    $isPublished = $category->isPublished();
+                    if($category->export_to_magento){
                     
-                    if($isPublishedBeforeSave && !$isPublished){
-                        Logger::debug("Magento2PimcoreObjectListener - Unpublished Category. Delete in Magento.");
-                        $categoryListener->onPostDelete($obj);
-                        
-                    }else if($saveVersionOnly || !$isPublished){
-                        Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
-                        
-                    }else{
-                        Logger::debug("Magento2PimcoreObjectListener - Insert or Update Catgegory in Magento");
-                        $categoryListener->onPostUpdate($category);
+                        $isPublished = $category->isPublished();
+
+                        if($isPublishedBeforeSave && !$isPublished){
+                            Logger::debug("Magento2PimcoreObjectListener - Unpublished Category. Delete in Magento.");
+                            $categoryListener->onPostDelete($obj);
+
+                        }else if($saveVersionOnly || !$isPublished){
+                            Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
+
+                        }else{
+                            Logger::debug("Magento2PimcoreObjectListener - Insert or Update Catgegory in Magento");
+                            $categoryListener->onPostUpdate($category);
+                        }
                     }
 
                     break;

@@ -24,7 +24,7 @@ class CategoryUtils extends MagentoUtils{
     }
     
     public function toMagento2Category(Category $category){
-        $parentCategory = Category::getById($category->getParentId());
+        $parentCategory = Category::getById($category->getParentId(),true);
         
         $magento2Category = json_decode(file_get_contents($this->configFile), true);
         

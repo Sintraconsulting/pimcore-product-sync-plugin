@@ -44,18 +44,20 @@ class Magento2PimcoreController extends Controller implements AdminControllerInt
         $categories = new DataObject\Category\Listing();
         $categories->addConditionParam("export_to_magento = ?", "1");
         $categories->addConditionParam("magento_syncronized = ?", "0");
-        $categories->setLimit("10");
+        $categories->setLimit("5");
         
         $next = $categories->count() > 0;
         while($next){
             $category = $categories->current();
             
+            $category->beginTransaction();
             $categoryListener->onPostUpdate($category);
+            $category->commit();
             
             $next = $categories->next();
         }
-        
-        return new Response('Sincronizzate correttamente 10 categorie.');
+                
+        return new Response('Sincronizzate correttamente 5 categorie.');
     }
 
 }

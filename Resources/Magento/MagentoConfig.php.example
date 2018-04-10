@@ -10,5 +10,9 @@ class MagentoConfig {
             "apiKey" => "9ny1jvob0o0ofogm8yt8d3a9t1uj1g88"
         );
     }
+    
+    public static function getBaseUrl(){
+        return "http://pimcore.local:9080";
+    }
 
 }

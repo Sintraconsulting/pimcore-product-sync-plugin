@@ -21,14 +21,19 @@ class Magento2PimcoreProductListener {
         $search = $apiManager->searchProducts("sku",$sku);
         
         if($search["totalCount"] === 0){
-            $apiManager->createEntity($magento2Product);
+            $result = $apiManager->createEntity($magento2Product);
         }else{
-            $apiManager->updateEntity($sku,$magento2Product);
+            $result = $apiManager->updateEntity($sku,$magento2Product);
         }
+        
+        $product->setMagento_syncronized(true);
+        $product->setMagento_syncronyzed_at($result["updatedAt"]);
+        
+        $product->update(true);
         
     }
 
-    public function onPostDelete(Product $product) {
+    public function onPostDelete(Product $product, $isUnpublished = false) {
         $apiManager = ProductAPIManager::getInstance();
         
         $sku = $product->getSku();
@@ -36,6 +41,13 @@ class Magento2PimcoreProductListener {
         
         if($search["totalCount"] > 0){
             $apiManager->deleteEntity($sku);
+        }
+        
+        if($isUnpublished){
+            $product->setMagento_syncronized(true);
+            $product->setMagento_syncronyzed_at(date("Y-m-d H:i:s"));
+
+            $product->update(true);
         }
     }
 

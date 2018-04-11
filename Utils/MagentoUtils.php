@@ -37,7 +37,7 @@ class MagentoUtils {
                 break;
 
             case "objectbricks":
-                $objectBricks = $fieldValue->getItems();
+                $objectBricks = $fieldValue ? $fieldValue->getItems() : null;
                 if ($objectBricks != null && count($objectBricks) > 0) {
                     $this->insertObjectBricks($magento2Object, $objectBricks, $classId);
                 }

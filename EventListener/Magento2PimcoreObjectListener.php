@@ -32,6 +32,8 @@ class Magento2PimcoreObjectListener {
                 case "product":
                     $product = Product::getById($objId,true);
                     $this->isPublishedBeforeSave = $product->isPublished();
+                    
+                    $product->setMagento_syncronized(false);
                     break;
 
                 default:
@@ -56,21 +58,18 @@ class Magento2PimcoreObjectListener {
                     $categoryListener = new Magento2PimcoreCategoryListener();
                     $category = Category::getById($objId);
                     
-                    if($category->export_to_magento){
-                    
-                        $isPublished = $category->isPublished();
+                    $isPublished = $category->isPublished();
 
-                        if($isPublishedBeforeSave && !$isPublished){
-                            Logger::debug("Magento2PimcoreObjectListener - Unpublished Category. Delete in Magento.");
-                            $categoryListener->onPostDelete($obj);
+                    if($isPublishedBeforeSave && !$isPublished){
+                        Logger::debug("Magento2PimcoreObjectListener - Unpublished Category. Delete in Magento.");
+                        $categoryListener->onPostDelete($obj, true);
 
-                        }else if($saveVersionOnly || !$isPublished){
-                            Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
+                    }else if($saveVersionOnly || !$isPublished){
+                        Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
 
-                        }else{
-                            Logger::debug("Magento2PimcoreObjectListener - Insert or Update Catgegory in Magento");
-                            $categoryListener->onPostUpdate($category);
-                        }
+                    }else{
+                        Logger::debug("Magento2PimcoreObjectListener - Insert or Update Catgegory in Magento");
+                        $categoryListener->onPostUpdate($category);
                     }
 
                     break;
@@ -83,7 +82,7 @@ class Magento2PimcoreObjectListener {
                     
                     if($isPublishedBeforeSave && !$isPublished){
                         Logger::debug("Magento2PimcoreObjectListener - Unpublished Product. Delete in Magento.");
-                        $productListener->onPostDelete($obj);
+                        $productListener->onPostDelete($obj, true);
                         
                     }else if($saveVersionOnly || !$isPublished){
                         Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");

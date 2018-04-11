@@ -5,7 +5,12 @@
 	"price": "",
 	"weight": "",
 	"status": "",
+	"visibility":"",
+    "type_id":"", 
 	"extension_attributes": {
+		"website_ids":[
+            1
+        ], 
 		"stock_item": {
 			"qty": "",
 			"is_in_stock": ""

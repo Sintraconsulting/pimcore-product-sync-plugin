@@ -76,7 +76,9 @@ class MagentoUtils {
     }
 
     private function insertLocalizedFields(&$magento2Object, $localizedFields) {
-        foreach ($localizedFields["en"] as $fieldName => $fieldvalue) {
+        $config = \Pimcore\Config::getSystemConfig();
+        $lang = $config->general->language;
+        foreach ($localizedFields[$lang] as $fieldName => $fieldvalue) {
             $this->insertSingleValue($magento2Object, $fieldName, $fieldvalue);
         }
     }

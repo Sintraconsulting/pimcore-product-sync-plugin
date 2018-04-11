@@ -16,7 +16,7 @@ class ProductCategoryOptionsProvider implements MultiSelectOptionsProviderInterf
         $category_ids = array();
         
         $categories = new DataObject\Category\Listing();
-        $categories->setOrder("name");
+        $categories->setOrderKey("CONCAT(o_path, o_key)", false);
         
         $moreOption = $categories->count() > 0;
         while($moreOption){
@@ -24,6 +24,11 @@ class ProductCategoryOptionsProvider implements MultiSelectOptionsProviderInterf
             
             $magentoId = $category->getMagentoid();
             $name = $category->getName();
+            
+            $level = $category->getLevel();
+            for ($i = 0; $i < $level; $i++) {
+                $name = "&nbsp;&nbsp;&nbsp;&nbsp; ".$name;
+            }
             
             $category_ids[] = array("key" => $name, "value" => $magentoId);
             

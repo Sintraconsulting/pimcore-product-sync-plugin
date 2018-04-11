@@ -44,7 +44,7 @@ class Magento2PimcoreController extends Controller implements AdminControllerInt
     {
         $categoryListener = new Magento2PimcoreCategoryListener();
         
-        $categories = new DataObject\Product\Listing();
+        $categories = new DataObject\Category\Listing();
         $categories->addConditionParam("export_to_magento = ?", "1");
         $categories->addConditionParam("magento_syncronized = ?", "0");
         $categories->setLimit("30");
@@ -86,7 +86,7 @@ class Magento2PimcoreController extends Controller implements AdminControllerInt
     {
         $productListener = new Magento2PimcoreProductListener();
         
-        $products = new DataObject\Category\Listing();
+        $products = new DataObject\Product\Listing();
         $products->addConditionParam("export_to_magento = ?", "1");
         $products->addConditionParam("magento_syncronized = ?", "0");
         $products->setLimit("10");

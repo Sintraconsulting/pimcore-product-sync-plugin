@@ -54,9 +54,11 @@ class Magento2PimcoreController extends Controller implements AdminControllerInt
         while($next){
             $category = $categories->current();
             
-            $category->beginTransaction();
-            $categoryListener->onPostUpdate($category);
-            $category->commit();
+            try{
+                $categoryListener->onPostUpdate($category);
+            } catch(\Exception $e){
+                Logger::err($e->getMessage());
+            }
             
             $count++;
             $next = $categories->next();
@@ -95,10 +97,13 @@ class Magento2PimcoreController extends Controller implements AdminControllerInt
         $next = $products->count() > 0;
         while($next){
             $product = $products->current();
+
+            try{
+                $productListener->onPostUpdate($product);
+            } catch(\Exception $e){
+                Logger::err($e->getMessage());
+            }
             
-            $product->beginTransaction();
-            $productListener->onPostUpdate($product);
-            $product->commit();
             
             $count++;
             $next = $products->next();

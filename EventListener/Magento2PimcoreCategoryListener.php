@@ -14,6 +14,10 @@ class Magento2PimcoreCategoryListener {
         $categoryLevel = $this->getCategoryLevel($category);
         $category->setLevel($categoryLevel);
         
+        /****** TO-DO: Manage Multi Languages ******/
+        $name = $category->getName();
+        $category->setUrl_key(preg_replace('/\W+/', '-', strtolower($name)));
+        
         if($category->export_to_magento){
             $apiManager = CategoryAPIManager::getInstance();
 

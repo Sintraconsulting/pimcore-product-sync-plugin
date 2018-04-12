@@ -6,10 +6,6 @@
 	"include_in_menu": "",
 	"custom_attributes": [
 		{
-			"attribute_code": "image",
-			"value": ""
-		},
-		{
 			"attribute_code": "description",
 			"value": ""
 		},

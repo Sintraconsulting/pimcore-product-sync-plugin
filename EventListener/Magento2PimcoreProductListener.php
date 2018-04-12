@@ -11,10 +11,14 @@ class Magento2PimcoreProductListener {
     public function onPostUpdate(Product $product) {
         
         /****** TO-DO: Manage Multi Languages ******/
+        $config = \Pimcore\Config::getSystemConfig();
+        $languages = explode(",",$config->general->validLanguages);
+        $lang = $languages[0];
+        
         $sku = $product->getSku();
         $name = $product->getName();
         $urlKey = ($sku == $name) ? $sku : $sku." ".$name;
-        $product->setUrl_key(preg_replace('/\W+/', '-', strtolower($urlKey)));
+        $product->setUrl_key(preg_replace('/\W+/', '-', strtolower($urlKey)), $lang);
         
         $product->setMagento_syncronized(false);
         

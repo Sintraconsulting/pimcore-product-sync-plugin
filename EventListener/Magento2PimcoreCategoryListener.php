@@ -14,8 +14,12 @@ class Magento2PimcoreCategoryListener {
         $category->setLevel($categoryLevel);
         
         /****** TO-DO: Manage Multi Languages ******/
+        $config = \Pimcore\Config::getSystemConfig();
+        $languages = explode(",",$config->general->validLanguages);
+        $lang = $languages[0];
+        
         $name = $category->getName();
-        $category->setUrl_key(preg_replace('/\W+/', '-', strtolower($name)));
+        $category->setUrl_key(preg_replace('/\W+/', '-', strtolower($name)), $lang);
         
         $category->setMagento_syncronized(false);
         

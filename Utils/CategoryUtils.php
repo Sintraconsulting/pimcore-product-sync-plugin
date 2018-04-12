@@ -2,7 +2,9 @@
 
 namespace Magento2PimcoreBundle\Utils;
 
+use Magento2PimcoreBundle\ApiManager\CategoryAPIManager;
 use Magento2PimcoreBundle\Utils\MagentoUtils;
+use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
 
 /**
@@ -23,7 +25,31 @@ class CategoryUtils extends MagentoUtils{
         return self::$instance;
     }
     
-    public function toMagento2Category(Category $category){
+    public function exportToMagento(Category $category){
+        $apiManager = CategoryAPIManager::getInstance();
+
+        $magento2Category = $this->toMagento2Category($category);
+
+        Logger::debug("MAGENTO CATEGORY: ".json_encode($magento2Category));
+
+        $magentoId = $category->getMagentoid();
+        if($magentoId == null || empty($magentoId)){
+            $result = $apiManager->createEntity($magento2Category);
+            $category->setMagentoid($result["id"]);
+
+        }else{
+            $result = $apiManager->updateEntity($magentoId,$magento2Category);
+        }
+
+        Logger::debug("UPDATED CATEGORY: ".$result->__toString());
+                
+        $category->setMagento_syncronized(true);
+        $category->setMagento_syncronyzed_at($result["updatedAt"]);
+
+        $category->update(true);
+    }
+    
+    private function toMagento2Category(Category $category){
         $parentCategory = Category::getById($category->getParentId(),true);
         
         $magento2Category = json_decode(file_get_contents($this->configFile), true);

@@ -25,15 +25,13 @@ class Magento2PimcoreObjectListener {
                 case "category":
                     $category = Category::getById($objId,true);
                     $this->isPublishedBeforeSave = $category->isPublished();
-                    
-                    $category->setMagento_syncronized(false);
+
                     break;
                 
                 case "product":
                     $product = Product::getById($objId,true);
                     $this->isPublishedBeforeSave = $product->isPublished();
                     
-                    $product->setMagento_syncronized(false);
                     break;
 
                 default:

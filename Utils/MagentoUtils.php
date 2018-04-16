@@ -26,7 +26,8 @@ class MagentoUtils {
                 break;
 
             case "numeric":
-                $this->insertSingleValue($magento2Object, $fieldName, $fieldValue);
+                $numericValue = $fieldValue ? $fieldValue : 0;
+                $this->insertSingleValue($magento2Object, $fieldName, $numericValue);
                 break;
 
             case "localizedfields":

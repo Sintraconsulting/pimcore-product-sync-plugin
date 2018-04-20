@@ -32,14 +32,27 @@ class ProductSkuResolver extends AbstractResolver{
             
             /**
              * set object key to avoid import error
-             * will be overridden if "key" is mapped
-             * in import column configuration
              */
-            $product->setKey($sku);
+            $keyColumnId = $this->getKeyColumnId($config);
+            if(!empty($keyColumnId)){
+                $key = $rowData[$keyColumnId];
+                $product->setKey($key);
+            }else{
+                $product->setKey($sku);
+            }
         }
         
         return $product;
         
+    }
+    
+    private function getKeyColumnId(\stdClass $config){
+        $configArray = json_decode(json_encode($config), true);
+        $selectedGridColumns = $configArray["selectedGridColumns"];
+        
+        $keyColumnId = array_search("key", array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
+        
+        return $keyColumnId;
     }
 
 }

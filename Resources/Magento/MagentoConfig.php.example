@@ -3,6 +3,8 @@
 namespace Magento2PimcoreBundle\Resources\Magento;
 
 class MagentoConfig {
+    
+    public static $updateProductPrices = false;
 
     public static function getConfig() {
         return array(

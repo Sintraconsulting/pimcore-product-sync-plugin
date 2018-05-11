@@ -1,6 +1,6 @@
 <?php
 
-namespace Magento2PimcoreBundle\Controller;
+namespace SintraPimcoreBundle\Controller;
 
 use Pimcore\Controller\FrontendController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -14,6 +14,6 @@ class DefaultController extends FrontendController
      */
     public function indexAction(Request $request)
     {
-        return new Response('Hello world from magento2_pimcore');
+        return new Response('Hello world from sintra_pimcore');
     }
 }

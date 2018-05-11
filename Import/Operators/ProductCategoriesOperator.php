@@ -1,6 +1,6 @@
 <?php
 
-namespace Magento2PimcoreBundle\Import\Operators;
+namespace SintraPimcoreBundle\Import\Operators;
 
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;

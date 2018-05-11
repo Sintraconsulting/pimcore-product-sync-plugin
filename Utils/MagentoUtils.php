@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-namespace Magento2PimcoreBundle\Utils;
+namespace SintraPimcoreBundle\Utils;
 
 use Pimcore\Db;
 use Pimcore\Logger;

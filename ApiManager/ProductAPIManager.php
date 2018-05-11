@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-namespace Magento2PimcoreBundle\ApiManager;
+namespace SintraPimcoreBundle\ApiManager;
 
 use Pimcore\Logger;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductRepositoryV1Api;

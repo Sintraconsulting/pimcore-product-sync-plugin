@@ -1,8 +1,8 @@
-pimcore.registerNS("pimcore.plugin.Magento2PimcoreBundle");
+pimcore.registerNS("pimcore.plugin.SintraPimcoreBundle");
 
-pimcore.plugin.Magento2PimcoreBundle = Class.create(pimcore.plugin.admin, {
+pimcore.plugin.SintraPimcoreBundle = Class.create(pimcore.plugin.admin, {
     getClassName: function () {
-        return "pimcore.plugin.Magento2PimcoreBundle";
+        return "pimcore.plugin.SintraPimcoreBundle";
     },
 
     initialize: function () {
@@ -10,8 +10,8 @@ pimcore.plugin.Magento2PimcoreBundle = Class.create(pimcore.plugin.admin, {
     },
 
     pimcoreReady: function (params, broker) {
-        // alert("Magento2PimcoreBundle ready!");
+        // alert("SintraPimcoreBundle ready!");
     }
 });
 
-var Magento2PimcoreBundlePlugin = new pimcore.plugin.Magento2PimcoreBundle();
+var SintraPimcoreBundlePlugin = new pimcore.plugin.SintraPimcoreBundle();

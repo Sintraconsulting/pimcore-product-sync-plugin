@@ -1,6 +1,6 @@
 <?php
 
-namespace Magento2PimcoreBundle\OptionsProviders;
+namespace SintraPimcoreBundle\OptionsProviders;
 
 use Pimcore\Model\DataObject;
 use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\MultiSelectOptionsProviderInterface;

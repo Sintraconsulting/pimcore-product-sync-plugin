@@ -1,10 +1,10 @@
 <?php
 
-namespace Magento2PimcoreBundle\Utils;
+namespace SintraPimcoreBundle\Utils;
 
-use Magento2PimcoreBundle\ApiManager\ProductAPIManager;
-use Magento2PimcoreBundle\Resources\Magento\MagentoConfig;
-use Magento2PimcoreBundle\Utils\MagentoUtils;
+use SintraPimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\Resources\Magento\MagentoConfig;
+use SintraPimcoreBundle\Utils\MagentoUtils;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Product;
 

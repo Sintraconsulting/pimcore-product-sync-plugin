@@ -1,16 +1,16 @@
 <?php
 
-namespace Magento2PimcoreBundle\EventListener;
+namespace SintraPimcoreBundle\EventListener;
 
 use Pimcore\Event\Model\ElementEventInterface;
 use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
 use Pimcore\Model\DataObject\Product;
-use Magento2PimcoreBundle\EventListener\Magento2PimcoreCategoryListener;
-use Magento2PimcoreBundle\EventListener\Magento2PimcoreProductListener;
+use SintraPimcoreBundle\EventListener\SintraPimcoreCategoryListener;
+use SintraPimcoreBundle\EventListener\SintraPimcoreProductListener;
 
-class Magento2PimcoreObjectListener {
+class SintraPimcoreObjectListener {
     private $isPublishedBeforeSave;
     
     public function onPreUpdate (ElementEventInterface $e) {
@@ -53,46 +53,46 @@ class Magento2PimcoreObjectListener {
             $className = $obj->o_className;
             switch ($className) {
                 case "category":
-                    $categoryListener = new Magento2PimcoreCategoryListener();
+                    $categoryListener = new SintraPimcoreCategoryListener();
                     $category = Category::getById($objId);
                     
                     $isPublished = $category->isPublished();
 
                     if($isPublishedBeforeSave && !$isPublished){
-                        Logger::debug("Magento2PimcoreObjectListener - Unpublished Category. Delete in Magento.");
+                        Logger::debug("SintraPimcoreObjectListener - Unpublished Category. Delete in Magento.");
                         $categoryListener->onPostDelete($obj, true);
 
                     }else if($saveVersionOnly || !$isPublished){
-                        Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
+                        Logger::debug("SintraPimcoreObjectListener - Save Local Version Only.");
 
                     }else{
-                        Logger::debug("Magento2PimcoreObjectListener - Insert or Update Catgegory in Magento");
+                        Logger::debug("SintraPimcoreObjectListener - Insert or Update Catgegory in Magento");
                         $categoryListener->onPostUpdate($category);
                     }
 
                     break;
                 
                 case "product":
-                    $productListener = new Magento2PimcoreProductListener();
+                    $productListener = new SintraPimcoreProductListener();
                     $product = Product::getById($objId);
                     
                     $isPublished = $product->isPublished();
                     
                     if($isPublishedBeforeSave && !$isPublished){
-                        Logger::debug("Magento2PimcoreObjectListener - Unpublished Product. Delete in Magento.");
+                        Logger::debug("SintraPimcoreObjectListener - Unpublished Product. Delete in Magento.");
                         $productListener->onPostDelete($obj, true);
                         
                     }else if($saveVersionOnly || !$isPublished){
-                        Logger::debug("Magento2PimcoreObjectListener - Save Local Version Only.");
+                        Logger::debug("SintraPimcoreObjectListener - Save Local Version Only.");
                     }else{
-                        Logger::debug("Magento2PimcoreObjectListener - Insert or Update Product in Magento");
+                        Logger::debug("SintraPimcoreObjectListener - Insert or Update Product in Magento");
                         $productListener->onPostUpdate($product);
                     }
                     
                     break;
 
                 default:
-                    Logger::debug("Magento2PimcoreObjectListener - Class '".$className."' is not Managed for Update");
+                    Logger::debug("SintraPimcoreObjectListener - Class '".$className."' is not Managed for Update");
                     break;
             }
         }
@@ -107,23 +107,23 @@ class Magento2PimcoreObjectListener {
             $className = $obj->o_className;
             switch ($className) {
                 case "category":
-                    Logger::debug("Magento2PimcoreObjectListener - Delete Catgegory in Magento");
+                    Logger::debug("SintraPimcoreObjectListener - Delete Catgegory in Magento");
                     
-                    $categoryListener = new Magento2PimcoreCategoryListener();
+                    $categoryListener = new SintraPimcoreCategoryListener();
                     $categoryListener->onPostDelete($obj);
 
                     break;
                 
                 case "product":
-                    Logger::debug("Magento2PimcoreObjectListener - Delete Product in Magento");
+                    Logger::debug("SintraPimcoreObjectListener - Delete Product in Magento");
                     
-                    $productListener = new Magento2PimcoreProductListener();
+                    $productListener = new SintraPimcoreProductListener();
                     $productListener->onPostDelete($obj);
                     
                     break;
 
                 default:
-                    Logger::debug("Magento2PimcoreObjectListener - Class '".$className."' is not Managed for Delete");
+                    Logger::debug("SintraPimcoreObjectListener - Class '".$className."' is not Managed for Delete");
                     break;
             }
         }

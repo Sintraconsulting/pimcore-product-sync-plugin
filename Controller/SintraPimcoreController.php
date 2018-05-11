@@ -1,9 +1,9 @@
 <?php
 
-namespace Magento2PimcoreBundle\Controller;
+namespace SintraPimcoreBundle\Controller;
 
-use Magento2PimcoreBundle\Utils\CategoryUtils;
-use Magento2PimcoreBundle\Utils\ProductUtils;
+use SintraPimcoreBundle\Utils\CategoryUtils;
+use SintraPimcoreBundle\Utils\ProductUtils;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
@@ -14,12 +14,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class Magento2PimcoreController
- * @package Magento2PimcoreBundle\Controller
+ * Class SintraPimcoreController
+ * @package SintraPimcoreBundle\Controller
  *
- * @Route("/magento2_pimcore")
+ * @Route("/sintra_pimcore")
  */
-class Magento2PimcoreController extends Controller implements AdminControllerInterface {
+class SintraPimcoreController extends Controller implements AdminControllerInterface {
 
     /**
      * @inheritDoc
@@ -38,9 +38,9 @@ class Magento2PimcoreController extends Controller implements AdminControllerInt
     }
     
     /**
-     * @Route("/sync_magento_categories")
+     * @Route("/sync_categories")
      */
-    public function syncMagentoCategoriesAction(Request $request)
+    public function syncCategoriesAction(Request $request)
     {
         $categoryUtils = CategoryUtils::getInstance();
         
@@ -84,9 +84,9 @@ class Magento2PimcoreController extends Controller implements AdminControllerInt
     }
     
     /**
-     * @Route("/sync_magento_products")
+     * @Route("/sync_products")
      */
-    public function syncMagentoProductsAction(Request $request)
+    public function syncProductsAction(Request $request)
     {
         $productUtils = ProductUtils::getInstance();
         

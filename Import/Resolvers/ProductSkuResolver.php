@@ -1,6 +1,6 @@
 <?php
 
-namespace Magento2PimcoreBundle\Import\Resolvers;
+namespace SintraPimcoreBundle\Import\Resolvers;
 
 use Pimcore\DataObject\Import\Resolver\AbstractResolver;
 use Pimcore\Model\DataObject\Product;

@@ -1,9 +1,9 @@
 services:
     
     optionsproviders.productcategoryoptionsprovider:
-        class: Magento2PimcoreBundle\OptionsProviders\ProductCategoryOptionsProvider
+        class: SintraPimcoreBundle\OptionsProviders\ProductCategoryOptionsProvider
         public: true
     
     optionsproviders.productattributesetoptionsprovider:
-        class: Magento2PimcoreBundle\OptionsProviders\ProductAttributeSetOptionsProvider
+        class: SintraPimcoreBundle\OptionsProviders\ProductAttributeSetOptionsProvider
         public: true

@@ -1,12 +1,12 @@
 <?php
 
-namespace Magento2PimcoreBundle\EventListener;
+namespace SintraPimcoreBundle\EventListener;
 
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
-use Magento2PimcoreBundle\ApiManager\CategoryAPIManager;
+use SintraPimcoreBundle\ApiManager\CategoryAPIManager;
 
-class Magento2PimcoreCategoryListener {
+class SintraPimcoreCategoryListener {
 
     public function onPostUpdate(Category $category) {
         

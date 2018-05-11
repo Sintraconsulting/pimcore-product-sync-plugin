@@ -1,6 +1,6 @@
 <?php
 
-namespace Magento2PimcoreBundle\ApiManager;
+namespace SintraPimcoreBundle\ApiManager;
 
 use SpringImport\Swagger\Magento2\Client\Api\CatalogAttributeSetRepositoryV1Api;
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace Magento2PimcoreBundle\EventListener;
+namespace SintraPimcoreBundle\EventListener;
 
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Product;
-use Magento2PimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\ApiManager\ProductAPIManager;
 
-class Magento2PimcoreProductListener {
+class SintraPimcoreProductListener {
 
     public function onPostUpdate(Product $product) {
         

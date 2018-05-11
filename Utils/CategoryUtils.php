@@ -1,9 +1,9 @@
 <?php
 
-namespace Magento2PimcoreBundle\Utils;
+namespace SintraPimcoreBundle\Utils;
 
-use Magento2PimcoreBundle\ApiManager\CategoryAPIManager;
-use Magento2PimcoreBundle\Utils\MagentoUtils;
+use SintraPimcoreBundle\ApiManager\CategoryAPIManager;
+use SintraPimcoreBundle\Utils\MagentoUtils;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
 

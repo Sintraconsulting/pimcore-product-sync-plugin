@@ -1,6 +1,6 @@
 <?php
 
-use Magento2PimcoreBundle\Resources\Magento\MagentoConfig;
+use SintraPimcoreBundle\Resources\Magento\MagentoConfig;
 use Pimcore\Logger;
 
 include_once 'Resources/Magento/MagentoConfig.php';
@@ -8,7 +8,7 @@ include_once 'Resources/Magento/MagentoConfig.php';
 $baseUrl = MagentoConfig::getBaseUrl();
 
 $curl = curl_init();
-curl_setopt($curl, CURLOPT_URL, $baseUrl.'/magento2_pimcore/sync_magento_categories');
+curl_setopt($curl, CURLOPT_URL, $baseUrl.'/sintra_pimcore/sync_products');
 
 $result = curl_exec($curl);
 

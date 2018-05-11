@@ -1,5 +1,5 @@
-magento2_pimcore:
-    resource: "@Magento2PimcoreBundle/Controller/"
+sintra_pimcore:
+    resource: "@SintraPimcoreBundle/Controller/"
     type:     annotation
     prefix:   /
 

@@ -1,6 +1,6 @@
 services:
     
-    Magento2PimcoreBundle\EventListener\Magento2PimcoreObjectListener:
+    SintraPimcoreBundle\EventListener\SintraPimcoreObjectListener:
         tags:
             - { name: kernel.event_listener, event: pimcore.dataobject.preUpdate, method: onPreUpdate }
             - { name: kernel.event_listener, event: pimcore.dataobject.postUpdate, method: onPostUpdate }

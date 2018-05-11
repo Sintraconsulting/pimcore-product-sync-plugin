@@ -6,9 +6,9 @@
  * and open the template in the editor.
  */
 
-namespace Magento2PimcoreBundle\OptionsProviders;
+namespace SintraPimcoreBundle\OptionsProviders;
 
-use Magento2PimcoreBundle\ApiManager\AttributeSetAPIManager;
+use SintraPimcoreBundle\ApiManager\AttributeSetAPIManager;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\SelectOptionsProviderInterface;
 

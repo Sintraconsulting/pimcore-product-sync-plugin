@@ -6,16 +6,11 @@
  * and open the template in the editor.
  */
 
-namespace Magento2PimcoreBundle\ApiManager;
+namespace SintraPimcoreBundle\ApiManager;
 
 use SpringImport\Swagger\Magento2\Client\Configuration;
 use SpringImport\Swagger\Magento2\Client\ApiClient;
-use Magento2PimcoreBundle\Resources\Magento\MagentoConfig;
-
-//include_once 'vendor/autoload.php';
-//include_once 'vendor/springimport/swagger-magento2-client/lib/Configuration.php';
-//include_once 'vendor/springimport/swagger-magento2-client/lib/ApiClient.php';
-//require_once 'src/Magento2PimcoreBundle/Resources/magento/MagentoConfig.php';
+use SintraPimcoreBundle\Resources\Magento\MagentoConfig;
 
 /**
  * Magento Rest API Manager 

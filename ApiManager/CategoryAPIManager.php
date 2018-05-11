@@ -8,6 +8,9 @@
 
 namespace SintraPimcoreBundle\ApiManager;
 
+use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
+use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
+use Pimcore\Tool\RestClient\Exception;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogCategoryRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body30;
 
@@ -40,11 +43,11 @@ class CategoryAPIManager extends AbstractAPIManager {
         try {
             $category = array("category" => $entity);
             $categoryBody = new Body30($category);
-        
             $result = $categoryInstance->catalogCategoryRepositoryV1SavePost($categoryBody);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             echo $e->getMessage();
+            return null;
         }
     }
 
@@ -56,8 +59,9 @@ class CategoryAPIManager extends AbstractAPIManager {
         try {
             $result = $categoryInstance->catalogCategoryRepositoryV1DeleteByIdentifierDelete($categoryId);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             echo $e->getMessage();
+            return null;
         }
     }
 
@@ -73,8 +77,9 @@ class CategoryAPIManager extends AbstractAPIManager {
         try {
             $result = $categoryInstance->catalogCategoryRepositoryV1GetGet($categoryId, $storeId);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             echo $e->getMessage();
+            return null;
         }
     }
 
@@ -89,8 +94,9 @@ class CategoryAPIManager extends AbstractAPIManager {
             
             $result = $categoryInstance->catalogCategoryRepositoryV1SavePut($categoryId, $categoryBody);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             echo $e->getMessage();
+            return null;
         }
     }
 

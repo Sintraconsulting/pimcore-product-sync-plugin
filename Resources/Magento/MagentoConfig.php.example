@@ -6,15 +6,19 @@ class MagentoConfig {
     
     public static $updateProductPrices = false;
 
+    protected static $magento2Url = "http://magento.base.url";
+    protected static $magento2ApiKey = "MY-API-KEY";
+    protected static $pimcoreBaseUrl = "http://pimcore.base.url";
+
     public static function getConfig() {
         return array(
-            "path" => "http://magento.base.url",
-            "apiKey" => "MY-API-KEY"
+                "path" => static::$magento2Url,
+                "apiKey" => static::$magento2ApiKey
         );
     }
-    
+
     public static function getBaseUrl(){
-        return "http://pimcore.base.url";
+        return static::$pimcoreBaseUrl;
     }
 
 }

@@ -62,7 +62,7 @@ class CategoryAPIManager extends AbstractAPIManager {
     }
 
     public function getEntityByKey($categoryId) {
-        return $this->getEntity($categoryId, null);
+        return $this->getEntity($categoryId);
     }
     
     public function getEntity($categoryId, $storeId = null) {

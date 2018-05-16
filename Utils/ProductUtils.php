@@ -3,7 +3,7 @@
 namespace SintraPimcoreBundle\Utils;
 
 use SintraPimcoreBundle\ApiManager\ProductAPIManager;
-use SintraPimcoreBundle\Resources\Magento\MagentoConfig;
+use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use SintraPimcoreBundle\Utils\MagentoUtils;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Product;

@@ -10,7 +10,7 @@ namespace SintraPimcoreBundle\ApiManager;
 
 use SpringImport\Swagger\Magento2\Client\Configuration;
 use SpringImport\Swagger\Magento2\Client\ApiClient;
-use SintraPimcoreBundle\Resources\Magento\MagentoConfig;
+use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 
 /**
  * Magento Rest API Manager 

@@ -1,6 +1,6 @@
 <?php
 
-use SintraPimcoreBundle\Resources\Magento\MagentoConfig;
+use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use Pimcore\Logger;
 
 include_once 'Resources/Magento/MagentoConfig.php';

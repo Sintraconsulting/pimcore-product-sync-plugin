@@ -1,2 +1,3 @@
-Resources/Magento/MagentoConfig.php
+Resources/Ecommerce/*
+!Resources/Ecommerce/BaseEcommerceConfig.php
 .idea

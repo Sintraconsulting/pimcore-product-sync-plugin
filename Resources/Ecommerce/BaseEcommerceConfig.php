@@ -1,4 +1,5 @@
 <?php
+namespace SintraPimcoreBundle\Resources\Ecommerce;
 
 abstract class BaseEcommerceConfig {
     public static $updateProductPrices = false;

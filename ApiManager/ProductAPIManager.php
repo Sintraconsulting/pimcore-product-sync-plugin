@@ -85,8 +85,8 @@ class ProductAPIManager extends AbstractAPIManager {
     
     /**
      * Search Product with search condition
-     * @param $field field used for research
-     * @param $value the field value 
+     * @param string $field field used for research
+     * @param string $value the field value
      * @param $conditionType condition on the field value. Available conditions:
      * - eq:         Equals.
      * - finset:     A value within a set of values

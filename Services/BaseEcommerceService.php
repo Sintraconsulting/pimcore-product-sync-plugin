@@ -1,4 +1,7 @@
 <?php
+namespace SintraPimcoreBundle\Services;
+
+use Pimcore\Logger;
 
 /**
  * Extending classes have to define their own functionality for custom attributes.
@@ -44,7 +47,11 @@ abstract class BaseEcommerceService extends SingletonService{
     }
 
     protected function insertLocalizedFields(&$ecommObject, $localizedFields) {
-        $config = \Pimcore\Config::getSystemConfig();
+        try{
+            $config = \Pimcore\Config::getSystemConfig();
+        } catch (Exception $e) {
+            Logger::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
+        }
         $languages = explode(",",$config->general->validLanguages);
 
         foreach ($localizedFields[$languages[0]] as $fieldName => $fieldvalue) {

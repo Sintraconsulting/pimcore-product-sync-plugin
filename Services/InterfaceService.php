@@ -1,4 +1,5 @@
 <?php
+namespace SintraPimcoreBundle\Services;
 
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Category;

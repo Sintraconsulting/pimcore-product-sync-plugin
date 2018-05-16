@@ -1,12 +1,13 @@
 <?php
+namespace SintraPimcoreBundle\Services;
 
 class SingletonService {
 
-    private static $instance;
+    protected static $instance;
 
     public static function getInstance() {
-        if (is_null(self::$instance)) {
-            static::$instance = new self();
+        if (is_null(static::$instance)) {
+            static::$instance = new static();
         }
         return static::$instance;
     }

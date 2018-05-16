@@ -1,4 +1,5 @@
 <?php
+namespace SintraPimcoreBundle\Services;
 
 /**
  * Magento 2 Shop level logic

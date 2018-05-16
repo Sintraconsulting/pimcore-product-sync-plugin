@@ -1,7 +1,7 @@
 <?php
 namespace SintraPimcoreBundle\Resources\Ecommerce;
 
-abstract class BaseEcommerceConfig {
+class BaseEcommerceConfig {
     public static $updateProductPrices = false;
     protected static $url;
     protected static $apiKey;

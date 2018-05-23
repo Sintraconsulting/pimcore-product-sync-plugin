@@ -1,0 +1,9 @@
+<?php
+namespace SintraPimcoreBundle\Resources\Ecommerce;
+
+class MagentoConfig extends BaseEcommerceConfig{
+
+    public static $updateProductPrices = false;
+    protected static $url = "http://your/magento/url";
+    protected static $apiKey = "your-magento-api-key";
+}

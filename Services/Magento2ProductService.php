@@ -47,7 +47,7 @@ class Magento2ProductService extends BaseMagento2Service implements InterfaceSer
     }
 
     public function toEcomm ($dataObject, bool $updateProductPrices = false) {
-        $magento2Product = (json_decode(file_get_contents($this->configFile), true))['magento2'];
+        $magento2Product = json_decode(file_get_contents($this->configFile), true)['magento2'];
 
         if(!$updateProductPrices){
             unset($magento2Product["price"]);

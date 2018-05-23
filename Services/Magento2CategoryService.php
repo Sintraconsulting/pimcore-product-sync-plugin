@@ -40,7 +40,7 @@ class Magento2CategoryService extends BaseMagento2Service implements InterfaceSe
     public function toEcomm ($dataObject, bool $update = false) {
         $parentCategory = Category::getById($dataObject->getParentId(),true);
 
-        $magento2Category = (json_decode(file_get_contents($this->configFile), true))['magento2'];
+        $magento2Category = json_decode(file_get_contents($this->configFile), true)['magento2'];
 
         $magentoId = $dataObject->magentoid;
         if($magentoId != null && !empty($magentoId)){

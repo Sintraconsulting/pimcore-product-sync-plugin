@@ -2,8 +2,8 @@
 
 namespace SintraPimcoreBundle\Controller;
 
-use SintraPimcoreBundle\Utils\CategoryUtils;
-use SintraPimcoreBundle\Utils\ProductUtils;
+use SintraPimcoreBundle\Services\Magento2CategoryService;
+use SintraPimcoreBundle\Services\Magento2ProductService;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
@@ -42,7 +42,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
      */
     public function syncCategoriesAction(Request $request)
     {
-        $categoryUtils = CategoryUtils::getInstance();
+        $categoryUtils = Magento2CategoryService::getInstance();
         
         $categories = new DataObject\Category\Listing();
         $categories->addConditionParam("export_to_magento = ?", "1");
@@ -56,7 +56,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             $category = $categories->current();
             
             try{
-                $categoryUtils->exportToMagento($category);
+                $categoryUtils->export($category);
                 $count++;
             } catch(\Exception $e){
                 Logger::err($e->getMessage());
@@ -88,7 +88,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
      */
     public function syncProductsAction(Request $request)
     {
-        $productUtils = ProductUtils::getInstance();
+        $productUtils = Magento2ProductService::getInstance();
         
         $products = new DataObject\Product\Listing();
         $products->addConditionParam("export_to_magento = ?", "1");
@@ -102,7 +102,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             $product = $products->current();
 
             try{
-                $productUtils->exportToMagento($product);
+                $productUtils->export($product);
                 $count++;
             } catch(\Exception $e){
                 Logger::err($e->getMessage());

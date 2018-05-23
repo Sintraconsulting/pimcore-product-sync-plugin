@@ -1,9 +1,8 @@
 <?php
 
-use SintraPimcoreBundle\Resources\Magento\MagentoConfig;
-use Pimcore\Logger;
+use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 
-include_once 'Resources/Magento/MagentoConfig.php';
+include_once 'Resources/Ecommerce/MagentoConfig.php';
 
 $baseUrl = MagentoConfig::getBaseUrl();
 

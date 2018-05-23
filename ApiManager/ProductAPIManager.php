@@ -11,6 +11,8 @@ namespace SintraPimcoreBundle\ApiManager;
 use Pimcore\Logger;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body18;
+use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
+
 
 //include_once 'vendor/springimport/swagger-magento2-client/lib/Api/CatalogProductRepositoryV1Api.php';
 //include_once 'vendor/springimport/swagger-magento2-client/lib/Model/Body18.php';
@@ -43,8 +45,9 @@ class ProductAPIManager extends AbstractAPIManager {
             
             $result = $productInstance->catalogProductRepositoryV1SavePost($productBody);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             Logger::err($e->getMessage());
+            return false;
         }
     }
     
@@ -56,8 +59,9 @@ class ProductAPIManager extends AbstractAPIManager {
         try {
             $result = $productInstance->catalogProductRepositoryV1DeleteByIdDelete($sku);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             Logger::err($e->getMessage());
+            return false;
         }
     }
     
@@ -73,7 +77,7 @@ class ProductAPIManager extends AbstractAPIManager {
         try {
             $result = $productInstance->catalogProductRepositoryV1GetGet($sku, $editMode, $storeId, $forceReload);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             Logger::err($e->getMessage());
             return false;
         }
@@ -81,8 +85,8 @@ class ProductAPIManager extends AbstractAPIManager {
     
     /**
      * Search Product with search condition
-     * @param $field field used for research
-     * @param $value the field value 
+     * @param string $field field used for research
+     * @param string $value the field value
      * @param $conditionType condition on the field value. Available conditions:
      * - eq:         Equals.
      * - finset:     A value within a set of values
@@ -106,7 +110,7 @@ class ProductAPIManager extends AbstractAPIManager {
         try {
             $result = $productInstance->catalogProductRepositoryV1GetListGet($field, $value, $conditionType);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             Logger::err($e->getMessage());
             return false;
         }
@@ -123,8 +127,9 @@ class ProductAPIManager extends AbstractAPIManager {
             
             $result = $productInstance->catalogProductRepositoryV1SavePut($sku, $productBody);
             return $result;
-        } catch (Exception $e) {
+        } catch (SwaggerApiException $e) {
             Logger::err($e->getMessage());
+            return false;
         }
     }
 }

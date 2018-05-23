@@ -43,7 +43,6 @@ class SintraPimcoreObjectListener {
     public function onPostUpdate (ElementEventInterface $e) {
        
         if ($e instanceof DataObjectEvent) {
-            
             $saveVersionOnly = $e->hasArgument("saveVersionOnly");
             $obj = $e->getObject();
             $objId = $obj->getId();
@@ -51,6 +50,7 @@ class SintraPimcoreObjectListener {
             $isPublishedBeforeSave = $this->isPublishedBeforeSave;
             
             $className = $obj->o_className;
+            $className = strtolower($className);
             switch ($className) {
                 case "category":
                     $categoryListener = new SintraPimcoreCategoryListener();

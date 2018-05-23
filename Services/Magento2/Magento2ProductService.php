@@ -25,7 +25,7 @@ class Magento2ProductService extends BaseMagento2Service implements InterfaceSer
             $magento2Product = $this->toEcomm($dataObject, true);
             Logger::debug("MAGENTO PRODUCT: ".json_encode($magento2Product));
 
-            $result = $apiManager->createEntity($magento2Product);
+            $result = $apiManager->createEntity($magento2Product, 'mage2');
         }else{
             //product already exists, we may want to not update prices
             $magento2Product = $this->toEcomm($dataObject, MagentoConfig::$updateProductPrices);

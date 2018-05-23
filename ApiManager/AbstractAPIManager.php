@@ -8,6 +8,8 @@
 
 namespace SintraPimcoreBundle\ApiManager;
 
+use PHPShopify\ShopifySDK;
+use SintraPimcoreBundle\Resources\Ecommerce\ShopifyConfig;
 use SpringImport\Swagger\Magento2\Client\Configuration;
 use SpringImport\Swagger\Magento2\Client\ApiClient;
 use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
@@ -24,7 +26,7 @@ abstract class AbstractAPIManager {
      *
      * @return ApiClient The API Client
      */
-    public function getApiInstance() {
+    public function getMagento2ApiInstance() {
         $magentoConfig = MagentoConfig::getConfig();
 
         $baseUrl = $magentoConfig['path'] . '/rest';
@@ -35,6 +37,15 @@ abstract class AbstractAPIManager {
         $config->addDefaultHeader('Authorization', $token);
 
         return new ApiClient($config);
+    }
+
+    public function getShopifyApiInstance () {
+        $shopifyConfig = ShopifyConfig::getConfig();
+        $config = [
+                'ShopUrl' => $shopifyConfig['path'],
+                'AccessToken' => $shopifyConfig['apiKey']
+        ];
+        return new ShopifySDK($config);
     }
     
     public abstract function createEntity($entity);

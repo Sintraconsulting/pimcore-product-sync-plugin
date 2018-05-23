@@ -2,6 +2,10 @@
 
 namespace SintraPimcoreBundle\Controller;
 
+use PHPShopify\Exception\SdkException;
+use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
+use Pimcore\Tool\RestClient\Exception;
+use SintraPimcoreBundle\ApiManager\ProductAPIManager;
 use SintraPimcoreBundle\Services\Magento2CategoryService;
 use SintraPimcoreBundle\Services\Magento2ProductService;
 use Pimcore\Model\DataObject;
@@ -12,6 +16,7 @@ use Pimcore\Logger;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use PHPShopify\ShopifySDK;
 
 /**
  * Class SintraPimcoreController
@@ -129,4 +134,18 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         }
     }
 
+    /**
+     * @Route("/shopify_test")
+     */
+    public function testShopify (Request $request) {
+        $productApi = ProductAPIManager::getInstance()->getShopifyApiInstance();
+        $product =  (json_decode(file_get_contents(__DIR__ . '/../Services/config/product.json'), true))['shopify'];
+        $product['title'] = 'Scimbare';
+        $product['id'] = 898031157305;
+        $product['body_html'] = 'Schimbare BODY';
+        unset($product['variants']);
+        $product['metafield_global_description_tag'] = 'vrajeala, schimbat';
+        $product['metafields_global_title_tag'] = 'Vrajeala schimbare';
+        return new Response(json_encode($productApi->Product(898031157305)->put($product)));
+    }
 }

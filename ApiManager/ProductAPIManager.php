@@ -35,7 +35,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
     
     public function createEntity($entity) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -52,7 +52,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
     
     public function deleteEntity($sku) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -70,7 +70,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
 
     public function getEntity($sku, $editMode = null, $storeId = null, $forceReload = null) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -103,7 +103,7 @@ class ProductAPIManager extends AbstractAPIManager {
      * - null:       Null
      */
     public function searchProducts($field, $value, $conditionType = null) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -117,7 +117,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
     
     public function updateEntity($sku, $entity) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 

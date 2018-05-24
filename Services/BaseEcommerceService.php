@@ -49,7 +49,7 @@ abstract class BaseEcommerceService extends SingletonService{
     protected function insertLocalizedFields(&$ecommObject, $localizedFields) {
         try{
             $config = \Pimcore\Config::getSystemConfig();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Logger::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
         $languages = explode(",",$config->general->validLanguages);

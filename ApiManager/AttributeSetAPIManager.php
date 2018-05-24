@@ -29,7 +29,7 @@ class AttributeSetAPIManager extends AbstractAPIManager{
     }
     
     public function getAllAttributeSet(){
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         

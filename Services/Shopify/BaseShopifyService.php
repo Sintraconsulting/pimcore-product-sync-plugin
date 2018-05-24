@@ -40,15 +40,20 @@ abstract class BaseShopifyService extends BaseEcommerceService {
     protected function parseField (&$ecommObject, $shopifyField, $origField, $origValue) {
         if ($shopifyField == 'variants') {
             $ecommObject['variants'][0][$origField] = $origValue;
-        } else if ($shopifyField == 'metafields') {
-            if (!in_array($origField, $this->productExportHidden)) {
-                $ecommObject['metafields'][] = [
-                        "key" => $origField,
-                        "value" => $origValue,
-                        "value_type" => "string",
-                        "namespace" => "global"
-                ];
-            }
+//        } else if ($shopifyField == 'metafields') {
+//            if (!in_array($origField, $this->productExportHidden)) {
+//                if (is_array($origValue)) {
+//                    $type = "Array";
+//                } else {
+//                    $type = "string";
+//                }
+//                $ecommObject['metafields'][] = [
+//                        "key" => $origField,
+//                        "value" => $origValue,
+//                        "value_type" => $type,
+//                        "namespace" => "global"
+//                ];
+//            }
         } else {
             $ecommObject[$shopifyField] = $origValue;
         }

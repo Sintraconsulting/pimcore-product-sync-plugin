@@ -1,21 +1,30 @@
 <?php
 
-namespace SintraPimcoreBundle\Import\Operators;
+namespace SintraPimcoreBundle\Import\Operators\Product;
 
-use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
-use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
+use SintraPimcoreBundle\Import\Operators\TransliterateOperator;
 /**
  * Convert category path in comma-separated list of categories magento ids
  *
  * @author Marco Guiducci
  */
-class ProductCategoriesOperator extends AbstractOperator{
+class CategoriesOperator extends TransliterateOperator{
     
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {
-        $category_ids = array();
         
-        $fullpath = $rowData[$colIndex];
+        $category_ids = array();
+
+        $categories = $rowData[$colIndex];
+        
+        $keyParts  = explode('>', $categories);
+        foreach ($keyParts as $i => $keyPart) {
+            $keyParts[$i] = $this->transliterate($keyPart);
+        }
+       
+        $path = implode('/', $keyParts);
+        
+        $fullpath = '/categories/Default Category/'.$path;
         $category = Category::getByPath($fullpath, true);
         
         $level = $category->getLevel();

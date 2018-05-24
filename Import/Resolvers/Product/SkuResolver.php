@@ -1,6 +1,6 @@
 <?php
 
-namespace SintraPimcoreBundle\Import\Resolvers;
+namespace SintraPimcoreBundle\Import\Resolvers\Product;
 
 use Pimcore\DataObject\Import\Resolver\AbstractResolver;
 use Pimcore\Model\DataObject\Product;
@@ -10,7 +10,7 @@ use Pimcore\Model\DataObject\Product;
  *
  * @author Marco Guiducci
  */
-class ProductSkuResolver extends AbstractResolver{
+class SkuResolver extends AbstractResolver{
 
     public function resolve(\stdClass $config, int $parentId, array $rowData){
         $columnId = $this->getIdColumn($config);

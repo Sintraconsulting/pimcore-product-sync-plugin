@@ -1,6 +1,6 @@
 <?php
 
-namespace SintraPimcoreBundle\Import\Resolvers;
+namespace SintraPimcoreBundle\Import\Resolvers\Category;
 
 use Pimcore\DataObject\Import\Resolver\AbstractResolver;
 use Pimcore\Logger;
@@ -13,7 +13,7 @@ use Transliterator;
  *
  * @author Marco Guiducci
  */
-class CategoryFullpathResolver extends AbstractResolver{
+class FullpathResolver extends AbstractResolver{
 
     public function resolve(\stdClass $config, int $parentId, array $rowData){
         $transliterator = Transliterator::createFromRules(

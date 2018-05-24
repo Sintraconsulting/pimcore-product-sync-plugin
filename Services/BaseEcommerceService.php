@@ -11,7 +11,7 @@ use Pimcore\Logger;
 abstract class BaseEcommerceService extends SingletonService{
     protected $productExportHidden = [
             'shopify_id', 'export_to_magento', 'export_to_shopify', 'magento_syncronized',
-            'magento_syncronized_at', 'shopify_sync', 'shopify_sync_at'
+            'magento_syncronyzed_at', 'shopify_sync', 'shopify_sync_at'
     ];
 
     abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue, $isBrick = false);

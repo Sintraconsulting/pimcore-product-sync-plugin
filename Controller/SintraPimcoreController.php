@@ -97,7 +97,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         try {
             // TODO: modular activate/deactivate of Ecomm sync
             // Mage2 Sync
-            $response[] = (new Mage2SyncController())->syncProducts();
+//            $response[] = (new Mage2SyncController())->syncProducts();
             // Shopify Sync
             $response[] = (new ShopifySyncController())->syncProducts();
 
@@ -106,7 +106,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             Logger::err($e->getMessage());
         }
 
-        return new Response(implode(PHP_EOL, $response));
+        return new Response(implode('<br>'.PHP_EOL, $response));
     }
 
     /**
@@ -116,13 +116,17 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         $productApi = ProductAPIManager::getInstance()->getShopifyApiInstance();
         $product =  (json_decode(file_get_contents(__DIR__ . '/../Services/config/product.json'), true))['shopify'];
         $product['title'] = 'Scimbare';
-        $product['id'] = 898031157305;
+//        $product['id'] = 906063282233;
         $product['body_html'] = 'Schimbare BODY';
         $product['variants'][0]['weight'] = 2;
         $product['variants'][0]['price'] = 12.5;
         $product['metafield_global_description_tag'] = 'vrajeala, schimbat';
         $product['metafields_global_title_tag'] = 'Vrajeala schimbare';
-        return new Response(json_encode($productApi->Product(898031157305)->put($product)));
+        try {
+            return new Response(json_encode($productApi->Product(905733701689)->put($product)));
+        } catch (\PHPShopify\Exception\ApiException $e) {
+            return new Response($e->getMessage());
+        }
     }
 
     /**

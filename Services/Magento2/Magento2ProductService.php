@@ -1,10 +1,11 @@
 <?php
-namespace SintraPimcoreBundle\Services;
+namespace SintraPimcoreBundle\Services\Magento2;
 
 use Pimcore\Model\DataObject\Product;
 use SintraPimcoreBundle\ApiManager\ProductAPIManager;
 use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use Pimcore\Logger;
+use SintraPimcoreBundle\Services\InterfaceService;
 
 class Magento2ProductService extends BaseMagento2Service implements InterfaceService {
 

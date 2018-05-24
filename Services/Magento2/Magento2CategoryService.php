@@ -7,7 +7,7 @@ use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
 
 class Magento2CategoryService extends BaseMagento2Service implements InterfaceService {
-    private $configFile = __DIR__ . '/config/category.json';
+    private $configFile = __DIR__ . '/../config/category.json';
 
     public function export ($dataObject) {
         $apiManager = CategoryAPIManager::getInstance();

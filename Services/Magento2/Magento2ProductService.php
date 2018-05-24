@@ -9,7 +9,7 @@ use SintraPimcoreBundle\Services\InterfaceService;
 
 class Magento2ProductService extends BaseMagento2Service implements InterfaceService {
 
-    private $configFile = __DIR__ . '/config/product.json';
+    private $configFile = __DIR__ . '/../config/product.json';
 
     /**
      * @param Product $dataObject

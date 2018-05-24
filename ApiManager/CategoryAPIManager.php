@@ -36,7 +36,7 @@ class CategoryAPIManager extends AbstractAPIManager {
 
     public function createEntity($entity) {
         
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -52,7 +52,7 @@ class CategoryAPIManager extends AbstractAPIManager {
     }
 
     public function deleteEntity($categoryId) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -70,7 +70,7 @@ class CategoryAPIManager extends AbstractAPIManager {
     }
     
     public function getEntity($categoryId, $storeId = null) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -84,7 +84,7 @@ class CategoryAPIManager extends AbstractAPIManager {
     }
 
     public function updateEntity($categoryId, $entity) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         

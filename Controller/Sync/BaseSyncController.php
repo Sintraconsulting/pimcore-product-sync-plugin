@@ -15,6 +15,11 @@ abstract class BaseSyncController {
         return $this->ecommerce;
     }
 
+    /**
+     * @param InterfaceService  $productService
+     * @param Listing $products
+     * @return string
+     */
     protected function exportProducts (InterfaceService $productService, Listing $products) {
         $count = 0;
         $err = 0;
@@ -41,7 +46,7 @@ abstract class BaseSyncController {
         }
         if($count > 0){
             Logger::debug("Sincronizzati correttamente $count $ecomm prodotti. $err prodotti hanno causato un errore.");
-            return ("[$datetime] - Sincronizzati correttamente $count prodotti. $err prodotti hanno causato un errore.");
+            return ("[$datetime] - Sincronizzati correttamente $count $ecomm prodotti. $err prodotti hanno causato un errore.");
         }else{
             Logger::debug("Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");
             return ("[$datetime] - Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");

@@ -9,6 +9,7 @@
 namespace SintraPimcoreBundle\ApiManager;
 
 use Pimcore\Logger;
+use Pimcore\Tool\RestClient\Exception;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body18;
 use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
@@ -35,7 +36,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
     
     public function createEntity($entity) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -52,7 +53,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
     
     public function deleteEntity($sku) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -70,7 +71,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
 
     public function getEntity($sku, $editMode = null, $storeId = null, $forceReload = null) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -103,7 +104,7 @@ class ProductAPIManager extends AbstractAPIManager {
      * - null:       Null
      */
     public function searchProducts($field, $value, $conditionType = null) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -117,7 +118,7 @@ class ProductAPIManager extends AbstractAPIManager {
     }
     
     public function updateEntity($sku, $entity) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -129,6 +130,42 @@ class ProductAPIManager extends AbstractAPIManager {
             return $result;
         } catch (SwaggerApiException $e) {
             Logger::err($e->getMessage());
+            return false;
+        }
+    }
+
+    public function searchShopifyProducts ($filters) {
+        $apiClient = $this->getShopifyApiInstance();
+
+        try {
+            $result = $apiClient->Product->get($filters);
+            return $result;
+        } catch (Exception $e) {
+            Logger::err('SEARCH SHOPIFY PRODUCT ERROR:', $e->getMessage());
+            return false;
+        }
+    }
+
+    public function createShopifyEntity ($data) {
+        $apiClient = $this->getShopifyApiInstance();
+
+        try {
+            $result = $apiClient->Product->post($data);
+            return $result;
+        } catch (Exception $e) {
+            Logger::err('CREATE SHOPIFY PRODUCT ERROR:', $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateShopifyEntity ($data, $shopifyId) {
+        $apiClient = $this->getShopifyApiInstance();
+
+        try {
+            $result = $apiClient->Product($shopifyId)->put($data);
+            return $result;
+        } catch (Exception $e) {
+            Logger::err('UPDATE SHOPIFY PRODUCT ERROR:', $e->getMessage());
             return false;
         }
     }

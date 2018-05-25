@@ -9,6 +9,10 @@ use Pimcore\Logger;
  * Class EcommerceService
  */
 abstract class BaseEcommerceService extends SingletonService{
+    protected $productExportHidden = [
+            'shopify_id', 'export_to_magento', 'export_to_shopify', 'magento_syncronized',
+            'magento_syncronyzed_at', 'shopify_sync', 'shopify_sync_at'
+    ];
 
     abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue, $isBrick = false);
 
@@ -49,7 +53,7 @@ abstract class BaseEcommerceService extends SingletonService{
     protected function insertLocalizedFields(&$ecommObject, $localizedFields) {
         try{
             $config = \Pimcore\Config::getSystemConfig();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Logger::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
         $languages = explode(",",$config->general->validLanguages);

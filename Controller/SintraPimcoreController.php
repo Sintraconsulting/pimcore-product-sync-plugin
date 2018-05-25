@@ -2,8 +2,13 @@
 
 namespace SintraPimcoreBundle\Controller;
 
-use SintraPimcoreBundle\Services\Magento2CategoryService;
-use SintraPimcoreBundle\Services\Magento2ProductService;
+use PHPShopify\Exception\SdkException;
+use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
+use Pimcore\Tool\RestClient\Exception;
+use SintraPimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\Controller\Sync\Mage2SyncController;
+use SintraPimcoreBundle\Controller\Sync\ShopifySyncController;
+use SintraPimcoreBundle\Services\Magento2\Magento2CategoryService;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
@@ -88,45 +93,55 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
      */
     public function syncProductsAction(Request $request)
     {
-        $productUtils = Magento2ProductService::getInstance();
-        
-        $products = new DataObject\Product\Listing();
-        $products->addConditionParam("export_to_magento = ?", "1");
-        $products->addConditionParam("magento_syncronized = ?", "0");
-        $products->setLimit("10");
-        
-        $count = 0;
-        $err = 0;
-        $next = $products->count() > 0;
-        while($next){
-            $product = $products->current();
+        $response = [];
+        try {
+            // TODO: modular activate/deactivate of Ecomm sync
+            // Mage2 Sync
+            $response[] = (new Mage2SyncController())->syncProducts();
+            // Shopify Sync
+            $response[] = (new ShopifySyncController())->syncProducts();
 
-            try{
-                $productUtils->export($product);
-                $count++;
-            } catch(\Exception $e){
-                Logger::err($e->getMessage());
-                $err++;
-            }
-            
-            $next = $products->next();
-        }
-        
-        try{
             Cache::clearTag("output");
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             Logger::err($e->getMessage());
         }
-        
-        $datetime = date("Y-m-d H:i:s");
-        
-        if($count > 0){
-            Logger::debug("Sincronizzati correttamente $count prodotti. $err prodotti hanno causato un errore.");      
-            return new Response("[$datetime] - Sincronizzati correttamente $count prodotti. $err prodotti hanno causato un errore.");
-        }else{
-            Logger::debug("Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");      
-            return new Response("[$datetime] - Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");
+
+        return new Response(implode('<br>'.PHP_EOL, $response));
+    }
+
+    /**
+     * @Route("/shopify_test")
+     */
+    public function testShopify (Request $request) {
+        $productApi = ProductAPIManager::getInstance()->getShopifyApiInstance();
+        $product =  (json_decode(file_get_contents(__DIR__ . '/../Services/config/product.json'), true))['shopify'];
+        $product['title'] = 'Scimbare';
+//        $product['id'] = 906063282233;
+        $product['body_html'] = 'Schimbare BODY';
+        $product['variants'][0]['weight'] = 2;
+        $product['variants'][0]['price'] = 12.5;
+        $product['metafield_global_description_tag'] = 'vrajeala, schimbat';
+        $product['metafields_global_title_tag'] = 'Vrajeala schimbare';
+        try {
+            return new Response(json_encode($productApi->Product(905733701689)->put($product)));
+        } catch (\PHPShopify\Exception\ApiException $e) {
+            return new Response($e->getMessage());
         }
     }
 
+    /**
+     * @Route("/shopify_create")
+     * @param Request $request
+     * @return Response
+     */
+    public function shopifyCreate (Request $request) {
+        $productApi = ProductAPIManager::getInstance()->getShopifyApiInstance();
+        $product =  (json_decode(file_get_contents(__DIR__ . '/../Services/config/product.json'), true))['shopify'];
+        $product['title'] = 'Scimbare';
+        $product['body_html'] = 'Schimbare BODY';
+        $product['variants'][0]['price'] = 12.5;
+        $product['metafield_global_description_tag'] = 'vrajeala, schimbat';
+        $product['metafields_global_title_tag'] = 'Vrajeala schimbare';
+        return new Response(json_encode($productApi->Product->post($product)));
+    }
 }

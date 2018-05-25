@@ -1,14 +1,15 @@
 <?php
-namespace SintraPimcoreBundle\Services;
+namespace SintraPimcoreBundle\Services\Magento2;
 
 use Pimcore\Model\DataObject\Product;
 use SintraPimcoreBundle\ApiManager\ProductAPIManager;
 use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use Pimcore\Logger;
+use SintraPimcoreBundle\Services\InterfaceService;
 
 class Magento2ProductService extends BaseMagento2Service implements InterfaceService {
 
-    private $configFile = __DIR__ . '/config/product.json';
+    private $configFile = __DIR__ . '/../config/product.json';
 
     /**
      * @param Product $dataObject
@@ -25,7 +26,7 @@ class Magento2ProductService extends BaseMagento2Service implements InterfaceSer
             $magento2Product = $this->toEcomm($dataObject, true);
             Logger::debug("MAGENTO PRODUCT: ".json_encode($magento2Product));
 
-            $result = $apiManager->createEntity($magento2Product);
+            $result = $apiManager->createEntity($magento2Product, 'mage2');
         }else{
             //product already exists, we may want to not update prices
             $magento2Product = $this->toEcomm($dataObject, MagentoConfig::$updateProductPrices);

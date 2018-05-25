@@ -21,6 +21,7 @@ class SintraPimcoreProductListener {
         $product->setUrl_key(preg_replace('/\W+/', '-', strtolower($urlKey)), $lang);
         
         $product->setMagento_syncronized(false);
+        $product->setShopify_sync(false);
         
         $product->update(true);
         

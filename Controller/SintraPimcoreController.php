@@ -97,7 +97,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         try {
             // TODO: modular activate/deactivate of Ecomm sync
             // Mage2 Sync
-//            $response[] = (new Mage2SyncController())->syncProducts();
+            $response[] = (new Mage2SyncController())->syncProducts();
             // Shopify Sync
             $response[] = (new ShopifySyncController())->syncProducts();
 

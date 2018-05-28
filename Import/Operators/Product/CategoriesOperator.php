@@ -25,7 +25,7 @@ class CategoriesOperator extends TransliterateOperator{
         $path = implode('/', $keyParts);
         
         $fullpath = '/categories/Default Category/'.$path;
-        $category = Category::getByPath($fullpath, true);
+        $category = $this->getCategory($fullpath);
         
         $level = $category->getLevel();
         while($level > 0){
@@ -38,6 +38,22 @@ class CategoriesOperator extends TransliterateOperator{
         }
 
         $target->setCategory_ids($category_ids);
+    }
+    
+    private function getCategory($path){
+        $categories = new Category\Listing();
+        $categories->setCondition("CONCAT(o_path,o_key) = ?", $path);
+        $categories->setLimit(1);
+        
+        $categories = $categories->load();
+
+        if($categories){
+            $category = $categories[0];
+        }else{
+            $category = null;
+        }
+        
+        return $category;
     }
 
 }

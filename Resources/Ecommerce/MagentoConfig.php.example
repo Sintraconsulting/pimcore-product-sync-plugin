@@ -1,6 +1,8 @@
 <?php
 namespace SintraPimcoreBundle\Resources\Ecommerce;
 
+include 'BaseEcommerceConfig.php';
+
 class MagentoConfig extends BaseEcommerceConfig{
 
     public static $updateProductPrices = false;

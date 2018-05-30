@@ -49,19 +49,37 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         $categories->addConditionParam("magento_syncronized = ?", "0");
         $categories->setLimit("30");
         
-        $count = 0;
-        $err = 0;
+        $categories->load();
+        
+        $response = array(
+            "started" => date("Y-m-d H:i:s"),
+            "finished" => "",
+            "total elements" => 0,
+            "syncronized elements" => 0,
+            "elements with errors" => 0,
+            "errors" => array()
+        );
+        
         $next = $categories->count() > 0;
+              
+        $totalElements = 0;
+        $syncronizedElements = 0;
+        $elementsWithError = 0;
+        
         while($next){
             $category = $categories->current();
             
             try{
                 $categoryUtils->export($category);
-                $count++;
+                $syncronizedElements++;
             } catch(\Exception $e){
+                $response["errors"][] = "OBJECT ID ".$category->getId().": ".$ex->getMessage();
                 Logger::err($e->getMessage());
-                $err++;
+                
+                $elementsWithError++;
             }
+            
+            $totalElements++;
             
             $next = $categories->next();
         }
@@ -74,40 +92,59 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         
         $datetime = date("Y-m-d H:i:s");
         
-        if($count > 0){
-            Logger::debug("Sincronizzate correttamente $count categorie. $err categorie hanno causato un errore.");      
-            return new Response("[$datetime] - Sincronizzate correttamente $count categorie. $err categorie hanno causato un errore.");
-        }else{
-            Logger::debug("Nessuna categoria sincronizzata. $err categorie hanno causato un errore.");      
-            return new Response("[$datetime] - Nessuna categoria sincronizzata. $err categorie hanno causato un errore.");
-        }
+        $response["finished"] = $datetime;
+        $response["total elements"] = $totalElements;
+        $response["syncronized elements"] = $syncronizedElements;
+        $response["elements with errors"] = $elementsWithError;
+        
+        Logger::info("CATEGORIES SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true));
+        return new Response("[$datetime] - CATEGORIES SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true).PHP_EOL);
+    
     }
     
     /**
      * @Route("/sync_products")
      */
     public function syncProductsAction(Request $request)
-    {
+    {        
         $productUtils = Magento2ProductService::getInstance();
         
         $products = new DataObject\Product\Listing();
         $products->addConditionParam("export_to_magento = ?", "1");
         $products->addConditionParam("magento_syncronized = ?", "0");
-        $products->setLimit("10");
+        $products->setLimit("30");
         
-        $count = 0;
-        $err = 0;
+        $products->load();
+        
+        $response = array(
+            "started" => date("Y-m-d H:i:s"),
+            "finished" => "",
+            "total elements" => 0,
+            "syncronized elements" => 0,
+            "elements with errors" => 0,
+            "errors" => array()
+        );
+        
         $next = $products->count() > 0;
+            
+        $totalElements = 0;
+        $syncronizedElements = 0;
+        $elementsWithError = 0;
+        
         while($next){
             $product = $products->current();
 
             try{
                 $productUtils->export($product);
-                $count++;
+                $syncronizedElements++;
             } catch(\Exception $e){
+                $response["errors"][] = "OBJECT ID ".$product->getId().": ".$ex->getMessage();
                 Logger::err($e->getMessage());
-                $err++;
+                
+                $elementsWithError++;
             }
+            
+            $totalElements++;
             
             $next = $products->next();
         }
@@ -120,13 +157,13 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         
         $datetime = date("Y-m-d H:i:s");
         
-        if($count > 0){
-            Logger::debug("Sincronizzati correttamente $count prodotti. $err prodotti hanno causato un errore.");      
-            return new Response("[$datetime] - Sincronizzati correttamente $count prodotti. $err prodotti hanno causato un errore.");
-        }else{
-            Logger::debug("Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");      
-            return new Response("[$datetime] - Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");
-        }
+        $response["finished"] = $datetime;
+        $response["total elements"] = $totalElements;
+        $response["syncronized elements"] = $syncronizedElements;
+        $response["elements with errors"] = $elementsWithError;
+        
+        Logger::info("PRODUCT SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true));
+        return new Response("[$datetime] - PRODUCT SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true).PHP_EOL);
     }
 
 }

@@ -1,4 +1,4 @@
 Resources/Ecommerce/*
-!Resources/Ecommerce/BaseEcommerceConfig.php.example
+!Resources/Ecommerce/BaseEcommerceConfig.php
 !Resources/Ecommerce/MagentoConfig.php.example
 .idea

@@ -111,7 +111,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         
         $products = new DataObject\Product\Listing();
         $products->addConditionParam("export_to_magento = ?", "1");
-        $products->addConditionParam("magento_syncronized = ?", "0");
+        $products->addConditionParam("magento_syncronized = ? OR magento_syncronized IS NULL", "0");
         $products->setLimit("30");
         
         $products->load();

@@ -2,8 +2,13 @@
 
 namespace SintraPimcoreBundle\Controller;
 
-use SintraPimcoreBundle\Services\Magento2CategoryService;
-use SintraPimcoreBundle\Services\Magento2ProductService;
+use PHPShopify\Exception\SdkException;
+use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
+use Pimcore\Tool\RestClient\Exception;
+use SintraPimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\Controller\Sync\Mage2SyncController;
+use SintraPimcoreBundle\Controller\Sync\ShopifySyncController;
+use SintraPimcoreBundle\Services\Magento2\Magento2CategoryService;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
@@ -50,7 +55,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         $categories->setLimit("30");
         
         $categories->load();
-        
+
         $response = array(
             "started" => date("Y-m-d H:i:s"),
             "finished" => "",
@@ -59,13 +64,13 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             "elements with errors" => 0,
             "errors" => array()
         );
-        
+
         $next = $categories->count() > 0;
-              
+
         $totalElements = 0;
         $syncronizedElements = 0;
         $elementsWithError = 0;
-        
+
         while($next){
             $category = $categories->current();
             
@@ -75,12 +80,12 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$category->getId().": ".$ex->getMessage();
                 Logger::err($e->getMessage());
-                
+
                 $elementsWithError++;
             }
-            
+
             $totalElements++;
-            
+
             $next = $categories->next();
         }
         
@@ -96,74 +101,30 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         $response["total elements"] = $totalElements;
         $response["syncronized elements"] = $syncronizedElements;
         $response["elements with errors"] = $elementsWithError;
-        
+
         Logger::info("CATEGORIES SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true));
         return new Response("[$datetime] - CATEGORIES SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true).PHP_EOL);
-    
+
     }
     
     /**
      * @Route("/sync_products")
      */
     public function syncProductsAction(Request $request)
-    {        
-        $productUtils = Magento2ProductService::getInstance();
-        
-        $products = new DataObject\Product\Listing();
-        $products->addConditionParam("export_to_magento = ?", "1");
-        $products->addConditionParam("magento_syncronized = ? OR magento_syncronized IS NULL", "0");
-        $products->setLimit("30");
-        
-        $products->load();
-        
-        $response = array(
-            "started" => date("Y-m-d H:i:s"),
-            "finished" => "",
-            "total elements" => 0,
-            "syncronized elements" => 0,
-            "elements with errors" => 0,
-            "errors" => array()
-        );
-        
-        $next = $products->count() > 0;
-            
-        $totalElements = 0;
-        $syncronizedElements = 0;
-        $elementsWithError = 0;
-        
-        while($next){
-            $product = $products->current();
+    {
+        $response = [];
+        try {
+            // TODO: modular activate/deactivate of Ecomm sync
+            // Mage2 Sync
+            $response[] = (new Mage2SyncController())->syncProducts();
+            // Shopify Sync
+            $response[] = (new ShopifySyncController())->syncProducts();
 
-            try{
-                $productUtils->export($product);
-                $syncronizedElements++;
-            } catch(\Exception $e){
-                $response["errors"][] = "OBJECT ID ".$product->getId().": ".$ex->getMessage();
-                Logger::err($e->getMessage());
-                
-                $elementsWithError++;
-            }
-            
-            $totalElements++;
-            
-            $next = $products->next();
-        }
-        
-        try{
             Cache::clearTag("output");
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             Logger::err($e->getMessage());
         }
-        
-        $datetime = date("Y-m-d H:i:s");
-        
-        $response["finished"] = $datetime;
-        $response["total elements"] = $totalElements;
-        $response["syncronized elements"] = $syncronizedElements;
-        $response["elements with errors"] = $elementsWithError;
-        
-        Logger::info("PRODUCT SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true));
-        return new Response("[$datetime] - PRODUCT SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true).PHP_EOL);
-    }
 
+        return new Response(implode('<br>'.PHP_EOL, $response));
+    }
 }

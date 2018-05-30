@@ -29,7 +29,7 @@ class AttributeSetAPIManager extends AbstractAPIManager{
     }
     
     public function getAllAttributeSet(){
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -47,7 +47,7 @@ class AttributeSetAPIManager extends AbstractAPIManager{
     }
 
     public function getEntityByKey($entityKey) {
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -61,7 +61,7 @@ class AttributeSetAPIManager extends AbstractAPIManager{
     }
     
     public function searchAttributeSet($field, $value, $conditionType = null){
-        $apiClient = $this->getApiInstance();
+        $apiClient = $this->getMagento2ApiInstance();
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         

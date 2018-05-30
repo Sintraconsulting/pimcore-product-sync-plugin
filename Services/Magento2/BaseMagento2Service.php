@@ -1,6 +1,7 @@
 <?php
-namespace SintraPimcoreBundle\Services;
+namespace SintraPimcoreBundle\Services\Magento2;
 
+use SintraPimcoreBundle\Services\BaseEcommerceService;
 /**
  * Magento 2 Shop level logic
  * Needs to implement BaseEcommerceService abstract functions

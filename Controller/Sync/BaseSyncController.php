@@ -2,6 +2,7 @@
 
 namespace SintraPimcoreBundle\Controller\Sync;
 
+use Pimcore\Cache;
 use Pimcore\Model\DataObject\Product\Listing;
 use SintraPimcoreBundle\Services\InterfaceService;
 use Pimcore\Logger;
@@ -21,35 +22,58 @@ abstract class BaseSyncController {
      * @return string
      */
     protected function exportProducts (InterfaceService $productService, Listing $products) {
-        $count = 0;
-        $err = 0;
+        $response = array(
+                "started" => date("Y-m-d H:i:s"),
+                "finished" => "",
+                "total elements" => 0,
+                "syncronized elements" => 0,
+                "elements with errors" => 0,
+                "errors" => array()
+        );
         $next = $products->count() > 0;
+
+        $totalElements = 0;
+        $syncronizedElements = 0;
+        $elementsWithError = 0;
+
         while($next){
             $product = $products->current();
 
             try{
                 $productService->export($product);
-                $count++;
+                $syncronizedElements++;
             } catch(\Exception $e){
-                Logger::err('EXPORT ERR' . $e->getMessage() . PHP_EOL . $e->getTraceAsString());
-                $err++;
+                $response["errors"][] = "OBJECT ID ".$product->getId().": ".$ex->getMessage();
+                Logger::err($e->getMessage());
+
+                $elementsWithError++;
             }
+
+            $totalElements++;
 
             $next = $products->next();
         }
-        return $this->logSyncedProducts($count, $err, $this->getEcommerce());
+
+        try{
+            Cache::clearTag("output");
+        } catch(\Exception $e){
+            Logger::err($e->getMessage());
+        }
+
+        $response["total elements"] = $totalElements;
+        $response["syncronized elements"] = $syncronizedElements;
+        $response["elements with errors"] = $elementsWithError;
+
+        return $this->logSyncedProducts($response, $this->getEcommerce());
     }
 
-    protected function logSyncedProducts ($count, $err, $ecomm, $datetime = null) {
-        if (!$datetime) {
-            $datetime = date("Y-m-d H:i:s");
+    protected function logSyncedProducts ($response, $ecomm, $finished = null) {
+        if (!$finished) {
+            $finished = date("Y-m-d H:i:s");
         }
-        if($count > 0){
-            Logger::debug("Sincronizzati correttamente $count $ecomm prodotti. $err prodotti hanno causato un errore.");
-            return ("[$datetime] - Sincronizzati correttamente $count $ecomm prodotti. $err prodotti hanno causato un errore.");
-        }else{
-            Logger::debug("Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");
-            return ("[$datetime] - Nessun prodotto sincronizzato. $err prodotti hanno causato un errore.");
-        }
+        $response["finished"] = $finished;
+
+        Logger::info("PRODUCT $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response],true));
+        return ("[$finished] - PRODUCT $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response],true).PHP_EOL);
     }
 }

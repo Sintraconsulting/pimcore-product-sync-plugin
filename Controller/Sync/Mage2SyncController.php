@@ -19,7 +19,7 @@ class Mage2SyncController extends BaseSyncController {
 
         $products = new Listing();
         $products->addConditionParam("export_to_magento = ?", "1");
-        $products->addConditionParam("magento_syncronized = ?", "0");
+        $products->addConditionParam("magento_syncronized = ? OR magento_syncronized IS NULL", "0");
         $products->setLimit("$count");
         return $this->exportProducts($productUtils, $products);
     }

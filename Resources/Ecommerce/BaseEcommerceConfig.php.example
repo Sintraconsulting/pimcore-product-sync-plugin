@@ -5,7 +5,7 @@ class BaseEcommerceConfig {
     public static $updateProductPrices = false;
     protected static $url;
     protected static $apiKey;
-    protected static $pimcoreBaseUrl = "http://pimcore.local";
+    protected static $pimcoreBaseUrl = "http://your/pimcore/url";
 
     public static function getConfig() {
         return array(

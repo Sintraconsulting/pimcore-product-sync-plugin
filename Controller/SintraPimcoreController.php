@@ -18,6 +18,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
+
 /**
  * Class SintraPimcoreController
  * @package SintraPimcoreBundle\Controller
@@ -115,10 +117,18 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         $response = [];
         try {
             // TODO: modular activate/deactivate of Ecomm sync
+            
+            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
+            
             // Mage2 Sync
-            $response[] = (new Mage2SyncController())->syncProducts();
+            if($enabledIntegrations["magento2"]){
+                $response[] = (new Mage2SyncController())->syncProducts();
+            }
+            
             // Shopify Sync
-            $response[] = (new ShopifySyncController())->syncProducts();
+            if($enabledIntegrations["shopify"]){
+                $response[] = (new ShopifySyncController())->syncProducts();
+            }
 
             Cache::clearTag("output");
         } catch (\Exception $e) {

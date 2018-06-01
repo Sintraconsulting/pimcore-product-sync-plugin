@@ -44,7 +44,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     }
 
     public function toEcomm ($dataObject, bool $update = false) {
-        $product = (json_decode(file_get_contents($this->configFile), true))['shopify'];
+        $product = json_decode(file_get_contents($this->configFile), true)['shopify'];
         if (!$update) {
             unset($product["variant"][0]["price"]);
         }

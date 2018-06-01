@@ -1,14 +1,25 @@
 <?php
 
-namespace SintraPimcoreBundle\EventListener;
+namespace SintraPimcoreBundle\EventListener\Magento2;
 
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Product;
 use SintraPimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\EventListener\InterfaceListener;
 
-class SintraPimcoreProductListener {
+class Magento2ProductListener extends Magento2ObjectListener implements InterfaceListener{
+    
+    /**
+     * @param Product $product
+     */
+    public function preUpdateAction($product) {
+        $this->setIsPublishedBeforeSave($product->isPublished());
+    }
 
-    public function onPostUpdate(Product $product) {
+    /**
+     * @param Product $product
+     */
+    public function postUpdateAction($product) {
         
         /****** TO-DO: Manage Multi Languages ******/
         $config = \Pimcore\Config::getSystemConfig();
@@ -21,13 +32,15 @@ class SintraPimcoreProductListener {
         $product->setUrl_key(preg_replace('/\W+/', '-', strtolower($urlKey)), $lang);
         
         $product->setMagento_syncronized(false);
-        $product->setShopify_sync(false);
         
         $product->update(true);
-        
     }
 
-    public function onPostDelete(Product $product, $isUnpublished = false) {
+    /**
+     * @param Product $product
+     */
+    public function postDeleteAction($product, $isUnpublished = false) {
+        
         $apiManager = ProductAPIManager::getInstance();
         
         $sku = $product->getSku();
@@ -44,5 +57,6 @@ class SintraPimcoreProductListener {
             $product->update(true);
         }
     }
+    
 
 }

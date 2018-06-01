@@ -36,7 +36,7 @@ class SkuResolver extends AbstractResolver{
             $keyColumnId = $this->getKeyColumnId($config);
             if(!empty($keyColumnId)){
                 $key = $rowData[$keyColumnId];
-                $product->setKey($key);
+                $product->setKey($sku." - ".$key);
             }else{
                 $product->setKey($sku);
             }
@@ -50,7 +50,7 @@ class SkuResolver extends AbstractResolver{
         $configArray = json_decode(json_encode($config), true);
         $selectedGridColumns = $configArray["selectedGridColumns"];
         
-        $keyColumnId = array_search("key", array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
+        $keyColumnId = array_search("name", array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
         
         return $keyColumnId;
     }

@@ -41,6 +41,10 @@ abstract class BaseEcommerceService extends SingletonService{
                 }
                 break;
 
+            case "select":
+                $selectValue = $fieldValue ? $fieldValue : null;
+                $this->insertSingleValue($ecommObject, $fieldName, $selectValue);
+                
             case "objects":
                 break;
 

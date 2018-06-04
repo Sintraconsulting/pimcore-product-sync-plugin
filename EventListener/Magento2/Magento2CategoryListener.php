@@ -1,14 +1,26 @@
 <?php
 
-namespace SintraPimcoreBundle\EventListener;
+namespace SintraPimcoreBundle\EventListener\Magento2;
 
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
 use SintraPimcoreBundle\ApiManager\CategoryAPIManager;
+use SintraPimcoreBundle\EventListener\InterfaceListener;
 
-class SintraPimcoreCategoryListener {
+class Magento2CategoryListener extends Magento2ObjectListener implements InterfaceListener{
+    
+    /**
+     * @param Category $category
+     */
+    public function preUpdateAction($category) {
+        $this->setIsPublishedBeforeSave($product->isPublished());
+    }
 
-    public function onPostUpdate(Category $category) {
+    /**
+     * @param Category $category
+     */
+    public function postUpdateAction($category) {
+        $category = Category::getById($obj->getId());
         
         $categoryLevel = $this->getCategoryLevel($category);
         $category->setLevel($categoryLevel);
@@ -24,10 +36,13 @@ class SintraPimcoreCategoryListener {
         $category->setMagento_syncronized(false);
         
         $category->update(true);
-        
     }
 
-    public function onPostDelete(Category $category, $isUnpublished = false) {
+    /**
+     * @param Category $category
+     */
+    public function postDeleteAction($category, $isUnpublished = false) {
+        
         $apiManager = CategoryAPIManager::getInstance();
         
         $magentoId = $category->getMagentoid();

@@ -17,4 +17,12 @@ class BaseEcommerceConfig {
     public static function getBaseUrl(){
         return static::$pimcoreBaseUrl;
     }
+    
+    public static function getEnabledIntegrations(){
+        return array(
+            "magento2" => true,
+            "shopify" => true,
+            "..."
+        );
+    }
 }

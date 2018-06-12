@@ -28,7 +28,7 @@ class Magento2ProductListener extends Magento2ObjectListener implements Interfac
         
         $sku = $product->getSku();
         $name = $product->getName();
-        $urlKey = ($sku == $name) ? $sku : $sku." ".$name;
+        $urlKey = ($sku == $name) ? $sku : $name." ".$sku;
         $product->setUrl_key(preg_replace('/\W+/', '-', strtolower($urlKey)), $lang);
         
         $product->setMagento_syncronized(false);

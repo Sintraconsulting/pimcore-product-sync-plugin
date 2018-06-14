@@ -53,7 +53,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         
         $categories = new DataObject\Category\Listing();
         $categories->addConditionParam("export_to_magento = ?", "1");
-        $categories->addConditionParam("magento_syncronized = ?", "0");
+        $categories->addConditionParam("magento_sync = ?", "0");
         $categories->setLimit("30");
         
         $categories->load();

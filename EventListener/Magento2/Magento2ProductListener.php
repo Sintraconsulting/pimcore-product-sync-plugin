@@ -31,7 +31,7 @@ class Magento2ProductListener extends Magento2ObjectListener implements Interfac
         $urlKey = ($sku == $name) ? $sku : $name." ".$sku;
         $product->setUrl_key(preg_replace('/\W+/', '-', strtolower($urlKey)), $lang);
         
-        $product->setMagento_syncronized(false);
+        $product->setMagento_sync(false);
         
         $product->update(true);
     }
@@ -51,8 +51,8 @@ class Magento2ProductListener extends Magento2ObjectListener implements Interfac
         }
         
         if($isUnpublished){
-            $product->setMagento_syncronized(true);
-            $product->setMagento_syncronyzed_at(date("Y-m-d H:i:s"));
+            $product->setMagento_sync(true);
+            $product->setMagento_sync_at(date("Y-m-d H:i:s"));
 
             $product->update(true);
         }

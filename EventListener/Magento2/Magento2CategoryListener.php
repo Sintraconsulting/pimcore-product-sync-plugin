@@ -33,7 +33,7 @@ class Magento2CategoryListener extends Magento2ObjectListener implements Interfa
         $name = $category->getName();
         $category->setUrl_key(preg_replace('/\W+/', '-', strtolower($name)), $lang);
         
-        $category->setMagento_syncronized(false);
+        $category->setMagento_sync(false);
         
         $category->update(true);
     }
@@ -55,8 +55,8 @@ class Magento2CategoryListener extends Magento2ObjectListener implements Interfa
         }
         
         if($isUnpublished){
-            $category->setMagento_syncronized(true);
-            $category->setMagento_syncronyzed_at(date("Y-m-d H:i:s"));
+            $category->setMagento_sync(true);
+            $category->setMagento_sync_at(date("Y-m-d H:i:s"));
 
             $category->update(true);
         }

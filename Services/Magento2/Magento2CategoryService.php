@@ -27,8 +27,8 @@ class Magento2CategoryService extends BaseMagento2Service implements InterfaceSe
 
         Logger::debug("UPDATED CATEGORY: ".$result->__toString());
 
-        $dataObject->setMagento_syncronized(true);
-        $dataObject->setMagento_syncronyzed_at($result["updatedAt"]);
+        $dataObject->setMagento_sync(true);
+        $dataObject->setMagento_sync_at($result["updatedAt"]);
 
         try{
             $dataObject->update(true);

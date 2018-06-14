@@ -36,8 +36,8 @@ class Magento2ProductService extends BaseMagento2Service implements InterfaceSer
         }
         Logger::debug("UPDATED PRODUCT: ".$result->__toString());
 
-        $dataObject->setMagento_syncronized(true);
-        $dataObject->setMagento_syncronyzed_at($result["updatedAt"]);
+        $dataObject->setMagento_sync(true);
+        $dataObject->setMagento_sync_at($result["updatedAt"]);
 
         try{
             $dataObject->update(true);

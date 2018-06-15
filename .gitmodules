@@ -1,0 +1,3 @@
+[submodule "Custom/TucanoPIM"]
+	path = Custom/TucanoPIM
+	url = https://sintraconsulting.visualstudio.com/Tucano-Java-All/_git/Tucano-PIM

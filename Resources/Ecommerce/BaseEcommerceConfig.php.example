@@ -25,4 +25,14 @@ class BaseEcommerceConfig {
             "..."
         );
     }
+    
+    public static function getCustomizationInfo(){
+        return array(
+            /*
+             * Will be searced in SintraPimcoreBundle/Custom folder
+             * If null or empty, skip customizations
+             */
+            "namespace" => "RepositoryNamespace"
+        );
+    }
 }

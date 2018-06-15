@@ -10,6 +10,8 @@ use SintraPimcoreBundle\EventListener\Magento2\Magento2ObjectListener;
 use SintraPimcoreBundle\EventListener\Shopify\ShopifyObjectListener;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
+use ReflectionClass;
+
 abstract class AbstractObjectListener {
     
     /**
@@ -44,6 +46,22 @@ abstract class AbstractObjectListener {
                 $shopifyObjectListener = new ShopifyObjectListener();
                 $shopifyObjectListener->preUpdateDispatcher($obj);
             }
+            
+            $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
+            $namespace = $customizationInfo["namespace"];
+            
+            if($namespace != null && !empty($namespace)){
+                Logger::info("AbstractObjectListener - Custom onPreUpdate Event for namespace: ".$namespace);
+                $customObjectListenerClassName = '\\SintraPimcoreBundle\\Custom\\'.$namespace.'\\EventListener\\ObjectListener';
+                
+                if(class_exists($customObjectListenerClassName)){
+                    $customObjectListenerClass = new ReflectionClass($customObjectListenerClassName);
+                    $customObjectListener = $customObjectListenerClass->newInstance();
+                    $customObjectListener->preUpdateDispatcher($obj);
+                }else{
+                    Logger::warn("AbstractObjectListener - WARNING. Class not found: ".$customObjectListenerClass);
+                }
+            }
         }
     }
     
@@ -64,6 +82,22 @@ abstract class AbstractObjectListener {
                 $shopifyObjectListener = new ShopifyObjectListener();
                 $shopifyObjectListener->postUpdateDispatcher($obj, $saveVersionOnly);
             }
+            
+            $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
+            $namespace = $customizationInfo["namespace"];
+            
+            if($namespace != null && !empty($namespace)){
+                Logger::info("AbstractObjectListener - Custom onPostUpdate Event for namespace: ".$namespace);
+                $customObjectListenerClassName = '\\SintraPimcoreBundle\\Custom\\'.$namespace.'\\EventListener\\ObjectListener';
+                
+                if(class_exists($customObjectListenerClassName)){
+                    $customObjectListenerClass = new ReflectionClass($customObjectListenerClassName);
+                    $customObjectListener = $customObjectListenerClass->newInstance();
+                    $customObjectListener->postUpdateDispatcher($obj, $saveVersionOnly);
+                }else{
+                    Logger::warn("AbstractObjectListener - WARNING. Class not found: ".$customObjectListenerClass);
+                }
+            }
         }
     }
     
@@ -82,6 +116,22 @@ abstract class AbstractObjectListener {
             if($enabledIntegrations["shopify"]){
                 $shopifyObjectListener = new ShopifyObjectListener();
                 $shopifyObjectListener->postDeleteDispatcher($obj);
+            }
+            
+            $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
+            $namespace = $customizationInfo["namespace"];
+            
+            if($namespace != null && !empty($namespace)){
+                Logger::info("AbstractObjectListener - Custom onPostDelete Event for namespace: ".$namespace);
+                $customObjectListenerClassName = '\\SintraPimcoreBundle\\Custom\\'.$namespace.'\\EventListener\\ObjectListener';
+                
+                if(class_exists($customObjectListenerClassName)){
+                    $customObjectListenerClass = new ReflectionClass($customObjectListenerClassName);
+                    $customObjectListener = $customObjectListenerClass->newInstance();
+                    $customObjectListener->postDeleteDispatcher($obj);
+                }else{
+                    Logger::warn("AbstractObjectListener - WARNING. Class not found: ".$customObjectListenerClass);
+                }
             }
         }
     }

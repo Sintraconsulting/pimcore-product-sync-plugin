@@ -13,14 +13,13 @@ class Magento2CategoryListener extends Magento2ObjectListener implements Interfa
      * @param Category $category
      */
     public function preUpdateAction($category) {
-        $this->setIsPublishedBeforeSave($product->isPublished());
+        $this->setIsPublishedBeforeSave($category->isPublished());
     }
 
     /**
      * @param Category $category
      */
     public function postUpdateAction($category) {
-        $category = Category::getById($obj->getId());
         
         $categoryLevel = $this->getCategoryLevel($category);
         $category->setLevel($categoryLevel);

@@ -35,7 +35,7 @@ class SkuResolver extends AbstractResolver{
              */
             $keyColumnId = $this->getKeyColumnId($config);
             if(!empty($keyColumnId)){
-                $key = $rowData[$keyColumnId];
+                $key = trim($rowData[$keyColumnId]);
                 $product->setKey($sku." - ".$key);
             }else{
                 $product->setKey($sku);

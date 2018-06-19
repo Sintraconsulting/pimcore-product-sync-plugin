@@ -33,11 +33,9 @@ class Magento2ProductListener extends Magento2ObjectListener implements Interfac
         $urlKey = ($sku == $name) ? $sku : $name." ".$sku;
         $product->setUrl_key(preg_replace('/\W+/', '-', strtolower($urlKey)), $lang);
         
-        $metaTitle = $name ." | Acquista Online";
+        $metaTitle = $name ." | Angel Mercatone";
         $product->setMeta_title($metaTitle, $lang);
-        
-        $metaDescription = $name.": ".$shortDescription;
-        $product->setMeta_description($metaDescription, $lang);
+        $product->setMeta_description($shortDescription, $lang);
         
         $product->setMagento_sync(false);
         

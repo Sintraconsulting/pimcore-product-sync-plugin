@@ -1,7 +1,7 @@
 <?php
 namespace SintraPimcoreBundle\Resources\Ecommerce;
 
-include 'BaseEcommerceConfig.php';
+include_once 'BaseEcommerceConfig.php';
 
 class MagentoConfig extends BaseEcommerceConfig{
 

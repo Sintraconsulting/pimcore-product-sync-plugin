@@ -12,7 +12,7 @@ class PriceOperator extends QuantityValueOperator{
     
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {
         $price = $rowData[$colIndex];
-        $target->setPrice($this->validateCurrency($price));
+        $target->setPrice($this->validateUnit($target->getClass(), "price", $price));
     }
 
 }

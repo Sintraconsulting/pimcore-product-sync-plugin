@@ -14,46 +14,45 @@ use Pimcore\Model\DataObject\Data\QuantityValue;
  */
 abstract class QuantityValueOperator extends AbstractOperator{
     
-    private $defaultCurrencyId = 1;
-    
-    public function validateCurrency($price){
-        $priceObject = new QuantityValue();
+    public function validateUnit(ClassDefinition $class, $field, $value){
+        $fieldDefinition = $class->getFieldDefinition($field);
+                
+        if($fieldDefinition->getFieldtype() == "quantityValue"){
+            $quantityValueObject = new QuantityValue();
+
+            $quantityValueParts = explode("_", $value);
         
-        if(!strpos($price, "_") > 0){
-            $priceObject->setValue($price);
-            $priceObject->setUnitId($this->getDefaulCurrency());
+            if(sizeof($quantityValueParts) === 1 || $this->checkCurrency($quantityValueParts[1])){
+                $quantityValueObject->setValue($value);
+                $quantityValueObject->setUnitId($this->getDefaulCurrency($fieldDefinition));
+            }else{
+                $quantityValueObject->setValue($quantityValueParts[0]);
+                $quantityValueObject->setUnitId($quantityValueParts[1]);
+            }
+
+            return $quantityValueObject;
         }
         
-        $priceParts = explode("_", $price);
-        $currencyId  = $priceParts[1];
-        
-        if($this->checkCurrency($currencyId)){
-            $priceObject->setValue($priceParts[0]);
-            $priceObject->setUnitId($currencyId);
-        }else{
-            Logger::warning("CURRENCY WITH ID '$currencyId' DOESN'T EXIST. DEFAULT SELECTED");
-            $priceObject->setValue($priceParts[0]);
-            $priceObject->setUnitId($this->getDefaulCurrency());
-        }
-        
-        return $priceObject;
+        return null;
     }
     
-    private function checkCurrency($currencyId){
-        $currency = Unit::getById($currencyId);
-        if($currency != null){
+    private function checkCurrency($unitId){
+        $unit = Unit::getById($unitId);
+        if($unit != null){
             return true;
         }else{
+            Logger::warning("UNIT WITH ID '$unitId' DOESN'T EXIST. DEFAULT SELECTED");
             return false;
         }
     }
     
-    private function getDefaulCurrency(){
-        $defaultCurrency = Unit::getById($this->defaultCurrencyId);
+    private function getDefaulCurrency(\Pimcore\Model\DataObject\ClassDefinition\Data\QuantityValue $fieldDefinition){
+        $defaultCurrency = $fieldDefinition->getDefaultUnit();
         if($defaultCurrency != null){
             return $defaultCurrency->getId();
         }
         
+        Logger::warning("FIELD '".$fieldDefinition->getName()."' HAS NO DEFAULT UNIT.");
         return "";
     }
 

@@ -15,7 +15,7 @@ class SkuResolver extends AbstractResolver{
     public function resolve(\stdClass $config, int $parentId, array $rowData){
         $columnId = $this->getIdColumn($config);
         
-        $sku = $rowData[$columnId];
+        $sku = trim($rowData[$columnId]);
         $products = new Product\Listing();
         $products->setCondition("sku = ".$products->quote($sku));
         $products->setLimit(1);

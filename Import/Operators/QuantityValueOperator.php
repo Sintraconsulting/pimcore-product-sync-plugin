@@ -6,9 +6,10 @@ use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\QuantityValue\Unit;
 use Pimcore\Model\DataObject\Data\QuantityValue;
+use Pimcore\Model\DataObject\ClassDefinition;
 
 /**
- * Check if currency exists
+ * Check if unit exists
  *
  * @author Marco Guiducci
  */
@@ -29,7 +30,7 @@ abstract class QuantityValueOperator extends AbstractOperator{
                 $quantityValueObject->setValue($quantityValueParts[0]);
                 $quantityValueObject->setUnitId($quantityValueParts[1]);
             }
-
+            
             return $quantityValueObject;
         }
         
@@ -49,7 +50,7 @@ abstract class QuantityValueOperator extends AbstractOperator{
     private function getDefaulCurrency(\Pimcore\Model\DataObject\ClassDefinition\Data\QuantityValue $fieldDefinition){
         $defaultCurrency = $fieldDefinition->getDefaultUnit();
         if($defaultCurrency != null){
-            return $defaultCurrency->getId();
+            return $defaultCurrency;
         }
         
         Logger::warning("FIELD '".$fieldDefinition->getName()."' HAS NO DEFAULT UNIT.");

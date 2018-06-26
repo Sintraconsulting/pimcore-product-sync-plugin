@@ -39,6 +39,15 @@ class FieldMapProvider implements SelectOptionsProviderInterface{
                     };
                     break;
                     
+                case "href":
+                case "objects":
+                    foreach($fieldDefinition->getClasses() as $classDefinition){
+                        $relatedClass = $classDefinition["classes"];
+                        $relatedClassDefinition = ClassDefinition::getByName($relatedClass);
+                        
+                        $this->extractClassField($relatedClassDefinition, $fields, true);
+                    };
+                    
                 case "fieldcollections":
                     break;
             

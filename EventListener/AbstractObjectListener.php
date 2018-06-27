@@ -52,7 +52,7 @@ abstract class AbstractObjectListener {
             
             if($namespace != null && !empty($namespace)){
                 Logger::info("AbstractObjectListener - Custom onPreUpdate Event for namespace: ".$namespace);
-                $customObjectListenerClassName = '\\'.$namespace.'\\EventListener\\ObjectListener';
+                $customObjectListenerClassName = '\\'.$namespace.'\\SintraPimcoreBundle\\EventListener\\ObjectListener';
                 
                 if(class_exists($customObjectListenerClassName)){
                     $customObjectListenerClass = new ReflectionClass($customObjectListenerClassName);

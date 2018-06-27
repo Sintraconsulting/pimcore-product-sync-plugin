@@ -5,7 +5,8 @@ namespace SintraPimcoreBundle\OptionsProviders;
 use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\MultiSelectOptionsProviderInterface;
 
 /**
- * Dynamic Options Provider for Product's category_ids field 
+ * Dynamic Options Provider that display valid languages for a TargetServer.
+ * Languages are taken from Pimcore configuration
  *
  * @author Marco Guiducci
  */

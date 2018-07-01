@@ -19,9 +19,9 @@ class ShopifyCategoryListener extends ShopifyObjectListener implements Interface
      */
     public function postUpdateAction($category) {
         
-        $category->setShopify_sync(false);
-        
-        $category->update(true);
+//        $category->setShopify_sync(false);
+//
+//        $category->update(true);
     }
 
     /**

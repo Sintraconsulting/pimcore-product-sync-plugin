@@ -47,7 +47,7 @@ class BaseSyncController {
         $db = Db::get();
         $prodIds = $db->fetchAll(
                 "SELECT dependencies.sourceid FROM dependencies
-INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1)
+INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL)
   WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'
   GROUP BY dependencies.sourceid",
                 [ $server->getId() ]);

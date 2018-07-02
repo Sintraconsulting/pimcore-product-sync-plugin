@@ -1,10 +1,10 @@
 <?php
 
-use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
+use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
-include_once 'Resources/Ecommerce/MagentoConfig.php';
+include_once 'Resources/Ecommerce/BaseEcommerceConfig.php';
 
-$baseUrl = MagentoConfig::getBaseUrl();
+$baseUrl = BaseEcommerceConfig::getBaseUrl();
 
 $curl = curl_init();
 curl_setopt($curl, CURLOPT_URL, $baseUrl.'/sintra_pimcore/sync_products');

@@ -31,7 +31,7 @@ class BaseSyncController {
         $productService = $productService::getInstance();
 
         $productsListing = new Product\Listing();
-        $productsListing->setCondition('o_id IN (?)', [$products]);
+        $productsListing->setCondition("o_id IN (". implode(",", [$products]).")");
 
         return $this->exportProducts($productService, $productsListing);
     }
@@ -47,7 +47,7 @@ class BaseSyncController {
         $db = Db::get();
         $prodIds = $db->fetchAll(
                 "SELECT dependencies.sourceid FROM dependencies
-INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL)
+INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))
   WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'
   GROUP BY dependencies.sourceid",
                 [ $server->getId() ]);

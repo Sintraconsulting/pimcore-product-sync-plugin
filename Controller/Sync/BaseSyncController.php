@@ -3,14 +3,62 @@
 namespace SintraPimcoreBundle\Controller\Sync;
 
 use Pimcore\Cache;
+use Pimcore\Model\DataObject\ClassDefinition;
+use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Product\Listing;
+use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Services\InterfaceService;
 use Pimcore\Logger;
+use ReflectionClass;
+use Pimcore\Db;
 
-abstract class BaseSyncController {
+class BaseSyncController {
     protected $ecommerce;
 
-    abstract public function syncProducts(int $count = 10) : string;
+    /**
+     * @param TargetServer $server
+     * @throws \ReflectionException
+     */
+    public function syncServerProducts ($server) {
+        $this->ecommerce = $server->getServer_name();
+        $serverType = $server->getServer_type();
+        $serviceName = "\SintraPimcoreBundle\Services\\" . ucfirst($serverType) . '\\' . ucfirst($serverType) . 'ProductService';
+
+        $products = $this->getServerToSyncProducts($server);
+
+        $productServiceClass = new ReflectionClass($serviceName);
+        $productService = $productServiceClass->newInstanceWithoutConstructor();
+        $productService = $productService::getInstance();
+
+        $productsListing = new Product\Listing();
+        $productsListing->setCondition("o_id IN (". implode(",", [$products]).")");
+
+        return $this->exportProducts($productService, $productsListing);
+    }
+
+    /**
+     * @param TargetServer $server
+     */
+    public function getServerToSyncProducts ($server) {
+        $classDef = ClassDefinition::getByName("Product");
+        $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
+        $classId = $classDef->getId();
+        $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
+        $db = Db::get();
+        $prodIds = $db->fetchAll(
+                "SELECT dependencies.sourceid FROM dependencies
+INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))
+  WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'
+  GROUP BY dependencies.sourceid",
+                [ $server->getId() ]);
+        $ids = [];
+        foreach ($prodIds as $id) {
+            $ids[] = $id['sourceid'];
+        }
+        $ids = implode(', ', $ids);
+
+        return $ids;
+    }
 
     protected function getEcommerce() : string {
         return $this->ecommerce;
@@ -43,7 +91,7 @@ abstract class BaseSyncController {
                 $productService->export($product);
                 $syncronizedElements++;
             } catch(\Exception $e){
-                $response["errors"][] = "OBJECT ID ".$product->getId().": ".$ex->getMessage();
+                $response["errors"][] = "OBJECT ID ".$product->getId().": ".$e->getMessage();
                 Logger::err($e->getMessage());
 
                 $elementsWithError++;

@@ -1,5 +1,5 @@
 <?php
-namespace SintraPimcoreBundle\Services\Magento2;
+namespace SintraPimcoreBundle\Services\Mage2;
 
 use SintraPimcoreBundle\Services\BaseEcommerceService;
 /**

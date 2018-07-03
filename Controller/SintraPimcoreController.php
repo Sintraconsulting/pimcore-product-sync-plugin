@@ -6,8 +6,7 @@ use PHPShopify\Exception\SdkException;
 use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
 use Pimcore\Tool\RestClient\Exception;
 use SintraPimcoreBundle\ApiManager\ProductAPIManager;
-use SintraPimcoreBundle\Controller\Sync\Mage2SyncController;
-use SintraPimcoreBundle\Controller\Sync\ShopifySyncController;
+use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
 use SintraPimcoreBundle\Services\Magento2\Magento2CategoryService;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
@@ -116,23 +115,17 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
     {
         $response = [];
         try {
-            // TODO: modular activate/deactivate of Ecomm sync
-            
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            // Mage2 Sync
-            if($enabledIntegrations["magento2"]){
-                $response[] = (new Mage2SyncController())->syncProducts();
-            }
-            
-            // Shopify Sync
-            if($enabledIntegrations["shopify"]){
-                $response[] = (new ShopifySyncController())->syncProducts();
+            $syncCTR = new BaseSyncController();
+            $servers = new DataObject\TargetServer\Listing();
+            $servers->addConditionParam('enabled', true);
+            foreach ($servers as $server) {
+                $response[] = print_r($syncCTR->syncServerProducts($server), true);
             }
 
             Cache::clearTag("output");
         } catch (\Exception $e) {
             Logger::err($e->getMessage());
+            echo $e->getMessage();
         }
 
         return new Response(implode('<br>'.PHP_EOL, $response));

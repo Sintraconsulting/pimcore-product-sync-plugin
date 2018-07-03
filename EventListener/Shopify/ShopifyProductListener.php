@@ -19,9 +19,9 @@ class ShopifyProductListener extends ShopifyObjectListener implements InterfaceL
      */
     public function postUpdateAction($product) {
         
-        $product->setShopify_sync(false);
-        
-        $product->update(true);
+//        $product->setShopify_sync(false);
+//
+//        $product->update(true);
     }
 
     /**

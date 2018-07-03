@@ -3,7 +3,7 @@
 namespace SintraPimcoreBundle\Controller\Sync;
 
 use Pimcore\Tool\RestClient\Exception;
-use SintraPimcoreBundle\Services\Magento2\Magento2ProductService;
+use SintraPimcoreBundle\Services\Mage2\Mage2ProductService;
 use Pimcore\Model\DataObject\Product\Listing;
 
 class Mage2SyncController extends BaseSyncController {
@@ -15,7 +15,7 @@ class Mage2SyncController extends BaseSyncController {
      * @throws \Exception
      */
     public function syncProducts (int $count = 10) : string {
-        $productUtils = Magento2ProductService::getInstance();
+        $productUtils = Mage2ProductService::getInstance();
 
         $products = new Listing();
         $products->addConditionParam("export_to_magento = ?", "1");

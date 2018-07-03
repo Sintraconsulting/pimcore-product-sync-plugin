@@ -29,7 +29,9 @@
 			{
 				"attribute_code": "short_description",
 				"value": ""
-			}
+			},
+			
+			[...]
 		]
 	},
 	
@@ -47,7 +49,13 @@
 		],
 		"metafield_global_description_tag": "",
 		"metafields_global_title_tag": "",
-		"metafields": []
+		"metafields": [
+			{
+                "key": "my-field-name",
+                "value": "",
+                "value_type": "my-field-value",
+                "namespace": "my-namespace"
+            }]
 	},
 	
 	[...]

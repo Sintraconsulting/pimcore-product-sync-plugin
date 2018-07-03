@@ -1,20 +1,21 @@
 <?php
 namespace SintraPimcoreBundle\Services;
 
-use Pimcore\Model\DataObject\Product;
-use Pimcore\Model\DataObject\Category;
+use Pimcore\Model\DataObject\TargetServer;
 
 interface InterfaceService {
     /**
-     * @param Product|Category $dataObject
+     * @param $dataObject
+     * @param TargetServer $targetServer
      * @return mixed
      */
-    function export($dataObject);
+    function export($dataObject, TargetServer $targetServer);
 
     /**
-     * @param Product|Category $dataObject
+     * @param $dataObject
+     * TargetServer $targetServer
      * @param bool $update
      * @return mixed
      */
-    function toEcomm($dataObject, bool $update = false);
+    function toEcomm($dataObject, TargetServer $targetServer, bool $update = false);
 }

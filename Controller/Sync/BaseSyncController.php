@@ -33,7 +33,7 @@ class BaseSyncController {
         $productsListing = new Product\Listing();
         $productsListing->setCondition("o_id IN (". implode(",", [$products]).")");
 
-        return $this->exportProducts($productService, $productsListing);
+        return $this->exportProducts($productService, $productsListing, $server);
     }
 
     /**
@@ -67,9 +67,10 @@ INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND
     /**
      * @param InterfaceService  $productService
      * @param Listing $products
+     * @param TargetServer $server
      * @return string
      */
-    protected function exportProducts (InterfaceService $productService, Listing $products) {
+    protected function exportProducts (InterfaceService $productService, Listing $products, TargetServer $server) {
         $response = array(
                 "started" => date("Y-m-d H:i:s"),
                 "finished" => "",
@@ -88,7 +89,7 @@ INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND
             $product = $products->current();
 
             try{
-                $productService->export($product);
+                $productService->export($product, $server);
                 $syncronizedElements++;
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$product->getId().": ".$e->getMessage();

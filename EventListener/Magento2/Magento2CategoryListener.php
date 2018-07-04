@@ -4,7 +4,7 @@ namespace SintraPimcoreBundle\EventListener\Magento2;
 
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
-use SintraPimcoreBundle\ApiManager\CategoryAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\CategoryAPIManager;
 use SintraPimcoreBundle\EventListener\InterfaceListener;
 
 class Magento2CategoryListener extends Magento2ObjectListener implements InterfaceListener{

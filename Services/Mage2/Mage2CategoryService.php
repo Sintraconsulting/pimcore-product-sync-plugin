@@ -2,7 +2,7 @@
 namespace SintraPimcoreBundle\Services\Mage2;
 
 use Pimcore\Model\DataObject\Category;
-use SintraPimcoreBundle\ApiManager\CategoryAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\CategoryAPIManager;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
 
@@ -10,9 +10,11 @@ class Mage2CategoryService extends BaseMagento2Service implements InterfaceServi
     private $configFile = __DIR__ . '/../config/category.json';
 
     public function export ($dataObject) {
+        $magento2Category = json_decode(file_get_contents($this->configFile), true)['magento2'];
+        
         $apiManager = CategoryAPIManager::getInstance();
 
-        $magento2Category = $this->toEcomm($dataObject);
+        $this->toEcomm($magento2Category, $dataObject);
 
         Logger::debug("MAGENTO CATEGORY: ".json_encode($magento2Category));
 
@@ -38,20 +40,18 @@ class Mage2CategoryService extends BaseMagento2Service implements InterfaceServi
         }
     }
 
-    public function toEcomm ($dataObject, bool $update = false) {
+    public function toEcomm (&$ecommObject, $dataObject, bool $update = false) {
         $parentCategory = Category::getById($dataObject->getParentId(),true);
-
-        $magento2Category = json_decode(file_get_contents($this->configFile), true)['magento2'];
 
         $magentoId = $dataObject->magentoid;
         if($magentoId != null && !empty($magentoId)){
-            $magento2Category["id"] = $magentoId;
+            $ecommObject["id"] = $magentoId;
         }else{
-            unset($magento2Category["id"]);
+            unset($ecommObject["id"]);
         }
 
         $parentMagentoId = $parentCategory->magentoid;
-        $magento2Category["parent_id"] = ($parentMagentoId != null && !empty($parentMagentoId)) ? $parentMagentoId : "1";
+        $ecommObject["parent_id"] = ($parentMagentoId != null && !empty($parentMagentoId)) ? $parentMagentoId : "1";
 
         $fieldDefinitions = $dataObject->getClass()->getFieldDefinitions();
         foreach ($fieldDefinitions as $fieldDefinition) {
@@ -61,11 +61,11 @@ class Mage2CategoryService extends BaseMagento2Service implements InterfaceServi
                 $fieldType = $fieldDefinition->getFieldtype();
                 $fieldValue = $dataObject->getValueForFieldName($fieldName);
 
-                $this->mapField($magento2Category, $fieldName, $fieldType, $fieldValue, $dataObject->getClassId());
+                $this->mapField($ecommObject, $fieldName, $fieldType, $fieldValue, $dataObject->getClassId());
             }
 
         }
 
-        return $magento2Category;
+        //return $magento2Category;
     }
 }

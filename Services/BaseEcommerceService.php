@@ -104,6 +104,10 @@ abstract class BaseEcommerceService extends SingletonService{
      * @return the field value
      */
     private function getField($fieldName, $language, $dataObject){
+        if($dataObject == null){
+            return "";
+        }
+        
         $objectReflection = new \ReflectionObject($dataObject);
         
         $classname = $dataObject->getClassName();

@@ -8,11 +8,7 @@
 
 namespace SintraPimcoreBundle\ApiManager;
 
-use PHPShopify\ShopifySDK;
-use SintraPimcoreBundle\Resources\Ecommerce\ShopifyConfig;
-use SpringImport\Swagger\Magento2\Client\Configuration;
-use SpringImport\Swagger\Magento2\Client\ApiClient;
-use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
+use Pimcore\Model\DataObject\TargetServer;
 
 /**
  * Magento Rest API Manager 
@@ -21,39 +17,15 @@ use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
  */
 abstract class AbstractAPIManager {
 
-    /**
-     * Get API Client to Perform Rest API calls
-     *
-     * @return ApiClient The API Client
-     */
-    public function getMagento2ApiInstance() {
-        $magentoConfig = MagentoConfig::getConfig();
+    protected static $instance;
 
-        $baseUrl = $magentoConfig['path'] . '/rest';
-        $token = 'bearer ' . $magentoConfig['apiKey'];
-
-        $config = new Configuration();
-        $config->setHost($baseUrl);
-        $config->addDefaultHeader('Authorization', $token);
-
-        return new ApiClient($config);
-    }
-
-    public function getShopifyApiInstance () {
-        $shopifyConfig = ShopifyConfig::getConfig();
-        $config = [
-                'ShopUrl' => $shopifyConfig['path'],
-                'AccessToken' => $shopifyConfig['apiKey']
-        ];
-        return new ShopifySDK($config);
+    public static function getInstance() {
+        if (is_null(static::$instance)) {
+            static::$instance = new static();
+        }
+        return static::$instance;
     }
     
-    public abstract function createEntity($entity);
-
-    public abstract function getEntityByKey($entityKey);
-    
-    public abstract function deleteEntity($entityKey);
-    
-    public abstract function updateEntity($entityKey, $entity);
+    public abstract function getApiInstance(TargetServer $server);
 
 }

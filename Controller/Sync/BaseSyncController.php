@@ -28,14 +28,19 @@ class BaseSyncController {
 
         $products = $this->getServerToSyncProducts($server);
 
-        $productServiceClass = new ReflectionClass($serviceName);
-        $productService = $productServiceClass->newInstanceWithoutConstructor();
-        $productService = $productService::getInstance();
+        if($products != null && !empty($products)){
+            $productServiceClass = new ReflectionClass($serviceName);
+            $productService = $productServiceClass->newInstanceWithoutConstructor();
+            $productService = $productService::getInstance();
 
-        $productsListing = new Product\Listing();
-        $productsListing->setCondition("o_id IN (". implode(",", [$products]).")");
+            $productsListing = new Product\Listing();
+            $productsListing->setCondition("o_id IN (". implode(",", [$products]).")");
 
-        return $this->exportProducts($productService, $productsListing, $server);
+            return $this->exportProducts($productService, $productsListing, $server);
+        }
+        
+        Logger::info("BaseSyncController - There are no product to sync for '".$server->getServer_name()."' server");
+        return "BaseSyncController - There are no product to sync for '".$server->getServer_name()."' server";
     }
 
     /**
@@ -57,11 +62,11 @@ class BaseSyncController {
         $db = Db::get();
         $prodIds = $db->fetchAll(
             "SELECT dependencies.sourceid FROM dependencies"
-            . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
+            . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.name=? AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
             . " WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'"
             . " GROUP BY dependencies.sourceid"
             . " LIMIT $limit",
-            [ $server->getId() ]);
+            [ $server->getKey(), $server->getId() ]);
         
         $ids = [];
         foreach ($prodIds as $id) {

@@ -55,6 +55,8 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     }
 
     /**
+     * Get the mapping of field to export from the server definition.
+     * For localized fields, the first valid language will be used.
      * 
      * @param Product $dataObject
      * @param TargetServer $targetServer
@@ -68,10 +70,13 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
 
         $exportMap = $targetServer->getExportMap()->getItems();
         $languages = $targetServer->getLanguages();
+        
         foreach ($exportMap as $fieldMap) {
+            //get the value of each object field
             $objectField = $this->getObjectField($fieldMap, $languages[0], $dataObject);
             
-            $serverField= $fieldMap->getServerField();
+            //get the name of the related field in server from field mapping
+            $serverField = $fieldMap->getServerField();
             $this->mapField($product, $serverField, $objectField);
         }
 

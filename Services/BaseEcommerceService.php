@@ -12,13 +12,16 @@ use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
  * Class EcommerceService
  */
 abstract class BaseEcommerceService extends SingletonService{
-    protected $productExportHidden = [
-            'shopify_id', 'export_to_magento', 'export_to_shopify', 'magento_sync',
-            'magento_sync_at', 'shopify_sync', 'shopify_sync_at'
-    ];
 
-    //$isBrick will be removed
-    abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue, $isBrick = false);
+    /**
+     * Search for field name in the API call object skeleton
+     * and fill that with the field value.
+     * 
+     * @param type $ecommObject the object to fill for the API call
+     * @param type $fieldName the field name
+     * @param type $fieldvalue the field value
+     */
+    abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue);
 
     public function mapField(&$ecommObject, $serverField, $objectField){
         /**
@@ -55,7 +58,12 @@ abstract class BaseEcommerceService extends SingletonService{
     }
     
     /**
-     * get field definition from field map
+     * get field definition from field map.
+     * 
+     * If the field is a reference to another object
+     * retrieve the related object specific field.
+     * If no related field is set for a reference object
+     * an exception will be throw
      * 
      * @param FieldMapping $fieldMap the field map
      * @param $language the server languages
@@ -69,7 +77,7 @@ abstract class BaseEcommerceService extends SingletonService{
             $relatedField = $fieldMap->getRelatedField();
             
             if($relatedField == null || empty($relatedField)){
-                throw new Exception("ERROR - Related field must be defined for reference field '$objectField'");
+                throw new \Exception("ERROR - Related field must be defined for reference field '$objectField'");
             }
             
             $objectReflection = new \ReflectionObject($dataObject);
@@ -85,15 +93,18 @@ abstract class BaseEcommerceService extends SingletonService{
         
     }
     
+    /**
+     * Get the field value of the object.
+     * check if field is localized and, if yes, take the right translation.
+     * 
+     * @param type $fieldName the field to get
+     * @param type $language the language of translation (if needed)
+     * @param type $dataObject the object to get value of
+     * 
+     * @return the field value
+     */
     private function getField($fieldName, $language, $dataObject){
         $objectReflection = new \ReflectionObject($dataObject);
-        
-        if(strpos($fieldName, "__") > -1){
-            $fieldParts = explode("__", $fieldName);
-            
-            $relatedClass = ucfirst($fieldParts[0]);
-            $relatedField = $fieldParts[1];
-        }
         
         $classname = $dataObject->getClassName();
         

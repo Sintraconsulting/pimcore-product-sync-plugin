@@ -69,8 +69,8 @@ class FieldMapProvider implements SelectOptionsProviderInterface{
         $value = $fieldDefinition->getName();
         
         return array(
-            "key" => $isClassRelated ? $classDefinition->getName()." - ".$key : $key,
-            "value" => $isClassRelated ? strtolower($classDefinition->getName())."__".$value : $value
+            "key" => $key,
+            "value" => $value
         );
     }    
 

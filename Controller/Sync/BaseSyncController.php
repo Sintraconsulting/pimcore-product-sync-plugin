@@ -16,6 +16,8 @@ class BaseSyncController {
     protected $ecommerce;
 
     /**
+     * Dispatch syncronization invoking the server related syncronization service
+     * 
      * @param TargetServer $server
      * @throws \ReflectionException
      */
@@ -37,20 +39,30 @@ class BaseSyncController {
     }
 
     /**
+     * get a batch of products that need to be syncronized in a specific server
+     * 
      * @param TargetServer $server
+     * @param int $limit
      */
-    public function getServerToSyncProducts ($server) {
+    public function getServerToSyncProducts (TargetServer $server, $limit = 10) {
+        /**
+         * dynamically get syncronization info tablename starting from class definition.
+         * take the field collection type from the exportServers field allowed types.
+         */
         $classDef = ClassDefinition::getByName("Product");
         $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
         $classId = $classDef->getId();
         $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
+        
         $db = Db::get();
         $prodIds = $db->fetchAll(
-                "SELECT dependencies.sourceid FROM dependencies
-INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))
-  WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'
-  GROUP BY dependencies.sourceid",
-                [ $server->getId() ]);
+            "SELECT dependencies.sourceid FROM dependencies"
+            . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
+            . " WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'"
+            . " GROUP BY dependencies.sourceid"
+            . " LIMIT $limit",
+            [ $server->getId() ]);
+        
         $ids = [];
         foreach ($prodIds as $id) {
             $ids[] = $id['sourceid'];

@@ -109,6 +109,8 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
     }
     
     /**
+     * Syncronize products in all enabled servers
+     * 
      * @Route("/sync_products")
      */
     public function syncProductsAction(Request $request)

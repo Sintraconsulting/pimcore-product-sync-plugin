@@ -30,25 +30,11 @@
 				"attribute_code": "short_description",
 				"value": ""
 			},
-			{
-				"attribute_code": "url_key",
-				"value": ""
-			},
-			{
-				"attribute_code": "meta_title",
-				"value": ""
-			},
-			{
-				"attribute_code": "meta_keyword",
-				"value": ""
-			},
-			{
-				"attribute_code": "meta_description",
-				"value": ""
-			}
+			
+			[...]
 		]
 	},
-	"magento1" : {},
+	
 	"shopify" : {
 		"id": "",
 		"title": "",
@@ -63,6 +49,14 @@
 		],
 		"metafield_global_description_tag": "",
 		"metafields_global_title_tag": "",
-		"metafields": []
-	}
+		"metafields": [
+			{
+                "key": "my-field-name",
+                "value": "",
+                "value_type": "my-field-value",
+                "namespace": "my-namespace"
+            }]
+	},
+	
+	[...]
 }

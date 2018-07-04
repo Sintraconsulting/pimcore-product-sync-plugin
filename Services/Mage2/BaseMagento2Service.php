@@ -8,14 +8,15 @@ use SintraPimcoreBundle\Services\BaseEcommerceService;
  * Class Magento2Service
  */
 abstract class BaseMagento2Service extends BaseEcommerceService {
-    protected function insertSingleValue (&$ecommObject, $fieldName, $fieldvalue, $isBrick = false) {
-        if ($isBrick) {
-            $ecommObject["custom_attributes"][] = array(
-                    "attribute_code" => $fieldName,
-                    "value" => $fieldvalue
-            );
-            return;
-        }
+    /**
+     * Search for field name in the API call object skeleton
+     * and fill that with the field value.
+     * 
+     * @param type $ecommObject the object to fill for the API call
+     * @param type $fieldName the field name
+     * @param type $fieldvalue the field value
+     */
+    protected function insertSingleValue (&$ecommObject, $fieldName, $fieldvalue) {
 
         if (array_key_exists($fieldName, $ecommObject)) {
             $ecommObject[$fieldName] = $fieldvalue;

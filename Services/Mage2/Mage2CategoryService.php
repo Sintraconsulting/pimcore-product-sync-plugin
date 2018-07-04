@@ -2,7 +2,7 @@
 namespace SintraPimcoreBundle\Services\Mage2;
 
 use Pimcore\Model\DataObject\Category;
-use SintraPimcoreBundle\ApiManager\CategoryAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\CategoryAPIManager;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
 

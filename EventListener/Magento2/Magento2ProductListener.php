@@ -4,7 +4,7 @@ namespace SintraPimcoreBundle\EventListener\Magento2;
 
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Product;
-use SintraPimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\EventListener\InterfaceListener;
 
 class Magento2ProductListener extends Magento2ObjectListener implements InterfaceListener{
@@ -47,7 +47,7 @@ class Magento2ProductListener extends Magento2ObjectListener implements Interfac
      */
     public function postDeleteAction($product, $isUnpublished = false) {
         
-        $apiManager = ProductAPIManager::getInstance();
+        $apiManager = Mage2ProductAPIManager::getInstance();
         
         $sku = $product->getSku();
         $search = $apiManager->searchProducts("sku",$sku);

@@ -6,37 +6,23 @@
  * and open the template in the editor.
  */
 
-namespace SintraPimcoreBundle\ApiManager;
+namespace SintraPimcoreBundle\ApiManager\Mage2;
 
-use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
 use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
-use Pimcore\Tool\RestClient\Exception;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogCategoryRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body30;
-
-//include_once 'vendor/springimport/swagger-magento2-client/lib/Api/CatalogCategoryRepositoryV1Api.php'
-//include_once 'vendor/springimport/swagger-magento2-client/lib/Model/Body30.php';
-//include_once 'AbstractAPIManager.php';
+use Pimcore\Model\DataObject\TargetServer;
 
 /**
  * Magento Rest Category API Manager 
  *
  * @author Marco Guiducci
  */
-class CategoryAPIManager extends AbstractAPIManager {
+class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
-    private static $instance;
-
-    public static function getInstance() {
-        if (is_null(self::$instance)) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-
-    public function createEntity($entity) {
+    public function createEntity($entity, TargetServer $server) {
         
-        $apiClient = $this->getMagento2ApiInstance();
+        $apiClient = $this->getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -51,8 +37,8 @@ class CategoryAPIManager extends AbstractAPIManager {
         }
     }
 
-    public function deleteEntity($categoryId) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function deleteEntity($categoryId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -65,12 +51,12 @@ class CategoryAPIManager extends AbstractAPIManager {
         }
     }
 
-    public function getEntityByKey($categoryId) {
-        return $this->getEntity($categoryId);
+    public function getEntityByKey($categoryId, TargetServer $server) {
+        return $this->getEntity($server, $categoryId);
     }
     
-    public function getEntity($categoryId, $storeId = null) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function getEntity(TargetServer $server, $categoryId, $storeId = null) {
+        $apiClient = $this->getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -83,8 +69,8 @@ class CategoryAPIManager extends AbstractAPIManager {
         }
     }
 
-    public function updateEntity($categoryId, $entity) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function updateEntity($categoryId, $entity, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         

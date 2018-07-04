@@ -8,7 +8,7 @@
 
 namespace SintraPimcoreBundle\OptionsProviders;
 
-use SintraPimcoreBundle\ApiManager\AttributeSetAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\AttributeSetAPIManager;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\SelectOptionsProviderInterface;
 

@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-namespace SintraPimcoreBundle\ApiManager;
+namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use Pimcore\Logger;
 use Pimcore\Tool\RestClient\Exception;
@@ -14,29 +14,17 @@ use SpringImport\Swagger\Magento2\Client\Api\CatalogProductRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body18;
 use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
 
-
-//include_once 'vendor/springimport/swagger-magento2-client/lib/Api/CatalogProductRepositoryV1Api.php';
-//include_once 'vendor/springimport/swagger-magento2-client/lib/Model/Body18.php';
-//include_once 'AbstractAPIManager.php';
+use Pimcore\Model\DataObject\TargetServer;
 
 /**
- * Magento Rest Product API Manager 
+ * Magento2 Rest Product API Manager 
  *
  * @author Marco Guiducci
  */
-class ProductAPIManager extends AbstractAPIManager {
+class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
-    private static $instance;
-
-    public static function getInstance() {
-        if (is_null(self::$instance)) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-    
-    public function createEntity($entity) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function createEntity($entity, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -52,8 +40,8 @@ class ProductAPIManager extends AbstractAPIManager {
         }
     }
     
-    public function deleteEntity($sku) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function deleteEntity($sku, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -66,12 +54,12 @@ class ProductAPIManager extends AbstractAPIManager {
         }
     }
     
-    public function getEntityByKey($sku) {
-        return $this->getEntity($sku,null,null,null);
+    public function getEntityByKey($sku, TargetServer $server) {
+        return $this->getEntity($server,$sku,null,null,null);
     }
 
-    public function getEntity($sku, $editMode = null, $storeId = null, $forceReload = null) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function getEntity(TargetServer $server, $sku, $editMode = null, $storeId = null, $forceReload = null) {
+        $apiClient = $this->getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -103,8 +91,8 @@ class ProductAPIManager extends AbstractAPIManager {
      * - notnull:    Not null
      * - null:       Null
      */
-    public function searchProducts($field, $value, $conditionType = null) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function searchProducts(TargetServer $server, $field, $value, $conditionType = null) {
+        $apiClient = $this->getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -117,8 +105,8 @@ class ProductAPIManager extends AbstractAPIManager {
         }
     }
     
-    public function updateEntity($sku, $entity) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function updateEntity($sku, $entity, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 

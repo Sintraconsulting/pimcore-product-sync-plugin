@@ -2,7 +2,7 @@
 namespace SintraPimcoreBundle\Services\Mage2;
 
 use Pimcore\Model\DataObject\Product;
-use SintraPimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
@@ -17,7 +17,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      */
     public function export ($dataObject) {
 
-        $apiManager = ProductAPIManager::getInstance();
+        $apiManager = Mage2ProductAPIManager::getInstance();
         $sku = $dataObject->getSku();
         $search = $apiManager->searchProducts("sku", $sku);
 

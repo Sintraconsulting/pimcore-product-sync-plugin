@@ -5,7 +5,7 @@ namespace SintraPimcoreBundle\Controller;
 use PHPShopify\Exception\SdkException;
 use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
 use Pimcore\Tool\RestClient\Exception;
-use SintraPimcoreBundle\ApiManager\ProductAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
 use SintraPimcoreBundle\Services\Magento2\Magento2CategoryService;
 use Pimcore\Model\DataObject;

@@ -16,6 +16,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @return mixed|void
      */
     public function export ($dataObject) {
+        $magento2Product = json_decode(file_get_contents($this->configFile), true)['magento2'];
 
         $apiManager = Mage2ProductAPIManager::getInstance();
         $sku = $dataObject->getSku();
@@ -23,13 +24,13 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
         if($search["totalCount"] === 0){
             //product is new, need to save price
-            $magento2Product = $this->toEcomm($dataObject, true);
+            $this->toEcomm($magento2Product, $dataObject, true);
             Logger::debug("MAGENTO CR PRODUCT: ".json_encode($magento2Product));
 
             $result = $apiManager->createEntity($magento2Product);
         }else{
             //product already exists, we may want to not update prices
-            $magento2Product = $this->toEcomm($dataObject, MagentoConfig::$updateProductPrices);
+            $this->toEcomm($magento2Product, $dataObject, MagentoConfig::$updateProductPrices);
             Logger::debug("MAGENTO UP PRODUCT: ".json_encode($magento2Product));
 
             $result = $apiManager->updateEntity($sku,$magento2Product);
@@ -47,11 +48,11 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         }
     }
 
-    public function toEcomm ($dataObject, bool $updateProductPrices = false) {
-        $magento2Product = json_decode(file_get_contents($this->configFile), true)['magento2'];
+    public function toEcomm (&$ecommObject, $dataObject, bool $updateProductPrices = false) {
+        $ecommObject = json_decode(file_get_contents($this->configFile), true)['magento2'];
 
         if(!$updateProductPrices){
-            unset($magento2Product["price"]);
+            unset($ecommObject["price"]);
         }
 
         $fieldDefinitions = $dataObject->getClass()->getFieldDefinitions();
@@ -60,9 +61,9 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             $fieldType = $fieldDefinition->getFieldtype();
             $fieldValue = $dataObject->getValueForFieldName($fieldName);
 
-            $this->mapField($magento2Product, $fieldName, $fieldType, $fieldValue, $dataObject->getClassId());
+            $this->mapField($ecommObject, $fieldName, $fieldType, $fieldValue, $dataObject->getClassId());
         }
 
-        return $magento2Product;
+        //return $magento2Product;
     }
 }

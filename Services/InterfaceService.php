@@ -17,5 +17,5 @@ interface InterfaceService {
      * @param bool $update
      * @return mixed
      */
-    function toEcomm($dataObject, TargetServer $targetServer, bool $update = false);
+    function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, bool $update = false);
 }

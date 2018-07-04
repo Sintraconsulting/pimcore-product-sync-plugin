@@ -19,7 +19,15 @@ use Pimcore\Model\DataObject\TargetServer;
 class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManagerInterface{
 
     public function getEntityByKey($entityKey, TargetServer $server) {
-        throw new \Exception("ERROR - Method 'getEntityByKey' not implemented in 'ShopifyProductAPIManager'");
+        $apiClient = $this->getApiInstance($server);
+
+        try {
+            $result = $apiClient->Product($entityKey)->get();
+            return $result;
+        } catch (Exception $e) {
+            Logger::err('SEARCH SHOPIFY PRODUCT ERROR:', $e->getMessage());
+            return false;
+        }
     }
     
     public function searchShopifyProducts ($filters, TargetServer $server) {

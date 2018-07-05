@@ -13,7 +13,7 @@ use Pimcore\Model\DataObject\ClassDefinition;
  *
  * @author Marco Guiducci
  */
-abstract class QuantityValueOperator extends AbstractOperator{
+class QuantityValueOperator extends AbstractOperator{
     
     private $additionalData;
     
@@ -32,7 +32,7 @@ abstract class QuantityValueOperator extends AbstractOperator{
         $value = $rowData[$colIndex];
         $field = $this->additionalData["field"];
         
-        $reflection = new ReflectionObject($target);
+        $reflection = new \ReflectionObject($target);
         $setFieldMethod = $reflection->getMethod('set'. ucfirst($field));
         $setFieldMethod->invoke($target, $this->validateUnit($target->getClass(), $field, $value));
 

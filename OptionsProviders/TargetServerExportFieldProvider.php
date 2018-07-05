@@ -4,6 +4,10 @@ namespace SintraPimcoreBundle\OptionsProviders;
 
 use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\MultiSelectOptionsProviderInterface;
 use Pimcore\Model\DataObject\ClassDefinition;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Fieldcollections;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Objectbricks;
+use Pimcore\Model\DataObject\ClassDefinition\Layout\Fieldset;
 
 /**
  * List Product fields
@@ -20,7 +24,9 @@ class TargetServerExportFieldProvider implements MultiSelectOptionsProviderInter
         $fields = array();
         
         $classDefinition = ClassDefinition::getByName("Product");
-        $this->extractClassField($classDefinition, $fields);
+        foreach ($classDefinition->getFieldDefinitions() as $fieldDefinition) {
+            $this->extractClassField($fieldDefinition, $fields);
+        }
         
         return $fields;
     }
@@ -28,26 +34,28 @@ class TargetServerExportFieldProvider implements MultiSelectOptionsProviderInter
     /**
      * Extract fields of a class.
      * 
-     * @param ClassDefinition $classDefinition the class definition
+     * @param $fieldDefinition the field definition
      * @param array $fields array that will contains all fields
      */
-    private function extractClassField($classDefinition, &$fields){
-        foreach ($classDefinition->getFieldDefinitions() as $fieldDefinition) {
-            switch ($fieldDefinition->getFieldtype()){
-                case "localizedfields":
-                    foreach($fieldDefinition->getChilds() as $localizedFieldDefinition){
-                        $fields[] = $this->extractSingleOption($localizedFieldDefinition, $classDefinition);
-                    };
-                    break;
-                    
-                case "objectbricks":
-                case "fieldcollections":
-                    break;
-            
-                default:
-                    $fields[] = $this->extractSingleOption($fieldDefinition, $classDefinition);
-                    break;
+    private function extractClassField($fieldDefinition, &$fields){
+        if($fieldDefinition instanceof Localizedfields){
+            foreach ($fieldDefinition->getChildren() as $localizedFieldDefinition) {
+                $this->extractClassField($localizedFieldDefinition, $fields);
             }
+            
+        }else if($fieldDefinition instanceof Fieldset){
+            foreach ($fieldDefinition->getChildren() as $FieldsetFieldDefinition) {
+                $this->extractClassField($FieldsetFieldDefinition, $fields);
+            }
+            
+        }else if($fieldDefinition instanceof Fieldcollections){
+            //nothig ToDo here
+            
+        }else if($fieldDefinition instanceof Objectbricks){
+            //nothig ToDo here
+            
+        }else{
+            $fields[] = $this->extractSingleOption($fieldDefinition);
         }
     }
     
@@ -55,9 +63,10 @@ class TargetServerExportFieldProvider implements MultiSelectOptionsProviderInter
      * create a new option entry for each field.
      * 
      * @param mixed $fieldDefinition the field definition
-     * @param ClassDefinition $classDefinition the class definition
      */
-    private function extractSingleOption($fieldDefinition, $classDefinition){
+    private function extractSingleOption($fieldDefinition){
+        \Pimcore\Logger::info(print_r($fieldDefinition,true));
+        
         $key = $fieldDefinition->getTitle();
         $value = $fieldDefinition->getName();
         

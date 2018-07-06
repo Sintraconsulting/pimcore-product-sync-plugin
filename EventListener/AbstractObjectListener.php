@@ -8,11 +8,17 @@ use Pimcore\Model\DataObject\Category;
 use Pimcore\Model\DataObject\Product;
 use SintraPimcoreBundle\EventListener\Magento2\Magento2ObjectListener;
 use SintraPimcoreBundle\EventListener\Shopify\ShopifyObjectListener;
+use SintraPimcoreBundle\EventListener\General\ObjectListener;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 use ReflectionClass;
 
 abstract class AbstractObjectListener {
+    
+    /**
+     * @param Product $dataObject
+     */
+    public abstract function preAddDispatcher($dataObject);
     
     /**
      * @param Product|Category $dataObject
@@ -29,23 +35,39 @@ abstract class AbstractObjectListener {
      */
     public abstract function postDeleteDispatcher($dataObject);
     
+    public static function onPreAdd (DataObjectEvent $e) {
+       
+        if ($e instanceof DataObjectEvent) {
+            $obj = $e->getObject();
+            
+            $objectListener = new ObjectListener();
+            $objectListener->preAddDispatcher($obj);
+            
+            $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
+            $namespace = $customizationInfo["namespace"];
+            
+            if($namespace != null && !empty($namespace)){
+                Logger::info("AbstractObjectListener - Custom onPreAdd Event for namespace: ".$namespace);
+                $customObjectListenerClassName = '\\'.$namespace.'\\SintraPimcoreBundle\\EventListener\\ObjectListener';
+                
+                if(class_exists($customObjectListenerClassName)){
+                    $customObjectListenerClass = new ReflectionClass($customObjectListenerClassName);
+                    $customObjectListener = $customObjectListenerClass->newInstance();
+                    $customObjectListener->preAddDispatcher($obj);
+                }else{
+                    Logger::warn("AbstractObjectListener - WARNING. Class not found: ".$customObjectListenerClass);
+                }
+            }
+        }
+    }
 
     public static function onPreUpdate (DataObjectEvent $e) {
        
         if ($e instanceof DataObjectEvent) {
             $obj = $e->getObject();
             
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            if($enabledIntegrations["magento2"]){
-                $magento2ObjectListener = new Magento2ObjectListener();
-                $magento2ObjectListener->preUpdateDispatcher($obj);
-            }
-            
-            if($enabledIntegrations["shopify"]){
-                $shopifyObjectListener = new ShopifyObjectListener();
-                $shopifyObjectListener->preUpdateDispatcher($obj);
-            }
+            $objectListener = new ObjectListener();
+            $objectListener->preUpdateDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];
@@ -71,17 +93,8 @@ abstract class AbstractObjectListener {
             $saveVersionOnly = $e->hasArgument("saveVersionOnly");
             $obj = $e->getObject();
             
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            if($enabledIntegrations["magento2"]){
-                $magento2ObjectListener = new Magento2ObjectListener();
-                $magento2ObjectListener->postUpdateDispatcher($obj, $saveVersionOnly);
-            }
-            
-            if($enabledIntegrations["shopify"]){
-                $shopifyObjectListener = new ShopifyObjectListener();
-                $shopifyObjectListener->postUpdateDispatcher($obj, $saveVersionOnly);
-            }
+            $objectListener = new ObjectListener();
+            $objectListener->postUpdateDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];
@@ -106,17 +119,8 @@ abstract class AbstractObjectListener {
         if ($e instanceof DataObjectEvent) {
             $obj = $e->getObject();
             
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            if($enabledIntegrations["magento2"]){
-                $magento2ObjectListener = new Magento2ObjectListener();
-                $magento2ObjectListener->postDeleteDispatcher($obj);
-            }
-            
-            if($enabledIntegrations["shopify"]){
-                $shopifyObjectListener = new ShopifyObjectListener();
-                $shopifyObjectListener->postDeleteDispatcher($obj);
-            }
+            $objectListener = new ObjectListener();
+            $objectListener->postUpdateDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];

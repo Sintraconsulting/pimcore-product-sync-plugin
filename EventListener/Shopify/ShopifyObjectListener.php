@@ -19,6 +19,13 @@ class ShopifyObjectListener extends AbstractObjectListener{
         $this->shopifyProductListener = new ShopifyProductListener();
     }
     
+    public function preAddDispatcher($dataObject) {
+        $className = $dataObject->o_className;
+        $className = strtolower($className);
+        
+        Logger::debug("ShopifyObjectListener - Class '".$className."' is not Managed for preAdd");
+    }
+    
     /**
      * @param Product|Category $dataObject
      */

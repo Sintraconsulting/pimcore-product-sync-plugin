@@ -6,6 +6,11 @@ use Pimcore\Model\DataObject\Category;
 
 interface InterfaceListener {
     /**
+     * @param Product $dataObject
+     */
+    public function preAddAction($dataObject);
+    
+    /**
      * @param Product|Category $dataObject
      */
     public function preUpdateAction($dataObject);

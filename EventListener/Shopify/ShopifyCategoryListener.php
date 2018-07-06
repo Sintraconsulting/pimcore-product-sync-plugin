@@ -8,6 +8,13 @@ use SintraPimcoreBundle\EventListener\InterfaceListener;
 class ShopifyCategoryListener extends ShopifyObjectListener implements InterfaceListener {
 
     /**
+     * @param Category $product
+     */
+    public function preAddAction($dataObject) {
+        
+    }
+    
+    /**
      * @param Category $category
      */
     public function preUpdateAction($category) {

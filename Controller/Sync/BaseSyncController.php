@@ -7,6 +7,7 @@ use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Product\Listing;
 use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Tool\RestClient\Exception;
 use SintraPimcoreBundle\Services\InterfaceService;
 use Pimcore\Logger;
 use ReflectionClass;
@@ -34,9 +35,8 @@ class BaseSyncController {
             $productService = $productService::getInstance();
 
             $productsListing = new Product\Listing();
-            $productsListing->setCondition("o_id IN (". implode(",", [$products]).")");
-
-            return $this->exportProducts($productService, $productsListing, $server);
+            $productsListing->setCondition("o_id IN (" . $products . ")");
+            return ($this->exportProducts($productService, $productsListing, $server));
         }
         
         Logger::info("BaseSyncController - There are no product to sync for '".$server->getServer_name()."' server");
@@ -57,14 +57,17 @@ class BaseSyncController {
         $classDef = ClassDefinition::getByName("Product");
         $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
         $classId = $classDef->getId();
+        $productTableClass = 'object_query_' . $classId;
         $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
         
         $db = Db::get();
         $prodIds = $db->fetchAll(
             "SELECT dependencies.sourceid FROM dependencies"
             . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.name=? AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
+            . " INNER JOIN $productTableClass as prod ON (prod.oo_id = dependencies.sourceid AND prod.oo_className = 'Product' )"
             . " WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'"
-            . " GROUP BY dependencies.sourceid"
+            . " GROUP BY prod.radice"
+            . " ORDER BY dependencies.sourceid ASC"
             . " LIMIT $limit",
             [ $server->getKey(), $server->getId() ]);
         
@@ -104,9 +107,9 @@ class BaseSyncController {
 
         while($next){
             $product = $products->current();
-
+            $exportProducts = $this->getRelationProductsFromBase($product->getRadice());
             try{
-                $productService->export($product, $server);
+                return $productService->export($exportProducts, $server);
                 $syncronizedElements++;
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$product->getId().": ".$e->getMessage();
@@ -131,6 +134,16 @@ class BaseSyncController {
         $response["elements with errors"] = $elementsWithError;
 
         return $this->logSyncedProducts($response, $this->getEcommerce());
+    }
+
+    protected function getRelationProductsFromBase ($radice) {
+        try {
+            $productsListing = new Product\Listing();
+            $productsListing->setCondition('radice = ?', [$radice]);
+            return $productsListing;
+        } catch (Exception $e) {
+            Logger::critical($e->getMessage());
+        }
     }
 
     protected function logSyncedProducts ($response, $ecomm, $finished = null) {

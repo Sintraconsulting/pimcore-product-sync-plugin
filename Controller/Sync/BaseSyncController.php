@@ -109,7 +109,7 @@ class BaseSyncController {
             $product = $products->current();
             $exportProducts = $this->getRelationProductsFromBase($product->getRadice());
             try{
-                return $productService->export($exportProducts, $server);
+                $productService->export($exportProducts, $server);
                 $syncronizedElements++;
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$product->getId().": ".$e->getMessage();

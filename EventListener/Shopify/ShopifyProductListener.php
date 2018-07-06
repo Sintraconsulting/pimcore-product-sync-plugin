@@ -10,7 +10,7 @@ class ShopifyProductListener extends ShopifyObjectListener implements InterfaceL
     /**
      * @param Product $product
      */
-    public function postAddAction($dataObject) {
+    public function preAddAction($dataObject) {
         
     }
 

@@ -12,7 +12,7 @@ class Magento2CategoryListener extends Magento2ObjectListener implements Interfa
     /**
      * @param Product $product
      */
-    public function postAddAction($dataObject) {
+    public function preAddAction($dataObject) {
         
     }
     

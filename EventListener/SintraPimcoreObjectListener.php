@@ -8,8 +8,8 @@ use SintraPimcoreBundle\EventListener\AbstractObjectListener;
 
 class SintraPimcoreObjectListener {
     
-    public function onPostAdd (DataObjectEvent $e) {
-       AbstractObjectListener::onPostAdd($e);
+    public function onPreAdd (DataObjectEvent $e) {
+       AbstractObjectListener::onPreAdd($e);
     }
     
     public function onPreUpdate (DataObjectEvent $e) {

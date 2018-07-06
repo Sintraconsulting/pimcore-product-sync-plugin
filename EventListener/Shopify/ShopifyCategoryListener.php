@@ -10,7 +10,7 @@ class ShopifyCategoryListener extends ShopifyObjectListener implements Interface
     /**
      * @param Category $product
      */
-    public function postAddAction($dataObject) {
+    public function preAddAction($dataObject) {
         
     }
     

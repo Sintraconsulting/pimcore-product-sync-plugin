@@ -8,7 +8,7 @@ interface InterfaceListener {
     /**
      * @param Product $dataObject
      */
-    public function postAddAction($dataObject);
+    public function preAddAction($dataObject);
     
     /**
      * @param Product|Category $dataObject

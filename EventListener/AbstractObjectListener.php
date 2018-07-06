@@ -8,6 +8,7 @@ use Pimcore\Model\DataObject\Category;
 use Pimcore\Model\DataObject\Product;
 use SintraPimcoreBundle\EventListener\Magento2\Magento2ObjectListener;
 use SintraPimcoreBundle\EventListener\Shopify\ShopifyObjectListener;
+use SintraPimcoreBundle\EventListener\General\ObjectListener;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 use ReflectionClass;
@@ -39,17 +40,8 @@ abstract class AbstractObjectListener {
         if ($e instanceof DataObjectEvent) {
             $obj = $e->getObject();
             
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            if($enabledIntegrations["magento2"]){
-                $magento2ObjectListener = new Magento2ObjectListener();
-                $magento2ObjectListener->preAddDispatcher($obj);
-            }
-            
-            if($enabledIntegrations["shopify"]){
-                $shopifyObjectListener = new ShopifyObjectListener();
-                $shopifyObjectListener->preAddDispatcher($obj);
-            }
+            $objectListener = new ObjectListener();
+            $objectListener->preAddDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];
@@ -74,17 +66,8 @@ abstract class AbstractObjectListener {
         if ($e instanceof DataObjectEvent) {
             $obj = $e->getObject();
             
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            if($enabledIntegrations["magento2"]){
-                $magento2ObjectListener = new Magento2ObjectListener();
-                $magento2ObjectListener->preUpdateDispatcher($obj);
-            }
-            
-            if($enabledIntegrations["shopify"]){
-                $shopifyObjectListener = new ShopifyObjectListener();
-                $shopifyObjectListener->preUpdateDispatcher($obj);
-            }
+            $objectListener = new ObjectListener();
+            $objectListener->preUpdateDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];
@@ -110,17 +93,8 @@ abstract class AbstractObjectListener {
             $saveVersionOnly = $e->hasArgument("saveVersionOnly");
             $obj = $e->getObject();
             
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            if($enabledIntegrations["magento2"]){
-                $magento2ObjectListener = new Magento2ObjectListener();
-                $magento2ObjectListener->postUpdateDispatcher($obj, $saveVersionOnly);
-            }
-            
-            if($enabledIntegrations["shopify"]){
-                $shopifyObjectListener = new ShopifyObjectListener();
-                $shopifyObjectListener->postUpdateDispatcher($obj, $saveVersionOnly);
-            }
+            $objectListener = new ObjectListener();
+            $objectListener->postUpdateDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];
@@ -145,17 +119,8 @@ abstract class AbstractObjectListener {
         if ($e instanceof DataObjectEvent) {
             $obj = $e->getObject();
             
-            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
-            
-            if($enabledIntegrations["magento2"]){
-                $magento2ObjectListener = new Magento2ObjectListener();
-                $magento2ObjectListener->postDeleteDispatcher($obj);
-            }
-            
-            if($enabledIntegrations["shopify"]){
-                $shopifyObjectListener = new ShopifyObjectListener();
-                $shopifyObjectListener->postDeleteDispatcher($obj);
-            }
+            $objectListener = new ObjectListener();
+            $objectListener->postUpdateDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];

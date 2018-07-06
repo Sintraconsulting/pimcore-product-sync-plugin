@@ -16,6 +16,13 @@ class Magento2ObjectListener extends AbstractObjectListener{
         $this->isPublishedBeforeSave = $isPublishedBeforeSave;
     }
 
+    public function postAddDispatcher($dataObject) {
+        $className = $dataObject->o_className;
+        $className = strtolower($className);
+        
+        Logger::debug("Magento2ObjectListener - Class '".$className."' is not Managed for preUpdate");
+    }
+    
     /**
      * @param Product|Category $dataObject
      */

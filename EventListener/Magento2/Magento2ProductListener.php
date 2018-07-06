@@ -12,6 +12,14 @@ class Magento2ProductListener extends Magento2ObjectListener implements Interfac
     /**
      * @param Product $product
      */
+    public function postAddAction($dataObject) {
+        
+    }
+
+    
+    /**
+     * @param Product $product
+     */
     public function preUpdateAction($product) {
         $this->setIsPublishedBeforeSave($product->isPublished());
     }

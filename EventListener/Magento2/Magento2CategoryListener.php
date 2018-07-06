@@ -10,6 +10,13 @@ use SintraPimcoreBundle\EventListener\InterfaceListener;
 class Magento2CategoryListener extends Magento2ObjectListener implements InterfaceListener{
     
     /**
+     * @param Product $product
+     */
+    public function postAddAction($dataObject) {
+        
+    }
+    
+    /**
      * @param Category $category
      */
     public function preUpdateAction($category) {

@@ -15,6 +15,11 @@ use ReflectionClass;
 abstract class AbstractObjectListener {
     
     /**
+     * @param Product $dataObject
+     */
+    public abstract function postAddDispatcher($dataObject);
+    
+    /**
      * @param Product|Category $dataObject
      */
     public abstract function preUpdateDispatcher($dataObject);
@@ -29,6 +34,40 @@ abstract class AbstractObjectListener {
      */
     public abstract function postDeleteDispatcher($dataObject);
     
+    public static function onPostAdd (DataObjectEvent $e) {
+       
+        if ($e instanceof DataObjectEvent) {
+            $obj = $e->getObject();
+            
+            $enabledIntegrations = BaseEcommerceConfig::getEnabledIntegrations();
+            
+            if($enabledIntegrations["magento2"]){
+                $magento2ObjectListener = new Magento2ObjectListener();
+                $magento2ObjectListener->postAddDispatcher($obj);
+            }
+            
+            if($enabledIntegrations["shopify"]){
+                $shopifyObjectListener = new ShopifyObjectListener();
+                $shopifyObjectListener->postAddDispatcher($obj);
+            }
+            
+            $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
+            $namespace = $customizationInfo["namespace"];
+            
+            if($namespace != null && !empty($namespace)){
+                Logger::info("AbstractObjectListener - Custom onPostAdd Event for namespace: ".$namespace);
+                $customObjectListenerClassName = '\\'.$namespace.'\\SintraPimcoreBundle\\EventListener\\ObjectListener';
+                
+                if(class_exists($customObjectListenerClassName)){
+                    $customObjectListenerClass = new ReflectionClass($customObjectListenerClassName);
+                    $customObjectListener = $customObjectListenerClass->newInstance();
+                    $customObjectListener->postAddDispatcher($obj);
+                }else{
+                    Logger::warn("AbstractObjectListener - WARNING. Class not found: ".$customObjectListenerClass);
+                }
+            }
+        }
+    }
 
     public static function onPreUpdate (DataObjectEvent $e) {
        

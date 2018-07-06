@@ -8,6 +8,7 @@
 
 namespace SintraPimcoreBundle\ApiManager\Shopify;
 
+use Pimcore\Logger;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use Pimcore\Model\DataObject\TargetServer;
 
@@ -47,6 +48,9 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
 
         try {
             $result = $apiClient->Product->post($entity);
+            Logger::log('response API: ');
+            Logger::log(print_r($result, true));
+            Logger::log(($result));
             return $result;
         } catch (Exception $e) {
             Logger::err('CREATE SHOPIFY PRODUCT ERROR:', $e->getMessage());

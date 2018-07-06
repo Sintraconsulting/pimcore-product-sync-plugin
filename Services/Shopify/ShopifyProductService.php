@@ -3,6 +3,7 @@
 namespace SintraPimcoreBundle\Services\Shopify;
 
 
+use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Logger;
@@ -14,12 +15,15 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
 
     /**
      * 
-     * @param Product $dataObject
+     * @param Product\Listing $dataObject
      * @param TargetServer $targetServer
      */
-    public function export ($dataObject, TargetServer $targetServer) {
-        $shopifyProduct = json_decode(file_get_contents($this->configFile), true)[$targetServer->getKey()];
-        
+    public function export ($dataObjects, TargetServer $targetServer) {
+        /** @var Product $dataObject */
+        $dataObject = $dataObjects->current();
+//        $shopifyProduct = json_decode(file_get_contents($this->configFile), true)[$targetServer->getKey()];
+        $shopifyApi = [];
+        /** @var ShopifyProductAPIManager $apiManager */
         $apiManager = ShopifyProductAPIManager::getInstance();
         $serverObjectInfo = $this->getServerObjectInfo($dataObject, $targetServer);
         
@@ -30,31 +34,27 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $search = $apiManager->getEntityByKey($shopifyId, $targetServer);
             Logger::info("SEARCH RESULT: $shopifyId".print_r($search,true));
         }
+        return json_encode($search);
 
         if (count($search) === 0) {
             //product is new, need to save price
-            $this->toEcomm($shopifyProduct, $dataObject, $targetServer, true);
-            Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyProduct));
-            
-            $result = $apiManager->createEntity($shopifyProduct, $targetServer);
-            $serverObjectInfo->setSync_at($result["updated_at"]);
-            $serverObjectInfo->setObject_id($result['id']);
+            $this->toEcomm($shopifyApi, $dataObjects, $targetServer, true);
+            Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
+
+            /** @var ShopifyProductAPIManager $apiManager */
+            $result = $apiManager->createEntity($shopifyApi, $targetServer);
         } else if (count($search) === 1){
-            $shopifyProduct["id"] = $search[0]['id'];
+            $shopifySkeleton["id"] = $search[0]['id'];
             
             //product already exists, we may want to not update prices
             $this->toEcomm($shopifyProduct, $dataObject, $targetServer, true);
             Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyProduct));
-            
             $result = $apiManager->updateEntity($search[0]['id'], $shopifyProduct, $targetServer);
-            $serverObjectInfo->setSync_at($result[0]["updated_at"]);
         }
         Logger::debug("SHOPIFY UPDATED PRODUCT: " . json_encode($result));
 
-        $serverObjectInfo->setSync(true);
-        
         try {
-            $dataObject->update(true);
+            $this->setSyncProducts($result, $targetServer);
         } catch (\Exception $e) {
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
@@ -63,29 +63,70 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     /**
      * Get the mapping of field to export from the server definition.
      * For localized fields, the first valid language will be used.
-     * 
-     * @param Product $dataObject
+     *
+     * @param $shopifyApi
+     * @param Product\Listing $dataObjects
      * @param TargetServer $targetServer
      * @param bool $update
      */
-    public function toEcomm (&$ecommObject, $dataObject, TargetServer $targetServer, bool $update = false) {
-        
-        if (!$update) {
-            unset($ecommObject["variant"][0]["price"]);
-        }
+    public function toEcomm (&$shopifyApi, $dataObjects, TargetServer $targetServer, bool $update = false) {
 
         $exportMap = $targetServer->getExportMap()->getItems();
         $languages = $targetServer->getLanguages();
-        
+
+        $shopifyApi = $this->prepareVariants($shopifyApi, $dataObjects, $targetServer);
+
+        /** @var FieldMapping $fieldMap */
         foreach ($exportMap as $fieldMap) {
+
             //get the value of each object field
-            $objectField = $this->getObjectField($fieldMap, $languages[0], $dataObject);
-            
+            $apiField = $fieldMap->getServerField();
+
+            $fieldsDepth = explode('.', $apiField);
+            $shopifyApi = $this->mapServerMultipleField($shopifyApi, $fieldMap, $fieldsDepth, $languages[0], $dataObjects, $targetServer);
+//            if ($depth > 1) {
+//                $shopifyApi = $this->mapServerMultipleField($shopifyApi, $fieldMap, $fieldsDepth, $languages[0], $dataObjects);
+//            } else {
+//                $objectFieldValue = $this->getObjectField($fieldMap, $languages[0], $dataObjects->current());
+//                $shopifyApi = $this->mapServerField($shopifyApi, $objectFieldValue, $apiField);
+//            }
             //get the name of the related field in server from field mapping
-            $serverField = $fieldMap->getServerField();
-            $this->mapField($ecommObject, $serverField, $objectField);
         }
 
         //return $ecommObject;
+    }
+
+    /**
+     * @param $shopifyApi
+     * @param Product\Listing $products
+     */
+    public function prepareVariants($shopifyApi, $products, TargetServer $server) {
+        $shopifyApi['variants'] = [];
+        foreach ($products as $product) {
+            $serverObjectInfo = $this->getServerObjectInfo($product, $server);
+            $varId = $serverObjectInfo->getVariant_id();
+            if ($varId) {
+                $shopifyApi['variants'][] = [
+                        'id' => $varId
+                ];
+            } else {
+                $shopifyApi['variants'][] = [];
+            }
+        }
+        return $shopifyApi;
+    }
+
+    protected function setSyncProducts ($results, $targetServer) {
+        if (is_array($results)) {
+            foreach ($results['variants'] as $variant) {
+                $product = Product::getBySku($variant['sku'])->current();
+                $serverObjectInfo = $this->getServerObjectInfo($product, $targetServer);
+                $serverObjectInfo->setSync(true);
+                $serverObjectInfo->setSync_at($results["updated_at"]);
+                $serverObjectInfo->setObject_id($results['id']);
+                $serverObjectInfo->setVariant_id($variant['id']);
+                $product->update(true);
+            }
+        }
     }
 }

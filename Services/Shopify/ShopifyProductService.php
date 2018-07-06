@@ -28,13 +28,12 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         $serverObjectInfo = $this->getServerObjectInfo($dataObject, $targetServer);
         
         $shopifyId = $serverObjectInfo->getObject_id();
-        
+
         $search = array();
         if($shopifyId != null && !empty($shopifyId)){
-            $search = $apiManager->getEntityByKey($shopifyId, $targetServer);
+            $search = $apiManager->searchShopifyProducts(['ids' => $shopifyId],$targetServer);
             Logger::info("SEARCH RESULT: $shopifyId".print_r($search,true));
         }
-        return json_encode($search);
 
         if (count($search) === 0) {
             //product is new, need to save price
@@ -44,12 +43,13 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             /** @var ShopifyProductAPIManager $apiManager */
             $result = $apiManager->createEntity($shopifyApi, $targetServer);
         } else if (count($search) === 1){
-            $shopifySkeleton["id"] = $search[0]['id'];
+            $shopifyApi["id"] = $search[0]['id'];
             
             //product already exists, we may want to not update prices
-            $this->toEcomm($shopifyProduct, $dataObject, $targetServer, true);
-            Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyProduct));
-            $result = $apiManager->updateEntity($search[0]['id'], $shopifyProduct, $targetServer);
+            $this->toEcomm($shopifyApi, $dataObjects, $targetServer, true);
+            Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
+            /** @var ShopifyProductAPIManager $apiManager */
+            $result = $apiManager->updateEntity($shopifyId, $shopifyApi, $targetServer);
         }
         Logger::debug("SHOPIFY UPDATED PRODUCT: " . json_encode($result));
 

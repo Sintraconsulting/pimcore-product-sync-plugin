@@ -120,7 +120,7 @@ abstract class AbstractObjectListener {
             $obj = $e->getObject();
             
             $objectListener = new ObjectListener();
-            $objectListener->postUpdateDispatcher($obj);
+            $objectListener->postDeleteDispatcher($obj);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];

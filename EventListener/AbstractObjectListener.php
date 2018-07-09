@@ -94,7 +94,7 @@ abstract class AbstractObjectListener {
             $obj = $e->getObject();
             
             $objectListener = new ObjectListener();
-            $objectListener->postUpdateDispatcher($obj);
+            $objectListener->postUpdateDispatcher($obj,$saveVersionOnly);
             
             $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
             $namespace = $customizationInfo["namespace"];

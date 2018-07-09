@@ -10,6 +10,7 @@ namespace SintraPimcoreBundle\Utils;
 
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Model\DataObject\Fieldcollection;
 
 /**
  * Event Listener Utils

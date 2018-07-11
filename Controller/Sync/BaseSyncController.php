@@ -12,6 +12,7 @@ use SintraPimcoreBundle\Services\InterfaceService;
 use Pimcore\Logger;
 use ReflectionClass;
 use Pimcore\Db;
+use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 class BaseSyncController {
     protected $ecommerce;
@@ -27,7 +28,17 @@ class BaseSyncController {
         $serverType = $server->getServer_type();
         $serviceName = "\SintraPimcoreBundle\Services\\" . ucfirst($serverType) . '\\' . ucfirst($serverType) . 'ProductService';
 
-        $products = $this->getServerToSyncProducts($server);
+        $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
+        $namespace = $customizationInfo["namespace"];
+        if ($namespace) {
+            $ctrName = $namespace . '\SintraPimcoreBundle\Controller\Sync\\' . ucfirst($serverType) . 'SyncController';
+            $syncControllerClass =  new ReflectionClass($ctrName);
+            /** @var \TucanoPimBundle\SintraPimcoreBundle\Controller\Sync\ShopifySyncController $syncController */
+            $syncController = $syncControllerClass->newInstance();
+            $products = $syncController->getServerToSyncProducts($server);
+        } else {
+            $products = $this->getServerToSyncProducts($server);
+        }
 
         if($products != null && !empty($products)){
             $productServiceClass = new ReflectionClass($serviceName);
@@ -36,7 +47,9 @@ class BaseSyncController {
 
             $productsListing = new Product\Listing();
             $productsListing->setCondition("o_id IN (" . $products . ")");
-            return ($this->exportProducts($productService, $productsListing, $server));
+            return $namespace ?
+                    ($syncController->exportProducts($productService, $productsListing, $server)) :
+                    ($this->exportProducts($productService, $productsListing, $server));
         }
         
         Logger::info("BaseSyncController - There are no product to sync for '".$server->getServer_name()."' server");
@@ -66,7 +79,6 @@ class BaseSyncController {
             . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.name=? AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
             . " INNER JOIN $productTableClass as prod ON (prod.oo_id = dependencies.sourceid AND prod.oo_className = 'Product' )"
             . " WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'"
-            . " GROUP BY prod.radice"
             . " ORDER BY dependencies.sourceid ASC"
             . " LIMIT $limit",
             [ $server->getKey(), $server->getId() ]);
@@ -107,9 +119,8 @@ class BaseSyncController {
 
         while($next){
             $product = $products->current();
-            $exportProducts = $this->getRelationProductsFromBase($product->getRadice());
             try{
-                $productService->export($exportProducts, $server);
+                $productService->export($product, $server);
                 $syncronizedElements++;
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$product->getId().": ".$e->getMessage();
@@ -136,12 +147,12 @@ class BaseSyncController {
         return $this->logSyncedProducts($response, $this->getEcommerce());
     }
 
-    protected function getRelationProductsFromBase ($radice) {
+    protected function getRelationProductsFromBase ($field, $value) {
         try {
             $productsListing = new Product\Listing();
-            $productsListing->setCondition('radice = ?', [$radice]);
+            $productsListing->setCondition("$field = ?", [$value]);
             return $productsListing;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Logger::critical($e->getMessage());
         }
     }

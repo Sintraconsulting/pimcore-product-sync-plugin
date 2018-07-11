@@ -37,39 +37,7 @@ abstract class BaseEcommerceService extends SingletonService{
 
     public function mapServerField ($apiObject, $serverFieldValue, $apiField) {
         // TODO: special cases managing here
-        if($serverFieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue){
-            if ($apiField == 'weight') {
-                return $this->insertServerSingleField($apiObject, $serverFieldValue->getValue(), $apiField) + $this->insertServerSingleField($apiObject, $serverFieldValue->getUnit()->getAbbreviation(), 'weight_unit');
-            }
-        }
         return $this->insertServerSingleField($apiObject, $serverFieldValue, $apiField);
-    }
-
-    public function mapServerMultipleField ($shopifyApi, $fieldMap, $fieldsDepth, $language, $dataSource = null, $server = null) {
-        if(count($fieldsDepth) == 1) {
-            /** @var Product\Listing $dataSource */
-            if ( method_exists($dataSource, 'current') ) {
-                $dataSource = $dataSource->getObjects()[0];
-            }
-            $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
-            $apiField = $fieldsDepth[0];
-            return $this->mapServerField($shopifyApi, $fieldValue, $apiField);
-        }
-        $parentDepth = array_shift($fieldsDepth);
-
-        if ($parentDepth == 'variants' && $dataSource) {
-            $i = 0;
-            foreach ($dataSource as $dataObject) {
-                $serverInfo = $this->getServerObjectInfo($dataObject, $server);
-                if (!$serverInfo->getSync()) {
-                    $shopifyApi[$parentDepth][$i] = $this->mapServerMultipleField($shopifyApi[$parentDepth][$i], $fieldMap, $fieldsDepth, $language, $dataObject);
-                }
-                $i++;
-            }
-            return $shopifyApi;
-        }
-
-//        return $this->mapServerMultipleField()
     }
 
     protected function insertServerSingleField ($apiObject, $serverFieldValue, $apiField) {

@@ -7,7 +7,6 @@ use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\Product\Listing;
 use Pimcore\Model\DataObject\TargetServer;
-use Pimcore\Tool\RestClient\Exception;
 use SintraPimcoreBundle\Services\InterfaceService;
 use Pimcore\Logger;
 use ReflectionClass;

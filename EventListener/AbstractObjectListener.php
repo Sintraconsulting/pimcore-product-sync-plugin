@@ -6,8 +6,6 @@ use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Category;
 use Pimcore\Model\DataObject\Product;
-use SintraPimcoreBundle\EventListener\Magento2\Magento2ObjectListener;
-use SintraPimcoreBundle\EventListener\Shopify\ShopifyObjectListener;
 use SintraPimcoreBundle\EventListener\General\ObjectListener;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 

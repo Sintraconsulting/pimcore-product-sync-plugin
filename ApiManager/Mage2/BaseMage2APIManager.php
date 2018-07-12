@@ -15,6 +15,8 @@ use SpringImport\Swagger\Magento2\Client\Configuration;
 use SpringImport\Swagger\Magento2\Client\ApiClient;
 use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 
+use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Model\DataObject\Objectbrick\Data\Mage2ServerInfo;
 /**
  * Base Magento2 API Manager
  *
@@ -23,16 +25,34 @@ use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 class BaseMage2APIManager extends AbstractAPIManager{
 
     public function getApiInstance(TargetServer $server) {
-        $magentoConfig = MagentoConfig::getConfig();
+        $serverInfo = $this->getServerInfo($server);
 
-        $baseUrl = $magentoConfig['path'] . '/rest';
-        $token = 'bearer ' . $magentoConfig['apiKey'];
+        $baseUrl = $server->getServerBaseUrl() . '/rest';
+        $token = 'bearer ' . $serverInfo->getApiKey();
 
         $config = new Configuration();
         $config->setHost($baseUrl);
         $config->addDefaultHeader('Authorization', $token);
 
         return new ApiClient($config);
+    }
+    
+    /**
+     * get server info from object brick
+     * 
+     * @param TargetServer $server the server
+     * @return Mage2ServerInfo the server info
+     */
+    private function getServerInfo(TargetServer $server){
+        $serverInfos = $server->getServerInfo()->getItems();
+        
+        $serverInfo = $serverInfos[0];
+        if($serverInfo->getType() != "Mage2ServerInfo"){
+            throw new \Exception("BaseMage2APIManager ERROR - ServerInfo must be an instance of 'Mage2ServerInfo' for Magento. "
+                    . "'".$serverInfo->getType()."' given");
+        }
+        
+        return $serverInfo;
     }
 
 }

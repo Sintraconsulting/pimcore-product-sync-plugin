@@ -13,9 +13,7 @@ use Pimcore\Model\DataObject\TargetServer;
 
 use SpringImport\Swagger\Magento2\Client\Configuration;
 use SpringImport\Swagger\Magento2\Client\ApiClient;
-use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 
-use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Objectbrick\Data\Mage2ServerInfo;
 /**
  * Base Magento2 API Manager

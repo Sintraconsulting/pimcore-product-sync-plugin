@@ -20,7 +20,7 @@ abstract class HTMLOperator extends AbstractOperator{
     }
     
     /**
-     * Dynamically invoke field setter for quantityValue fields 
+     * Dynamically invoke field setter for html fields 
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         

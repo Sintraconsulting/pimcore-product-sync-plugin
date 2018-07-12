@@ -21,7 +21,7 @@ class TransliterateOperator extends AbstractOperator{
     }
     
     /**
-     * Dynamically invoke field setter for quantityValue fields 
+     * Dynamically invoke field setter for fields to transliterate
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         

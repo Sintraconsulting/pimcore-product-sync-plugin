@@ -23,7 +23,7 @@ class PicklistOperator extends AbstractOperator{
     }
     
     /**
-     * Dynamically invoke field setter for quantityValue fields 
+     * Dynamically invoke field setter for picklist fields 
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         

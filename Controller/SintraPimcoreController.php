@@ -7,7 +7,7 @@ use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
 use Pimcore\Tool\RestClient\Exception;
 use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
-use SintraPimcoreBundle\Services\Magento2\Magento2CategoryService;
+use SintraPimcoreBundle\Services\Mage2\Mage2CategoryService;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
@@ -48,7 +48,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
      */
     public function syncCategoriesAction(Request $request)
     {
-        $categoryUtils = Magento2CategoryService::getInstance();
+        $categoryUtils = Mage2CategoryService::getInstance();
         
         $categories = new DataObject\Category\Listing();
         $categories->addConditionParam("export_to_magento = ?", "1");
@@ -121,7 +121,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             $servers = new DataObject\TargetServer\Listing();
             $servers->addConditionParam('enabled', true);
             foreach ($servers as $server) {
-                $response[] = print_r($syncCTR->syncServerProducts($server), true);
+                $response[] = ($syncCTR->syncServerProducts($server));
             }
 
             Cache::clearTag("output");

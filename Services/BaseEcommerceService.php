@@ -2,6 +2,7 @@
 namespace SintraPimcoreBundle\Services;
 
 use Pimcore\Logger;
+use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
@@ -28,17 +29,29 @@ abstract class BaseEcommerceService extends SingletonService{
          * Other special cases will be manage when needed
          */
         if($objectField instanceof \Pimcore\Model\DataObject\Data\QuantityValue){
-            $this->insertSingleValue($ecommObject, $serverField, $objectField->getValue());
+            return $this->insertSingleValue($ecommObject, $serverField, $objectField->getValue());
         }else{
-            $this->insertSingleValue($ecommObject, $serverField, $objectField);
+            return $this->insertSingleValue($ecommObject, $serverField, $objectField);
         }
+    }
+
+    public function mapServerField ($apiObject, $serverFieldValue, $apiField) {
+        // TODO: special cases managing here
+        return $this->insertServerSingleField($apiObject, $serverFieldValue, $apiField);
+    }
+
+    protected function insertServerSingleField ($apiObject, $serverFieldValue, $apiField) {
+        if (!array_key_exists($apiField, $apiObject)) {
+            return $apiObject + [ $apiField => $serverFieldValue ];
+        }
+        return $apiObject;
     }
     
     /**
      * Retrieve $dataObject's Fieldcollection related to $targetServer
      * searching in $dataObject's exportServers field
      * 
-     * @param $dataObject the object to sync
+     * @param Product $dataObject object to sync
      * @param TargetServer $targetServer the server to sync object in
      * 
      * @return ServerObjectInfo

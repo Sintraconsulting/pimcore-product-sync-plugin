@@ -6,6 +6,7 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
+use Pimcore\Model\DataObject\Listing;
 
 /**
  * Extending classes have to define their own functionality for custom attributes.
@@ -23,8 +24,25 @@ abstract class BaseEcommerceService extends SingletonService{
      * @param type $fieldvalue the field value
      */
     abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue);
+    
+    
+    /**
+     * Return object listing of a specific class in respect to a specific condition.
+     * In general case, object id is considered.
+     * 
+     * @param $objectId
+     * @param $classname
+     * @return Listing
+     */
+    protected function getObjectsToExport($objectId, $classname){
+        $listingClass = new ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
+        $listing = $listingClass->newInstance();
 
-    public function mapField(&$ecommObject, $serverField, $objectField){
+        $listing->setCondition("oo_id = ".$listing->quote($objectId));
+        return $listing;
+    }
+
+    protected function mapField(&$ecommObject, $serverField, $objectField){
         /**
          * Other special cases will be manage when needed
          */
@@ -35,7 +53,7 @@ abstract class BaseEcommerceService extends SingletonService{
         }
     }
 
-    public function mapServerField ($apiObject, $serverFieldValue, $apiField) {
+    protected function mapServerField ($apiObject, $serverFieldValue, $apiField) {
         // TODO: special cases managing here
         return $this->insertServerSingleField($apiObject, $serverFieldValue, $apiField);
     }

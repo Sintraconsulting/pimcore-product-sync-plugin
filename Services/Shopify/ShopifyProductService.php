@@ -16,12 +16,15 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
 
     /**
      *
-     * @param Product\Listing $dataObject
+     * @param $productId
      * @param TargetServer $targetServer
      */
-    public function export ($dataObjects, TargetServer $targetServer) {
+    public function export ($productId, TargetServer $targetServer) {
+        $dataObjects = $this->getObjectsToExport($productId, "Product");
+        
         /** @var Product $dataObject */
         $dataObject = $dataObjects->current();
+        
 //        $shopifyProduct = json_decode(file_get_contents($this->configFile), true)[$targetServer->getKey()];
         $shopifyApi = [];
         /** @var ShopifyProductAPIManager $apiManager */
@@ -85,13 +88,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
 
             $fieldsDepth = explode('.', $apiField);
             $shopifyApi = $this->mapServerMultipleField($shopifyApi, $fieldMap, $fieldsDepth, $languages[0], $dataObjects, $targetServer);
-//            if ($depth > 1) {
-//                $shopifyApi = $this->mapServerMultipleField($shopifyApi, $fieldMap, $fieldsDepth, $languages[0], $dataObjects);
-//            } else {
-//                $objectFieldValue = $this->getObjectField($fieldMap, $languages[0], $dataObjects->current());
-//                $shopifyApi = $this->mapServerField($shopifyApi, $objectFieldValue, $apiField);
-//            }
-            //get the name of the related field in server from field mapping
+
         }
 
         return $shopifyApi;

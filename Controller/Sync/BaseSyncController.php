@@ -25,30 +25,39 @@ class BaseSyncController {
     public function syncServerProducts ($server) {
         $this->ecommerce = $server->getServer_name();
         $serverType = $server->getServer_type();
-        $serviceName = "\SintraPimcoreBundle\Services\\" . ucfirst($serverType) . '\\' . ucfirst($serverType) . 'ProductService';
 
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
         $namespace = $customizationInfo["namespace"];
+        $ctrName = null;
+        $serviceName = null;
+        
         if ($namespace) {
             $ctrName = $namespace . '\SintraPimcoreBundle\Controller\Sync\\' . ucfirst($serverType) . 'SyncController';
+            $serviceName = $namespace . '\SintraPimcoreBundle\Services\\' . ucfirst($serverType) . '\\' . ucfirst($serverType) . 'ProductService';
+        } 
+        
+        $syncController = null;
+        if($ctrName != null && class_exists($ctrName)){
             $syncControllerClass =  new ReflectionClass($ctrName);
-            /** @var \TucanoPimBundle\SintraPimcoreBundle\Controller\Sync\ShopifySyncController $syncController */
+            
             $syncController = $syncControllerClass->newInstance();
             $products = $syncController->getServerToSyncProducts($server);
-        } else {
+        }else {
             $products = $this->getServerToSyncProducts($server);
+        }
+        
+        if($serviceName == null || !class_exists($serviceName)){
+            $serviceName = "\SintraPimcoreBundle\Services\\" . ucfirst($serverType) . '\\' . ucfirst($serverType) . 'ProductService';
         }
 
         if($products != null && !empty($products)){
             $productServiceClass = new ReflectionClass($serviceName);
             $productService = $productServiceClass->newInstanceWithoutConstructor();
             $productService = $productService::getInstance();
-
-            $productsListing = new Product\Listing();
-            $productsListing->setCondition("o_id IN (" . $products . ")");
-            return $namespace ?
-                    ($syncController->exportProducts($productService, $productsListing, $server)) :
-                    ($this->exportProducts($productService, $productsListing, $server));
+            
+            return $syncController != null ?
+                    ($syncController->exportProducts($productService, $products, $server)) :
+                    ($this->exportProducts($productService, $products, $server));
         }
         
         Logger::info("BaseSyncController - There are no product to sync for '".$server->getServer_name()."' server");
@@ -56,7 +65,7 @@ class BaseSyncController {
     }
 
     /**
-     * get a batch of products that need to be syncronized in a specific server
+     * get a batch of ids of products that need to be syncronized in a specific server
      * 
      * @param TargetServer $server
      * @param int $limit
@@ -86,7 +95,6 @@ class BaseSyncController {
         foreach ($prodIds as $id) {
             $ids[] = $id['sourceid'];
         }
-        $ids = implode(', ', $ids);
 
         return $ids;
     }
@@ -97,11 +105,11 @@ class BaseSyncController {
 
     /**
      * @param InterfaceService  $productService
-     * @param Listing $products
+     * @param array $products
      * @param TargetServer $server
      * @return string
      */
-    protected function exportProducts (InterfaceService $productService, Listing $products, TargetServer $server) {
+    protected function exportProducts (InterfaceService $productService, $products, TargetServer $server) {
         $response = array(
                 "started" => date("Y-m-d H:i:s"),
                 "finished" => "",
@@ -110,19 +118,18 @@ class BaseSyncController {
                 "elements with errors" => 0,
                 "errors" => array()
         );
-        $next = $products->count() > 0;
 
         $totalElements = 0;
         $syncronizedElements = 0;
         $elementsWithError = 0;
 
-        while($next){
-            $product = $products->current();
+        foreach ($products as $productId) {
+            
             try{
-                $productService->export($product, $server);
+                $productService->export($productId, $server);
                 $syncronizedElements++;
             } catch(\Exception $e){
-                $response["errors"][] = "OBJECT ID ".$product->getId().": ".$e->getMessage();
+                $response["errors"][] = "OBJECT ID ".$productId.": ".$e->getMessage();
                 Logger::err($e->getMessage());
 
                 $elementsWithError++;
@@ -130,7 +137,6 @@ class BaseSyncController {
 
             $totalElements++;
 
-            $next = $products->next();
         }
 
         try{

@@ -44,6 +44,6 @@ class BaseShopifyAPIManager extends AbstractAPIManager{
         
         return $serverInfo;
     }
-    
+
 
 }

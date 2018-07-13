@@ -15,6 +15,7 @@ use SpringImport\Swagger\Magento2\Client\Model\Body18;
 use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
 
 use Pimcore\Model\DataObject\TargetServer;
+use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 
 /**
  * Magento2 Rest Product API Manager 

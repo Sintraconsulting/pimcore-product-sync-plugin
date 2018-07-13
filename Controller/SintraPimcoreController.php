@@ -2,10 +2,6 @@
 
 namespace SintraPimcoreBundle\Controller;
 
-use PHPShopify\Exception\SdkException;
-use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
-use Pimcore\Tool\RestClient\Exception;
-use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
 use SintraPimcoreBundle\Services\Mage2\Mage2CategoryService;
 use Pimcore\Model\DataObject;
@@ -17,7 +13,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 /**
  * Class SintraPimcoreController

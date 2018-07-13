@@ -12,7 +12,7 @@ use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogCategoryRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body30;
 use Pimcore\Model\DataObject\TargetServer;
-
+use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 /**
  * Magento Rest Category API Manager 
  *

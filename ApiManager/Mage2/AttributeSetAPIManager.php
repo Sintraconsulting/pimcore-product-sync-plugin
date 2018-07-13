@@ -4,6 +4,7 @@ namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use SpringImport\Swagger\Magento2\Client\Api\CatalogAttributeSetRepositoryV1Api;
 use Pimcore\Model\DataObject\TargetServer;
+use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 
 /**
  * Magento Rest Attribute Set API Manager 

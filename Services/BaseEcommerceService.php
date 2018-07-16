@@ -35,7 +35,7 @@ abstract class BaseEcommerceService extends SingletonService{
      * @return Listing
      */
     protected function getObjectsToExport($objectId, $classname){
-        $listingClass = new ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
+        $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
         $listing = $listingClass->newInstance();
 
         $listing->setCondition("oo_id = ".$listing->quote($objectId));
@@ -55,6 +55,10 @@ abstract class BaseEcommerceService extends SingletonService{
 
     protected function mapServerField ($apiObject, $serverFieldValue, $apiField) {
         // TODO: special cases managing here
+        if($serverFieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue){
+            return $this->insertServerSingleField($apiObject, $serverFieldValue->getValue(), $apiField);
+        }
+        
         return $this->insertServerSingleField($apiObject, $serverFieldValue, $apiField);
     }
 

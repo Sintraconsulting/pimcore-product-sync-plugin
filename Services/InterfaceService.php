@@ -5,17 +5,20 @@ use Pimcore\Model\DataObject\TargetServer;
 
 interface InterfaceService {
     /**
-     * @param $dataObject
+     * @param $productId
      * @param TargetServer $targetServer
-     * @return mixed
      */
-    function export($dataObject, TargetServer $targetServer);
+    function export($productId, TargetServer $targetServer);
 
     /**
-     * @param $dataObject
-     * TargetServer $targetServer
+     * Get the mapping of field to export from the server definition.
+     * For localized fields, the first valid language will be used.
+     *
+     * @param $ecommObject
+     * @param $dataObjects
+     * @param TargetServer $targetServer
+     * @param $classname
      * @param bool $update
-     * @return mixed
      */
-    function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, bool $update = false);
+    function toEcomm(&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $update = false);
 }

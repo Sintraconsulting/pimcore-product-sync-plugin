@@ -3,6 +3,7 @@
 namespace SintraPimcoreBundle\Services\Shopify;
 
 use SintraPimcoreBundle\Services\BaseEcommerceService;
+use Pimcore\Model\DataObject\TargetServer;
 
 abstract class BaseShopifyService extends BaseEcommerceService {
     

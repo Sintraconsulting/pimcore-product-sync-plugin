@@ -3,7 +3,7 @@
 namespace SintraPimcoreBundle\OptionsProviders;
 
 use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\SelectOptionsProviderInterface;
-use Pimcore\Model\DataObject\ClassDefinition;
+use SintraPimcoreBundle\Utils\GeneralUtils;
 
 /**
  * Dynamic Options Provider that display valid languages for a TargetServer.
@@ -18,22 +18,14 @@ class SystemClassesOptionProvider implements SelectOptionsProviderInterface{
     }
     
     public function getOptions($context, $fieldDefinition): array {
-        $fields = array();
+        $fields = [];
         
-        $classesList = new ClassDefinition\Listing();
-        $classesList->setOrderKey('name');
-        $classesList->setOrder('asc');
-        $classes = $classesList->load();
-        
-        foreach ($classes as $class) {
-            $classname = $class->getName();
+        foreach (GeneralUtils::getAvailableClasses() as $classname) {
             
-            if($classname != "TargetServer"){
-                $fields[] = array(
-                    "key" => $classname,
-                    "value" => $classname
-                );
-            }
+            $fields[] = array(
+                "key" => $classname,
+                "value" => $classname
+            );
         }
         
         return $fields;

@@ -41,7 +41,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
 
         if (count($search) === 0) {
             //product is new, need to save price
-            $this->toEcomm($shopifyApi, $dataObjects, $targetServer, true);
+            $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
             Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
 
             /** @var ShopifyProductAPIManager $apiManager */
@@ -50,7 +50,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $shopifyApi["id"] = $search[0]['id'];
 
             //product already exists, we may want to not update prices
-            $this->toEcomm($shopifyApi, $dataObjects, $targetServer, true);
+            $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
             /** @var ShopifyProductAPIManager $apiManager */
             $result = $apiManager->updateEntity($shopifyId, $shopifyApi, $targetServer);
@@ -73,9 +73,9 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
      * @param TargetServer $targetServer
      * @param bool $update
      */
-    public function toEcomm (&$shopifyApi, $dataObjects, TargetServer $targetServer, bool $update = false) {
+    public function toEcomm (&$shopifyApi, $dataObjects, TargetServer $targetServer, $classname, bool $update = false) {
 
-        $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, "product");
+        $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, $classname);
         $languages = $targetServer->getLanguages();
 
         $shopifyApi = $this->prepareVariants($shopifyApi, $dataObjects, $targetServer);

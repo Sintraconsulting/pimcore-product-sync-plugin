@@ -3,12 +3,54 @@ namespace SintraPimcoreBundle\Services\Mage2;
 
 use SintraPimcoreBundle\Services\BaseEcommerceService;
 use Pimcore\Model\DataObject\Listing;
+use Pimcore\Model\DataObject\TargetServer;
 /**
  * Magento 2 Shop level logic
  * Needs to implement BaseEcommerceService abstract functions
  * Class Magento2Service
  */
 abstract class BaseMagento2Service extends BaseEcommerceService {
+    
+    /**
+     * 
+     * @param $dataObject
+     * @param $results
+     * @param TargetServer $targetServer
+     */
+    protected function setSyncProducts ($dataObject, $results, TargetServer $targetServer) {
+        $serverObjectInfo = $this->getServerObjectInfo($dataObject, $targetServer);
+        $serverObjectInfo->setSync(true);
+        $serverObjectInfo->setSync_at($results["updatedAt"]);
+        $serverObjectInfo->setObject_id($results["id"]);
+        $dataObject->update(true);
+    }
+    
+    /**
+     * Get the mapping of field to export from the server definition.
+     * For localized fields, the first valid language will be used.
+     *
+     * @param $ecommObject
+     * @param Listing $dataObjects
+     * @param TargetServer $targetServer
+     * @param $classname
+     * @param bool $updateProductPrices
+     */
+    protected function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $updateProductPrices = false) {
+        $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, $classname);
+        $languages = $targetServer->getLanguages();
+        
+        /** @var FieldMapping $fieldMap */
+        foreach ($fieldsMap as $fieldMap) {
+
+            //get the value of each object field
+            $apiField = $fieldMap->getServerField();
+
+            $fieldsDepth = explode('.', $apiField);
+            $ecommObject = $this->mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $languages[0], $dataObjects, $targetServer);
+
+        }
+
+    }
     
     protected function mapServerMultipleField ($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null) {
         // End of recursion

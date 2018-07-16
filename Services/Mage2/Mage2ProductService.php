@@ -7,7 +7,6 @@ use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
-use SintraPimcoreBundle\Utils\TargetServerUtils;
 
 class Mage2ProductService extends BaseMagento2Service implements InterfaceService {
 
@@ -32,13 +31,13 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
         if($search["totalCount"] === 0){
             //product is new, need to save price
-            $this->toEcomm($magento2Product, $dataObject, $targetServer, true);
+            $this->toEcomm($magento2Product, $dataObject, $targetServer, $dataObject->getClassName(), true);
             Logger::debug("MAGENTO CR PRODUCT: ".json_encode($magento2Product));
 
             $result = $apiManager->createEntity($magento2Product, $targetServer);
         }else{
             //product already exists, we may want to not update prices
-            $this->toEcomm($magento2Product, $dataObject, $targetServer, MagentoConfig::$updateProductPrices);
+            $this->toEcomm($magento2Product, $dataObject, $targetServer, $dataObject->getClassName(), MagentoConfig::$updateProductPrices);
             Logger::debug("MAGENTO UP PRODUCT: ".json_encode($magento2Product));
 
             $result = $apiManager->updateEntity($sku,$magento2Product, $targetServer);
@@ -51,20 +50,6 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
     }
-
-    /**
-     * 
-     * @param Product $product
-     * @param $results
-     * @param TargetServer $targetServer
-     */
-    protected function setSyncProducts ($product, $results, TargetServer $targetServer) {
-        $serverObjectInfo = $this->getServerObjectInfo($product, $targetServer);
-        $serverObjectInfo->setSync(true);
-        $serverObjectInfo->setSync_at($results["updatedAt"]);
-        $serverObjectInfo->setObject_id($results["id"]);
-        $product->update(true);
-    }
     
     /**
      * Get the mapping of field to export from the server definition.
@@ -73,22 +58,11 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @param $ecommObject
      * @param Product\Listing $dataObjects
      * @param TargetServer $targetServer
+     * @param $classname
      * @param bool $updateProductPrices
      */
-    public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, bool $updateProductPrices = false) {
-        $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, "product");
-        $languages = $targetServer->getLanguages();
-        
-        /** @var FieldMapping $fieldMap */
-        foreach ($fieldsMap as $fieldMap) {
-
-            //get the value of each object field
-            $apiField = $fieldMap->getServerField();
-
-            $fieldsDepth = explode('.', $apiField);
-            $ecommObject = $this->mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $languages[0], $dataObjects, $targetServer);
-
-        }
+    public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $updateProductPrices = false) {
+        parent::toEcomm($ecommObject, $dataObjects, $targetServer, $classname, $updateProductPrices);
         
         if(!$updateProductPrices){
             unset($ecommObject["price"]);

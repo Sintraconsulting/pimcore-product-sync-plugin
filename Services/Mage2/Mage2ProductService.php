@@ -7,6 +7,7 @@ use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
+use SintraPimcoreBundle\Utils\TargetServerUtils;
 
 class Mage2ProductService extends BaseMagento2Service implements InterfaceService {
 
@@ -61,6 +62,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         $serverObjectInfo = $this->getServerObjectInfo($product, $targetServer);
         $serverObjectInfo->setSync(true);
         $serverObjectInfo->setSync_at($results["updatedAt"]);
+        $serverObjectInfo->setObject_id($results["id"]);
         $product->update(true);
     }
     
@@ -68,17 +70,17 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * Get the mapping of field to export from the server definition.
      * For localized fields, the first valid language will be used.
      *
-     * @param $$ecommObject
+     * @param $ecommObject
      * @param Product\Listing $dataObjects
      * @param TargetServer $targetServer
      * @param bool $updateProductPrices
      */
     public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, bool $updateProductPrices = false) {
-        $exportMap = $targetServer->getExportMap()->getItems();
+        $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, "product");
         $languages = $targetServer->getLanguages();
         
         /** @var FieldMapping $fieldMap */
-        foreach ($exportMap as $fieldMap) {
+        foreach ($fieldsMap as $fieldMap) {
 
             //get the value of each object field
             $apiField = $fieldMap->getServerField();
@@ -94,46 +96,4 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
     }
     
-    protected function mapServerMultipleField ($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, $server = null) {
-        // End of recursion
-        if(count($fieldsDepth) == 1) {
-            /** @var Product\Listing $dataSource */
-            if ( method_exists($dataSource, 'current') ) {
-                $dataSource = $dataSource->getObjects()[0];
-            }
-            $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
-            $apiField = $fieldsDepth[0];
-            
-            return $this->mapServerField($ecommObject, $fieldValue, $apiField);
-        }
-        
-        $parentDepth = array_shift($fieldsDepth);
-
-
-        /**
-         * End of recursion with custom_attributes
-         */
-        if ($parentDepth == 'custom_attributes') {
-            if ( method_exists($dataSource, 'current') ) {
-                $dataSource = $dataSource->getObjects()[0];
-            }
-            $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
-            $apiField = $fieldsDepth[0];
-            
-            $customValue = [
-                    'attribute_code' => $apiField,
-                    'value' => $fieldValue
-            ];
-            $ecommObject[$parentDepth][] = $customValue;
-            return $ecommObject;
-        }
-
-        /**
-         * Recursion level > 1
-         * For now, on magento2 there is no nested field mapping except custom_attributes
-         * It should never reach this point with magento2.
-         * TODO: image implementation should be developed in the future here for field mapping
-         */
-        return $this->mapServerMultipleField($ecommObject[$parentDepth], $fieldMap, $fieldsDepth, $language, $dataSource, $server);
-    }
 }

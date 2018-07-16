@@ -70,7 +70,7 @@ class EventListenerUtils {
         $export = false;
             
         $targetServer = $exportServer->getServer();
-        $exportFields = $targetServer->getExport_fields();
+        $exportFields = TargetServerUtils::getClassExportFields($targetServer, $product->getClassName());
         $languages = $targetServer->getLanguages();
 
         foreach ($exportFields as $field) {

@@ -27,29 +27,45 @@ class FieldMapProvider implements SelectOptionsProviderInterface{
     public function getOptions($context, $fieldDefinition): array {
         $fields = array();
         
-        $classDefinition = ClassDefinition::getByName("Product");
-        foreach ($classDefinition->getFieldDefinitions() as $fieldDefinition) {
-            $this->extractClassField($fieldDefinition, $fields);
+        $classesList = new ClassDefinition\Listing();
+        $classesList->setOrderKey('name');
+        $classesList->setOrder('asc');
+        $classes = $classesList->load();
+        
+        foreach ($classes as $class) {
+            $classname = $class->getName();
+            
+            if($classname != "TargetServer"){
+                $this->extractFields($classname, $fields);
+            }
         }
         
         return $fields;
+    }
+    
+    private function extractFields($classname, &$fields){
+        $classDefinition = ClassDefinition::getByName($classname);
+        foreach ($classDefinition->getFieldDefinitions() as $fieldDefinition) {
+            $this->extractClassField($classname, $fieldDefinition, $fields);
+        }
     }
 
     /**
      * Extract fields of a class.
      * 
+     * @param $classname the class name
      * @param $fieldDefinition the field definition
      * @param array $fields array that will contains all fields
      */
-    private function extractClassField($fieldDefinition, &$fields){
+    private function extractClassField($classname, $fieldDefinition, &$fields){
         if($fieldDefinition instanceof Localizedfields){
             foreach ($fieldDefinition->getChildren() as $localizedFieldDefinition) {
-                $this->extractClassField($localizedFieldDefinition, $fields);
+                $this->extractClassField($classname, $localizedFieldDefinition, $fields);
             }
             
         }else if($fieldDefinition instanceof Fieldset){
             foreach ($fieldDefinition->getChildren() as $FieldsetFieldDefinition) {
-                $this->extractClassField($FieldsetFieldDefinition, $fields);
+                $this->extractClassField($classname, $FieldsetFieldDefinition, $fields);
             }
             
         }else if($fieldDefinition instanceof Fieldcollections){
@@ -59,19 +75,19 @@ class FieldMapProvider implements SelectOptionsProviderInterface{
             //nothig ToDo here
             
         }else{
-            $fields[] = $this->extractSingleOption($fieldDefinition);
+            $fields[] = $this->extractSingleOption($classname, $fieldDefinition);
         }
     }
     
     /**
      * create a new option entry for each field.
      * 
+     * @param $classname the class name
      * @param mixed $fieldDefinition the field definition
      */
-    private function extractSingleOption($fieldDefinition){
-        \Pimcore\Logger::info(print_r($fieldDefinition,true));
+    private function extractSingleOption($classname, $fieldDefinition){
         
-        $key = $fieldDefinition->getTitle();
+        $key = strtoupper($classname)." - ".$fieldDefinition->getTitle();
         $value = $fieldDefinition->getName();
         
         return array(

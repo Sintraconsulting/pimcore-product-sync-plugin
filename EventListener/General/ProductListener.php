@@ -2,9 +2,7 @@
 
 namespace SintraPimcoreBundle\EventListener\General;
 
-use Pimcore\Logger;
 use Pimcore\Model\DataObject\Product;
-use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\EventListener\InterfaceListener;
 use Pimcore\Model\DataObject\Fieldcollection;
 use SintraPimcoreBundle\Utils\EventListenerUtils;

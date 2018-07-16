@@ -15,15 +15,21 @@ use Pimcore\Model\DataObject\Listing;
  */
 abstract class BaseEcommerceService extends SingletonService{
 
+    
     /**
-     * Search for field name in the API call object skeleton
-     * and fill that with the field value.
+     * Mapping for Object export
+     * It builds the API array for communcation with object endpoint
      * 
-     * @param type $ecommObject the object to fill for the API call
-     * @param type $fieldName the field name
-     * @param type $fieldvalue the field value
+     * @param $ecommObject the object to fill for the API call
+     * @param $fieldMap the field map between Pimcore and external server
+     * @param $fieldsDepth tree structure of the field in the API array
+     * @param $language the active language
+     * @param $dataSource the object to export
+     * @param TargetServer $server the external server
+     * @return array the API array
+     * @throws \Exception
      */
-    abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue);
+    abstract protected function mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null);
     
     
     /**

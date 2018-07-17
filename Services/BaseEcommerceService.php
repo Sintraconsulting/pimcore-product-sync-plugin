@@ -1,11 +1,9 @@
 <?php
 namespace SintraPimcoreBundle\Services;
 
-use Pimcore\Logger;
-use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
-use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use Pimcore\Model\DataObject\Listing;
 
 /**
@@ -85,28 +83,31 @@ abstract class BaseEcommerceService extends SingletonService{
      * 
      * @param FieldMapping $fieldMap the field map
      * @param $language the server languages
-     * @param $dataObject the object to sync
+     * @param Concrete $dataObject the object to sync
      */
     protected function getObjectField(FieldMapping $fieldMap, $language, $dataObject){
         $objectField = $fieldMap->getObjectField();
+        
+        $classname = strtolower($dataObject->getClassName())."_";
+        $fieldname = substr_replace($objectField, "", 0, strlen($classname));
         
         $fieldType = $fieldMap->getFieldType();
         if ($fieldType == "reference") {
             $relatedField = $fieldMap->getRelatedField();
             
             if($relatedField == null || empty($relatedField)){
-                throw new \Exception("ERROR - Related field must be defined for reference field '$objectField'");
+                throw new \Exception("ERROR - Related field must be defined for reference field '$fieldname'");
             }
             
             $objectReflection = new \ReflectionObject($dataObject);
-            $methodName = "get". ucfirst($objectField);
+            $methodName = "get". ucfirst($fieldname);
             $objectMethod = $objectReflection->getMethod($methodName);
             
             $relatedObject = $objectMethod->invoke($dataObject);
             
             return $this->getField($relatedField, $language, $relatedObject);
         }else{
-            return $this->getField($objectField, $language, $dataObject);
+            return $this->getField($fieldname, $language, $dataObject);
         }
         
     }
@@ -115,13 +116,13 @@ abstract class BaseEcommerceService extends SingletonService{
      * Get the field value of the object.
      * check if field is localized and, if yes, take the right translation.
      * 
-     * @param type $field the field of a class to get (format e.g. product_sku)
+     * @param type $fieldname the field to get 
      * @param type $language the language of translation (if needed)
      * @param type $dataObject the object to get value of
      * 
      * @return the field value
      */
-    private function getField($field, $language, $dataObject){
+    private function getField($fieldname, $language, $dataObject){
         if($dataObject == null){
             return "";
         }
@@ -130,8 +131,6 @@ abstract class BaseEcommerceService extends SingletonService{
         
         $classname = $dataObject->getClassName();
         
-        $count=1;
-        $fieldname = str_replace(strtolower($classname)."_", "", $field, $count);
         $methodName = "get". ucfirst($fieldname);
         
         $method = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\$classname",$methodName);

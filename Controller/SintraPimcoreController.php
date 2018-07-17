@@ -3,7 +3,6 @@
 namespace SintraPimcoreBundle\Controller;
 
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
-use SintraPimcoreBundle\Services\Mage2\Mage2CategoryService;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;

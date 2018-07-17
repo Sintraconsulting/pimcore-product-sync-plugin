@@ -12,7 +12,6 @@ use Pimcore\Db;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 class BaseSyncController {
-    protected $ecommerce;
 
     /**
      * Dispatch syncronization invoking the server related syncronization service
@@ -22,7 +21,6 @@ class BaseSyncController {
      * @throws \ReflectionException
      */
     public function syncServerObjects ($server, $class) {
-        $this->ecommerce = $server->getServer_name();
         $serverType = $server->getServer_type();
 
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
@@ -99,10 +97,6 @@ class BaseSyncController {
         return $ids;
     }
 
-    protected function getEcommerce() : string {
-        return $this->ecommerce;
-    }
-
     /**
      * @param InterfaceService  $dataObjectService
      * @param array $dataObjects
@@ -149,7 +143,7 @@ class BaseSyncController {
         $response["syncronized elements"] = $syncronizedElements;
         $response["elements with errors"] = $elementsWithError;
 
-        return $this->logSyncedProducts($response, $this->getEcommerce(), $class);
+        return $this->logSyncedProducts($response, $server->getServer_name(), $class);
     }
 
     protected function logSyncedProducts ($response, $ecomm, $class, $finished = null) {

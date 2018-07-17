@@ -45,7 +45,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         Logger::debug("UPDATED PRODUCT: ".$result->__toString());
 
         try {
-            $this->setSyncProducts($dataObject, $result, $targetServer);
+            $this->setSyncObject($dataObject, $result, $targetServer);
         } catch (\Exception $e) {
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }

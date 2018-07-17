@@ -76,29 +76,6 @@ abstract class BaseEcommerceService extends SingletonService{
     }
     
     /**
-     * Retrieve $dataObject's Fieldcollection related to $targetServer
-     * searching in $dataObject's exportServers field
-     * 
-     * @param Product $dataObject object to sync
-     * @param TargetServer $targetServer the server to sync object in
-     * 
-     * @return ServerObjectInfo
-     */
-    protected function getServerObjectInfo($dataObject, TargetServer $targetServer){
-        
-        $exportServers = $dataObject->getExportServers()->getItems();
-        
-        $server = $exportServers[
-            array_search(
-                    $targetServer->getKey(), 
-                    array_column($exportServers, "name")
-            )
-        ];
-        
-        return $server;
-    }
-    
-    /**
      * get field definition from field map.
      * 
      * If the field is a reference to another object
@@ -138,13 +115,13 @@ abstract class BaseEcommerceService extends SingletonService{
      * Get the field value of the object.
      * check if field is localized and, if yes, take the right translation.
      * 
-     * @param type $fieldName the field to get
+     * @param type $field the field of a class to get (format e.g. product_sku)
      * @param type $language the language of translation (if needed)
      * @param type $dataObject the object to get value of
      * 
      * @return the field value
      */
-    private function getField($fieldName, $language, $dataObject){
+    private function getField($field, $language, $dataObject){
         if($dataObject == null){
             return "";
         }
@@ -153,7 +130,9 @@ abstract class BaseEcommerceService extends SingletonService{
         
         $classname = $dataObject->getClassName();
         
-        $methodName = "get". ucfirst($fieldName);
+        $count=1;
+        $fieldname = str_replace(strtolower($classname)."_", "", $field, $count);
+        $methodName = "get". ucfirst($fieldname);
         
         $method = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\$classname",$methodName);
         $params = $method->getParameters();

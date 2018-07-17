@@ -4,6 +4,8 @@ namespace SintraPimcoreBundle\Services\Mage2;
 use SintraPimcoreBundle\Services\BaseEcommerceService;
 use Pimcore\Model\DataObject\Listing;
 use Pimcore\Model\DataObject\TargetServer;
+use SintraPimcoreBundle\Utils\GeneralUtils;
+use SintraPimcoreBundle\Utils\TargetServerUtils;
 /**
  * Magento 2 Shop level logic
  * Needs to implement BaseEcommerceService abstract functions
@@ -17,8 +19,8 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
      * @param $results
      * @param TargetServer $targetServer
      */
-    protected function setSyncProducts ($dataObject, $results, TargetServer $targetServer) {
-        $serverObjectInfo = $this->getServerObjectInfo($dataObject, $targetServer);
+    protected function setSyncObject ($dataObject, $results, TargetServer $targetServer) {
+        $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
         $serverObjectInfo->setSync(true);
         $serverObjectInfo->setSync_at($results["updatedAt"]);
         $serverObjectInfo->setObject_id($results["id"]);
@@ -33,9 +35,9 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
      * @param Listing $dataObjects
      * @param TargetServer $targetServer
      * @param $classname
-     * @param bool $updateProductPrices
+     * @param bool $update
      */
-    protected function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $updateProductPrices = false) {
+    protected function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $update = false) {
         $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, $classname);
         $languages = $targetServer->getLanguages();
         

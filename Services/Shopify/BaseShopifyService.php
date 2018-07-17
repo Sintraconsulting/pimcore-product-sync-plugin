@@ -4,6 +4,7 @@ namespace SintraPimcoreBundle\Services\Shopify;
 
 use SintraPimcoreBundle\Services\BaseEcommerceService;
 use Pimcore\Model\DataObject\TargetServer;
+use SintraPimcoreBundle\Utils\GeneralUtils;
 
 abstract class BaseShopifyService extends BaseEcommerceService {
     
@@ -39,7 +40,7 @@ abstract class BaseShopifyService extends BaseEcommerceService {
         if ($parentDepth == 'variants' && $dataSource) {
             $i = 0;
             foreach ($dataSource as $dataObject) {
-                $serverInfo = $this->getServerObjectInfo($dataObject, $server);
+                $serverInfo = GeneralUtils::getServerObjectInfo($dataObject, $server);
                 if (!$serverInfo->getSync()) {
                     $shopifyApi[$parentDepth][$i] = $this->mapServerMultipleField($shopifyApi[$parentDepth][$i],
                             $fieldMap, $fieldsDepth, $language, $dataObject);

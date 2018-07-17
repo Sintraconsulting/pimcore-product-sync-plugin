@@ -78,21 +78,21 @@ class BaseSyncController {
         $classDef = ClassDefinition::getByName($class);
         $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
         $classId = $classDef->getId();
-        $productTableClass = 'object_query_' . $classId;
+        $objectTableClass = 'object_query_' . $classId;
         $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
         
         $db = Db::get();
-        $prodIds = $db->fetchAll(
+        $objIds = $db->fetchAll(
             "SELECT dependencies.sourceid FROM dependencies"
             . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.name=? AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
-            . " INNER JOIN $productTableClass as prod ON (prod.oo_id = dependencies.sourceid AND prod.oo_className = 'Product' )"
+            . " INNER JOIN $objectTableClass as prod ON (prod.oo_id = dependencies.sourceid AND prod.oo_className = ? )"
             . " WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'"
             . " ORDER BY dependencies.sourceid ASC"
             . " LIMIT $limit",
-            [ $server->getKey(), $server->getId() ]);
+            [ $server->getKey(), $class, $server->getId() ]);
         
         $ids = [];
-        foreach ($prodIds as $id) {
+        foreach ($objIds as $id) {
             $ids[] = $id['sourceid'];
         }
 

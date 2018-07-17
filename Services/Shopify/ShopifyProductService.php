@@ -9,6 +9,8 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Logger;
 use SintraPimcoreBundle\ApiManager\Shopify\ShopifyProductAPIManager;
 use SintraPimcoreBundle\Services\InterfaceService;
+use SintraPimcoreBundle\Utils\GeneralUtils;
+use SintraPimcoreBundle\Utils\TargetServerUtils;
 
 class ShopifyProductService extends BaseShopifyService implements InterfaceService {
     protected $configFile = __DIR__ . '/../config/product.json';
@@ -29,7 +31,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         
         /** @var ShopifyProductAPIManager $apiManager */
         $apiManager = ShopifyProductAPIManager::getInstance();
-        $serverObjectInfo = $this->getServerObjectInfo($dataObject, $targetServer);
+        $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 
         $shopifyId = $serverObjectInfo->getObject_id();
 
@@ -102,7 +104,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     public function prepareVariants($shopifyApi, $products, TargetServer $server) {
         $shopifyApi['variants'] = [];
         foreach ($products as $product) {
-            $serverObjectInfo = $this->getServerObjectInfo($product, $server);
+            $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $server);
             $varId = $serverObjectInfo->getVariant_id();
             if ($varId) {
                 $shopifyApi['variants'][] = [
@@ -119,7 +121,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
                 $product = Product::getBySku($variant['sku'])->current();
-                $serverObjectInfo = $this->getServerObjectInfo($product, $targetServer);
+                $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
                 $serverObjectInfo->setSync(true);
                 $serverObjectInfo->setSync_at($results["updated_at"]);
                 $serverObjectInfo->setObject_id($results['id']);

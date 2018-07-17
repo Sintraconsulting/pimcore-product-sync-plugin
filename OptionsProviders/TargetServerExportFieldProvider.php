@@ -84,7 +84,7 @@ class TargetServerExportFieldProvider implements MultiSelectOptionsProviderInter
     private function extractSingleOption($classname, $fieldDefinition){
         
         $key = strtoupper($classname)." - ".$fieldDefinition->getTitle();
-        $value = $fieldDefinition->getName();
+        $value = strtolower($classname)."_".$fieldDefinition->getName();
         
         return array(
             "key" => $key,

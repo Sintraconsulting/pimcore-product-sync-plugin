@@ -29,7 +29,6 @@ class ObjectRelationOperator extends AbstractOperator{
     {
         parent::__construct($config, $context);
 
-        Logger::info("ObjectRelationOperator - ADDITIONAL DATA: ".$config->additionalData);
         $this->additionalData = json_decode($config->additionalData,true);
     }
     

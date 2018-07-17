@@ -8,7 +8,7 @@
 
 namespace SintraPimcoreBundle\Utils;
 
-use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection;
 
@@ -62,19 +62,19 @@ class EventListenerUtils {
      * product must be syncronized in the server.
      * 
      * @param $exportServer the specific field collection implementation for a server
-     * @param Product $product the new version of the product to update
-     * @param Product $oldProduct the previous version of the product
+     * @param Concrete $dataObject the new version of the object to update
+     * @param Concrete $oldDataObject the previous version of the object
      * @return boolean
      */
-    public static function checkServerUpdate($exportServer,$product,$oldProduct){
+    public static function checkServerUpdate($exportServer,$dataObject,$oldDataObject){
         $export = false;
             
         $targetServer = $exportServer->getServer();
-        $exportFields = $targetServer->getExport_fields();
+        $exportFields = TargetServerUtils::getClassExportFields($targetServer, $dataObject->getClassName());
         $languages = $targetServer->getLanguages();
 
         foreach ($exportFields as $field) {
-            if(!self::compareFieldValues($product, $oldProduct, $field, $languages)){
+            if(!self::compareFieldValues($dataObject, $oldDataObject, $field, $languages)){
                 $export = true;
                 break;
             }
@@ -87,17 +87,17 @@ class EventListenerUtils {
      * Compare new and previous value of a product field.
      * Reflection is used to abstract on all possible fields.
      * 
-     * @param Product $product the new version of the product to update
-     * @param Product $oldProduct the previous version of the product
+     * @param Concrete $dataObject the new version of the object to update
+     * @param Concrete $oldDataObject the previous version of the object
      * @param String $field the specific field name
      * @param array $languages the valid languages for the server
      * @return boolean
      */
-    private static function compareFieldValues($product, $oldProduct, $field, $languages){
+    private static function compareFieldValues($dataObject, $oldDataObject, $field, $languages){
         $match = false;
         $methodName = "get". ucfirst($field);
         
-        $method = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\Product",$methodName);
+        $method = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\". ucfirst($dataObject->getClassName()),$methodName);
         $params = $method->getParameters();
         
         /**
@@ -111,8 +111,8 @@ class EventListenerUtils {
             }
         }
         
-        $productReflection = new \ReflectionObject($product);
-        $oldProductReflection = new \ReflectionObject($oldProduct);
+        $productReflection = new \ReflectionObject($dataObject);
+        $oldProductReflection = new \ReflectionObject($oldDataObject);
 
         $newValueMethod = $productReflection->getMethod($methodName);
         $oldValueMethod = $oldProductReflection->getMethod($methodName);
@@ -123,8 +123,8 @@ class EventListenerUtils {
          */
         if($isLocalized && !empty($languages)){
             foreach ($languages as $lang) {
-                $newValue = $newValueMethod->invoke($product, $lang);
-                $oldValue = $oldValueMethod->invoke($oldProduct, $lang);
+                $newValue = $newValueMethod->invoke($dataObject, $lang);
+                $oldValue = $oldValueMethod->invoke($oldDataObject, $lang);
                 
                 if($newValue == $oldValue){
                     $match = true;
@@ -132,8 +132,8 @@ class EventListenerUtils {
                 }
             }
         }else{
-            $newValue = $newValueMethod->invoke($product);
-            $oldValue = $oldValueMethod->invoke($oldProduct);
+            $newValue = $newValueMethod->invoke($dataObject);
+            $oldValue = $oldValueMethod->invoke($oldDataObject);
 
             if($newValue === $oldValue){
                 $match = true;

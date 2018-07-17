@@ -15,15 +15,21 @@ use Pimcore\Model\DataObject\Listing;
  */
 abstract class BaseEcommerceService extends SingletonService{
 
+    
     /**
-     * Search for field name in the API call object skeleton
-     * and fill that with the field value.
+     * Mapping for Object export
+     * It builds the API array for communcation with object endpoint
      * 
-     * @param type $ecommObject the object to fill for the API call
-     * @param type $fieldName the field name
-     * @param type $fieldvalue the field value
+     * @param $ecommObject the object to fill for the API call
+     * @param $fieldMap the field map between Pimcore and external server
+     * @param $fieldsDepth tree structure of the field in the API array
+     * @param $language the active language
+     * @param $dataSource the object to export
+     * @param TargetServer $server the external server
+     * @return array the API array
+     * @throws \Exception
      */
-    abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue);
+    abstract protected function mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null);
     
     
     /**
@@ -35,7 +41,7 @@ abstract class BaseEcommerceService extends SingletonService{
      * @return Listing
      */
     protected function getObjectsToExport($objectId, $classname){
-        $listingClass = new ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
+        $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
         $listing = $listingClass->newInstance();
 
         $listing->setCondition("oo_id = ".$listing->quote($objectId));
@@ -55,6 +61,10 @@ abstract class BaseEcommerceService extends SingletonService{
 
     protected function mapServerField ($apiObject, $serverFieldValue, $apiField) {
         // TODO: special cases managing here
+        if($serverFieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue){
+            return $this->insertServerSingleField($apiObject, $serverFieldValue->getValue(), $apiField);
+        }
+        
         return $this->insertServerSingleField($apiObject, $serverFieldValue, $apiField);
     }
 
@@ -63,29 +73,6 @@ abstract class BaseEcommerceService extends SingletonService{
             return $apiObject + [ $apiField => $serverFieldValue ];
         }
         return $apiObject;
-    }
-    
-    /**
-     * Retrieve $dataObject's Fieldcollection related to $targetServer
-     * searching in $dataObject's exportServers field
-     * 
-     * @param Product $dataObject object to sync
-     * @param TargetServer $targetServer the server to sync object in
-     * 
-     * @return ServerObjectInfo
-     */
-    protected function getServerObjectInfo($dataObject, TargetServer $targetServer){
-        
-        $exportServers = $dataObject->getExportServers()->getItems();
-        
-        $server = $exportServers[
-            array_search(
-                    $targetServer->getKey(), 
-                    array_column($exportServers, "name")
-            )
-        ];
-        
-        return $server;
     }
     
     /**
@@ -128,13 +115,13 @@ abstract class BaseEcommerceService extends SingletonService{
      * Get the field value of the object.
      * check if field is localized and, if yes, take the right translation.
      * 
-     * @param type $fieldName the field to get
+     * @param type $field the field of a class to get (format e.g. product_sku)
      * @param type $language the language of translation (if needed)
      * @param type $dataObject the object to get value of
      * 
      * @return the field value
      */
-    private function getField($fieldName, $language, $dataObject){
+    private function getField($field, $language, $dataObject){
         if($dataObject == null){
             return "";
         }
@@ -143,7 +130,9 @@ abstract class BaseEcommerceService extends SingletonService{
         
         $classname = $dataObject->getClassName();
         
-        $methodName = "get". ucfirst($fieldName);
+        $count=1;
+        $fieldname = str_replace(strtolower($classname)."_", "", $field, $count);
+        $methodName = "get". ucfirst($fieldname);
         
         $method = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\$classname",$methodName);
         $params = $method->getParameters();

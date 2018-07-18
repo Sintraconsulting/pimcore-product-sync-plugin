@@ -2,12 +2,7 @@
 
 namespace SintraPimcoreBundle\Controller;
 
-use PHPShopify\Exception\SdkException;
-use Pimcore\Analytics\Piwik\Api\Exception\ApiException;
-use Pimcore\Tool\RestClient\Exception;
-use SintraPimcoreBundle\ApiManager\ProductAPIManager;
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
-use SintraPimcoreBundle\Services\Magento2\Magento2CategoryService;
 use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
@@ -16,8 +11,8 @@ use Pimcore\Logger;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use SintraPimcoreBundle\Utils\GeneralUtils;
 
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 /**
  * Class SintraPimcoreController
@@ -44,82 +39,28 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
     }
     
     /**
-     * @Route("/sync_categories")
+     * Syncronize objects in all enabled servers
+     * 
+     * @Route("/sync_objects")
      */
-    public function syncCategoriesAction(Request $request)
+    public function syncObjectsAction(Request $request)
     {
-        $categoryUtils = Magento2CategoryService::getInstance();
+        $class = $request->get("class");
+        $availableClasses = GeneralUtils::getAvailableClasses();
         
-        $categories = new DataObject\Category\Listing();
-        $categories->addConditionParam("export_to_magento = ?", "1");
-        $categories->addConditionParam("magento_sync = ?", "0");
-        $categories->setLimit("30");
-        
-        $categories->load();
-
-        $response = array(
-            "started" => date("Y-m-d H:i:s"),
-            "finished" => "",
-            "total elements" => 0,
-            "syncronized elements" => 0,
-            "elements with errors" => 0,
-            "errors" => array()
-        );
-
-        $next = $categories->count() > 0;
-
-        $totalElements = 0;
-        $syncronizedElements = 0;
-        $elementsWithError = 0;
-
-        while($next){
-            $category = $categories->current();
-            
-            try{
-                $categoryUtils->export($category);
-                $syncronizedElements++;
-            } catch(\Exception $e){
-                $response["errors"][] = "OBJECT ID ".$category->getId().": ".$ex->getMessage();
-                Logger::err($e->getMessage());
-
-                $elementsWithError++;
-            }
-
-            $totalElements++;
-
-            $next = $categories->next();
+        if(!in_array($class, $availableClasses)){
+            throw new \Exception("Invalid class '".$class."'. Please choose a value in ['". implode("','", $availableClasses)."']");
         }
         
-        try{
-            Cache::clearTag("output");
-        } catch(\Exception $e){
-            Logger::err($e->getMessage());
-        }
-        
-        $datetime = date("Y-m-d H:i:s");
-        
-        $response["finished"] = $datetime;
-        $response["total elements"] = $totalElements;
-        $response["syncronized elements"] = $syncronizedElements;
-        $response["elements with errors"] = $elementsWithError;
-
-        Logger::info("CATEGORIES SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true));
-        return new Response("[$datetime] - CATEGORIES SYNCRONIZATION RESULT: ".print_r(['success' => $elementsWithError == 0, 'responsedata' => $response],true).PHP_EOL);
-
-    }
-    
-    /**
-     * @Route("/sync_products")
-     */
-    public function syncProductsAction(Request $request)
-    {
         $response = [];
         try {
+            
+            
             $syncCTR = new BaseSyncController();
             $servers = new DataObject\TargetServer\Listing();
             $servers->addConditionParam('enabled', true);
             foreach ($servers as $server) {
-                $response[] = print_r($syncCTR->syncServerProducts($server), true);
+                $response[] = ($syncCTR->syncServerObjects($server, $class));
             }
 
             Cache::clearTag("output");

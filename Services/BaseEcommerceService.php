@@ -1,7 +1,10 @@
 <?php
 namespace SintraPimcoreBundle\Services;
 
-use Pimcore\Logger;
+use Pimcore\Model\DataObject\Concrete;
+use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
+use Pimcore\Model\DataObject\Listing;
 
 /**
  * Extending classes have to define their own functionality for custom attributes.
@@ -9,76 +12,149 @@ use Pimcore\Logger;
  * Class EcommerceService
  */
 abstract class BaseEcommerceService extends SingletonService{
-    protected $productExportHidden = [
-            'shopify_id', 'export_to_magento', 'export_to_shopify', 'magento_sync',
-            'magento_sync_at', 'shopify_sync', 'shopify_sync_at'
-    ];
 
-    abstract protected function insertSingleValue(&$ecommObject, $fieldName, $fieldvalue, $isBrick = false);
+    
+    /**
+     * Mapping for Object export
+     * It builds the API array for communcation with object endpoint
+     * 
+     * @param $ecommObject the object to fill for the API call
+     * @param $fieldMap the field map between Pimcore and external server
+     * @param $fieldsDepth tree structure of the field in the API array
+     * @param $language the active language
+     * @param $dataSource the object to export
+     * @param TargetServer $server the external server
+     * @return array the API array
+     * @throws \Exception
+     */
+    abstract protected function mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null);
+    
+    
+    /**
+     * Return object listing of a specific class in respect to a specific condition.
+     * In general case, object id is considered.
+     * 
+     * @param $objectId
+     * @param $classname
+     * @return Listing
+     */
+    protected function getObjectsToExport($objectId, $classname){
+        $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
+        $listing = $listingClass->newInstance();
 
-    public function mapField(&$ecommObject, $fieldName, $fieldType, $fieldValue, $classId) {
-        switch ($fieldType) {
-            case "quantityValue":
-                $this->insertSingleValue($ecommObject, $fieldName, $fieldValue->value);
-                break;
+        $listing->setCondition("oo_id = ".$listing->quote($objectId));
+        return $listing;
+    }
 
-            case "numeric":
-                $numericValue = $fieldValue ? $fieldValue : 0;
-                $this->insertSingleValue($ecommObject, $fieldName, $numericValue);
-                break;
-
-            case "localizedfields":
-                $localizedFields = $fieldValue->getItems();
-                if ($localizedFields != null && count($localizedFields) > 0) {
-                    $this->insertLocalizedFields($ecommObject, $localizedFields);
-                }
-                break;
-
-            case "objectbricks":
-                $objectBricks = $fieldValue ? $fieldValue->getItems() : null;
-                if ($objectBricks != null && count($objectBricks) > 0) {
-                    $this->insertObjectBricks($ecommObject, $objectBricks, $classId);
-                }
-                break;
-
-            case "select":
-                $selectValue = $fieldValue ? $fieldValue : null;
-                $this->insertSingleValue($ecommObject, $fieldName, $selectValue);
-                
-            case "objects":
-                break;
-
-            default:
-                $this->insertSingleValue($ecommObject, $fieldName, $fieldValue);
-                break;
+    protected function mapField(&$ecommObject, $serverField, $objectField){
+        /**
+         * Other special cases will be manage when needed
+         */
+        if($objectField instanceof \Pimcore\Model\DataObject\Data\QuantityValue){
+            return $this->insertSingleValue($ecommObject, $serverField, $objectField->getValue());
+        }else{
+            return $this->insertSingleValue($ecommObject, $serverField, $objectField);
         }
     }
 
-    protected function insertLocalizedFields(&$ecommObject, $localizedFields) {
-        try{
-            $config = \Pimcore\Config::getSystemConfig();
-        } catch (\Exception $e) {
-            Logger::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
+    protected function mapServerField ($apiObject, $serverFieldValue, $apiField) {
+        // TODO: special cases managing here
+        if($serverFieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue){
+            return $this->insertServerSingleField($apiObject, $serverFieldValue->getValue(), $apiField);
         }
-        $languages = explode(",",$config->general->validLanguages);
-
-        foreach ($localizedFields[$languages[0]] as $fieldName => $fieldvalue) {
-            $this->insertSingleValue($ecommObject, $fieldName, $fieldvalue);
-        }
+        
+        return $this->insertServerSingleField($apiObject, $serverFieldValue, $apiField);
     }
 
-    protected function insertObjectBricks(&$ecommObject, $objectBricks, $classId) {
-        foreach ($objectBricks as $objectBrick) {
-            $type = $objectBrick->type;
-
-            $db = Db::get();
-            $brickfields = $db->fetchRow("SELECT * FROM object_brick_store_" . $type . "_" . $classId);
-
-            foreach ($brickfields as $fieldName => $fieldvalue) {
-                if (!in_array($fieldName, array("o_id", "fieldname"))) {
-                    $this->insertSingleValue($ecommObject, $fieldName, $objectBrick->getValueForFieldName($fieldName), true);
-                }
+    protected function insertServerSingleField ($apiObject, $serverFieldValue, $apiField) {
+        if (!array_key_exists($apiField, $apiObject)) {
+            return $apiObject + [ $apiField => $serverFieldValue ];
+        }
+        return $apiObject;
+    }
+    
+    /**
+     * get field definition from field map.
+     * 
+     * If the field is a reference to another object
+     * retrieve the related object specific field.
+     * If no related field is set for a reference object
+     * an exception will be throw
+     * 
+     * @param FieldMapping $fieldMap the field map
+     * @param $language the server languages
+     * @param Concrete $dataObject the object to sync
+     */
+    protected function getObjectField(FieldMapping $fieldMap, $language, $dataObject){
+        $objectField = $fieldMap->getObjectField();
+        
+        $classname = strtolower($dataObject->getClassName())."_";
+        $fieldname = substr_replace($objectField, "", 0, strlen($classname));
+        
+        $fieldType = $fieldMap->getFieldType();
+        if ($fieldType == "reference") {
+            $relatedField = $fieldMap->getRelatedField();
+            
+            if($relatedField == null || empty($relatedField)){
+                throw new \Exception("ERROR - Related field must be defined for reference field '$fieldname'");
+            }
+            
+            $objectReflection = new \ReflectionObject($dataObject);
+            $methodName = "get". ucfirst($fieldname);
+            $objectMethod = $objectReflection->getMethod($methodName);
+            
+            $relatedObject = $objectMethod->invoke($dataObject);
+            
+            return $this->getField($relatedField, $language, $relatedObject);
+        }else{
+            return $this->getField($fieldname, $language, $dataObject);
+        }
+        
+    }
+    
+    /**
+     * Get the field value of the object.
+     * check if field is localized and, if yes, take the right translation.
+     * 
+     * @param type $fieldname the field to get 
+     * @param type $language the language of translation (if needed)
+     * @param type $dataObject the object to get value of
+     * 
+     * @return the field value
+     */
+    private function getField($fieldname, $language, $dataObject){
+        if($dataObject == null){
+            return "";
+        }
+        
+        $objectReflection = new \ReflectionObject($dataObject);
+        
+        $classname = $dataObject->getClassName();
+        
+        $methodName = "get". ucfirst($fieldname);
+        
+        $method = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\$classname",$methodName);
+        $params = $method->getParameters();
+        
+        /**
+         * check if the getter method for the field accept the "language" parameter.
+         */
+        $isLocalized = false;
+        foreach ($params as $param) {
+            if($param->getName() == "language"){
+                $isLocalized = true;
+                break;
             }
         }
+        
+        $objectMethod = $objectReflection->getMethod($methodName);
+        
+        if($isLocalized && !empty($language)){
+            $fieldValue = $objectMethod->invoke($dataObject, $language);
+        }else{
+            $fieldValue = $objectMethod->invoke($dataObject);
+        }
+        
+        return $fieldValue;
     }
 }

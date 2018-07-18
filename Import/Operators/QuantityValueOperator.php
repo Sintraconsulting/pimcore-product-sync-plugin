@@ -13,7 +13,30 @@ use Pimcore\Model\DataObject\ClassDefinition;
  *
  * @author Marco Guiducci
  */
-abstract class QuantityValueOperator extends AbstractOperator{
+class QuantityValueOperator extends AbstractOperator{
+    
+    private $additionalData;
+    
+    public function __construct(\stdClass $config, $context = null)
+    {
+        parent::__construct($config, $context);
+
+        $this->additionalData = json_decode($config->additionalData,true);
+    }
+    
+    /**
+     * Dynamically invoke field setter for quantityValue fields 
+     */
+    public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
+        
+        $value = $rowData[$colIndex];
+        $field = $this->additionalData["field"];
+        
+        $reflection = new \ReflectionObject($target);
+        $setFieldMethod = $reflection->getMethod('set'. ucfirst($field));
+        $setFieldMethod->invoke($target, $this->validateUnit($target->getClass(), $field, $value));
+
+    }
     
     public function validateUnit(ClassDefinition $class, $field, $value){
         $fieldDefinition = $class->getFieldDefinition($field);

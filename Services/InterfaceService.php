@@ -1,20 +1,24 @@
 <?php
 namespace SintraPimcoreBundle\Services;
 
-use Pimcore\Model\DataObject\Product;
-use Pimcore\Model\DataObject\Category;
+use Pimcore\Model\DataObject\TargetServer;
 
 interface InterfaceService {
     /**
-     * @param Product|Category $dataObject
-     * @return mixed
+     * @param $productId
+     * @param TargetServer $targetServer
      */
-    function export($dataObject);
+    function export($productId, TargetServer $targetServer);
 
     /**
-     * @param Product|Category $dataObject
+     * Get the mapping of field to export from the server definition.
+     * For localized fields, the first valid language will be used.
+     *
+     * @param $ecommObject
+     * @param $dataObjects
+     * @param TargetServer $targetServer
+     * @param $classname
      * @param bool $update
-     * @return mixed
      */
-    function toEcomm($dataObject, bool $update = false);
+    function toEcomm(&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $update = false);
 }

@@ -1,35 +1,28 @@
 <?php
 
-namespace SintraPimcoreBundle\ApiManager;
+namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use SpringImport\Swagger\Magento2\Client\Api\CatalogAttributeSetRepositoryV1Api;
+use Pimcore\Model\DataObject\TargetServer;
+use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 
 /**
  * Magento Rest Attribute Set API Manager 
  *
  * @author Marco Guiducci
  */
-class AttributeSetAPIManager extends AbstractAPIManager{
+class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
-    private static $instance;
-
-    public static function getInstance() {
-        if (is_null(self::$instance)) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-    
-    public function createEntity($entity) {
-        
+    public function createEntity($entity, TargetServer $server) {
+        throw new \Exception("ERROR - Method 'createEntity' not implemented in 'AttributeSetAPIManager'");
     }
 
-    public function deleteEntity($entityKey) {
-        
+    public function deleteEntity($entityKey, TargetServer $server) {
+        throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'AttributeSetAPIManager'");
     }
     
-    public function getAllAttributeSet(){
-        $apiClient = $this->getMagento2ApiInstance();
+    public function getAllAttributeSet(TargetServer $server){
+        $apiClient = $this->getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -42,12 +35,12 @@ class AttributeSetAPIManager extends AbstractAPIManager{
         }
     }
     
-    public function getDefaultAttributeSet(){
-        return $this->searchAttributeSet("attribute_set_name","Default","eq");
+    public function getDefaultAttributeSet(TargetServer $server){
+        return $this->searchAttributeSet($server, "attribute_set_name","Default","eq");
     }
 
-    public function getEntityByKey($entityKey) {
-        $apiClient = $this->getMagento2ApiInstance();
+    public function getEntityByKey($entityKey, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -60,8 +53,8 @@ class AttributeSetAPIManager extends AbstractAPIManager{
         }
     }
     
-    public function searchAttributeSet($field, $value, $conditionType = null){
-        $apiClient = $this->getMagento2ApiInstance();
+    public function searchAttributeSet(TargetServer $server, $field, $value, $conditionType = null){
+        $apiClient = $this->getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -74,8 +67,8 @@ class AttributeSetAPIManager extends AbstractAPIManager{
         }
     }
 
-    public function updateEntity($entityKey, $entity) {
-        
+    public function updateEntity($entityKey, $entity, TargetServer $server) {
+        throw new \Exception("ERROR - Method 'updateEntity' not implemented in 'AttributeSetAPIManager'");
     }
 
 }

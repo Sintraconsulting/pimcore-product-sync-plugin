@@ -2,70 +2,77 @@
 namespace SintraPimcoreBundle\Services\Mage2;
 
 use Pimcore\Model\DataObject\Category;
-use SintraPimcoreBundle\ApiManager\CategoryAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\CategoryAPIManager;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
+use Pimcore\Model\DataObject\TargetServer;
+use SintraPimcoreBundle\Utils\GeneralUtils;
 
 class Mage2CategoryService extends BaseMagento2Service implements InterfaceService {
     private $configFile = __DIR__ . '/../config/category.json';
 
-    public function export ($dataObject) {
+    /**
+     * @param $productId
+     * @param TargetServer $targetServer
+     * @return mixed|void
+     */
+    public function export ($productId, TargetServer $targetServer) {
+        $magento2Category = json_decode(file_get_contents($this->configFile), true)[$targetServer->getKey()];
+        
+        $dataObjects = $this->getObjectsToExport($productId, "Category");
+        
+        /** @var Product $dataObject */
+        $dataObject = $dataObjects->current();
+
         $apiManager = CategoryAPIManager::getInstance();
-
-        $magento2Category = $this->toEcomm($dataObject);
-
-        Logger::debug("MAGENTO CATEGORY: ".json_encode($magento2Category));
-
-        $magentoId = $dataObject->getMagentoid();
+        
+        $objectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);                
+        $magentoId = $objectInfo->getObject_id();
+        
         if($magentoId == null || empty($magentoId)){
-            $result = $apiManager->createEntity($magento2Category);
-            $dataObject->setMagentoid($result["id"]);
+            $this->toEcomm($magento2Category, $dataObjects, $targetServer, $dataObject->getClassName(), true);
+            Logger::debug("MAGENTO CR CATEGORY: ".json_encode($magento2Category));
+            
+            $result = $apiManager->createEntity($magento2Category, $targetServer);
 
         }else{
-            $result = $apiManager->updateEntity($magentoId,$magento2Category);
+            //product is new, need to save price
+            $this->toEcomm($magento2Category, $dataObjects, $targetServer, $dataObject->getClassName(), true);
+            Logger::debug("MAGENTO CR CATEGORY: ".json_encode($magento2Category));
+            
+            $result = $apiManager->updateEntity($magentoId, $magento2Category, $targetServer);
         }
-
+        
         Logger::debug("UPDATED CATEGORY: ".$result->__toString());
 
-        $dataObject->setMagento_sync(true);
-        $dataObject->setMagento_sync_at($result["updatedAt"]);
-
-        try{
-            $dataObject->update(true);
-        }
-        catch (Exception $e){
+        try {
+            $this->setSyncObject($dataObject, $result, $targetServer);
+        } catch (\Exception $e) {
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
     }
 
-    public function toEcomm ($dataObject, bool $update = false) {
-        $parentCategory = Category::getById($dataObject->getParentId(),true);
-
-        $magento2Category = json_decode(file_get_contents($this->configFile), true)['magento2'];
-
-        $magentoId = $dataObject->magentoid;
+    public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $update = false) {
+        
+        $dataObject = $dataObjects->getObjects()[0];
+        
+        parent::toEcomm($ecommObject, $dataObjects, $targetServer, $classname, $update);
+        
+        $objectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);  
+        $magentoId = $objectInfo->getObject_id();
+        
         if($magentoId != null && !empty($magentoId)){
-            $magento2Category["id"] = $magentoId;
-        }else{
-            unset($magento2Category["id"]);
+            $ecommObject["id"] = $magentoId;
         }
 
-        $parentMagentoId = $parentCategory->magentoid;
-        $magento2Category["parent_id"] = ($parentMagentoId != null && !empty($parentMagentoId)) ? $parentMagentoId : "1";
+        $parentCategory = Category::getById($dataObject->getParentId(),true);
+        
+        if($parentCategory != null){
+            $parentObjectInfo = GeneralUtils::getServerObjectInfo($parentCategory, $targetServer);        
+            $parentMagentoId = $parentObjectInfo->getObject_id();
 
-        $fieldDefinitions = $dataObject->getClass()->getFieldDefinitions();
-        foreach ($fieldDefinitions as $fieldDefinition) {
-            $fieldName = $fieldDefinition->getName();
-
-            if($fieldName != "magentoid"){
-                $fieldType = $fieldDefinition->getFieldtype();
-                $fieldValue = $dataObject->getValueForFieldName($fieldName);
-
-                $this->mapField($magento2Category, $fieldName, $fieldType, $fieldValue, $dataObject->getClassId());
-            }
-
+            $ecommObject["parent_id"] = ($parentMagentoId != null && !empty($parentMagentoId)) ? $parentMagentoId : "1";
         }
 
-        return $magento2Category;
     }
 }

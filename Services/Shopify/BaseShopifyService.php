@@ -3,59 +3,83 @@
 namespace SintraPimcoreBundle\Services\Shopify;
 
 use SintraPimcoreBundle\Services\BaseEcommerceService;
+use Pimcore\Model\DataObject\TargetServer;
+use SintraPimcoreBundle\Utils\GeneralUtils;
 
 abstract class BaseShopifyService extends BaseEcommerceService {
-    protected function insertSingleValue (&$ecommObject, $fieldName, $fieldvalue, $isBrick = false) {
-        if ($isBrick) {
-            return;
-        }
-
-        if (array_key_exists($fieldName, $ecommObject)) {
-            $ecommObject[$fieldName] = $fieldvalue;
-        } else {
-            $shopifyField = '';
-            switch ($fieldName) {
-                case "name":
-                    $shopifyField = 'title';
-                    break;
-                case "status":
-                    $fieldvalue = (boolean)$fieldvalue;
-                    $shopifyField = 'published';
-                    break;
-                case "description":
-                    $shopifyField = 'body_html';
-                    break;
-                case "sku":
-                case "price":
-                case "weight":
-                    $shopifyField = 'variants';
-                    break;
-                default :
-                    $shopifyField = 'metafields';
+    
+    /**
+     * Specific mapping for Shopify Product export
+     * It builds the API array for communcation with shopify product endpoint
+     * @param $shopifyApi
+     * @param $fieldMap
+     * @param $fieldsDepth
+     * @param $language
+     * @param $dataSource
+     * @param TargetServer $server
+     * @return array
+     * @throws \Exception
+     */
+    protected function mapServerMultipleField ($shopifyApi, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null) {
+        // End of recursion
+        if(count($fieldsDepth) == 1) {
+            /** @var Product\Listing $dataSource */
+            if ( method_exists($dataSource, 'current') ) {
+                $dataSource = $dataSource->getObjects()[0];
             }
-            $this->parseField($ecommObject, $shopifyField, $fieldName, $fieldvalue);
+            $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
+            $apiField = $fieldsDepth[0];
+            if($fieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue && $apiField == 'weight'){
+                return $this->mapServerField($shopifyApi, $fieldValue->getValue(), $apiField) + $this->mapServerField([], $fieldValue->getUnit()->getAbbreviation(), 'weight_unit');
+            }
+            return $this->mapServerField($shopifyApi, $fieldValue, $apiField);
         }
-    }
+        $parentDepth = array_shift($fieldsDepth);
 
-    protected function parseField (&$ecommObject, $shopifyField, $origField, $origValue) {
-        if ($shopifyField == 'variants') {
-            $ecommObject['variants'][0][$origField] = $origValue;
-//        } else if ($shopifyField == 'metafields') {
-//            if (!in_array($origField, $this->productExportHidden)) {
-//                if (is_array($origValue)) {
-//                    $type = "Array";
-//                } else {
-//                    $type = "string";
-//                }
-//                $ecommObject['metafields'][] = [
-//                        "key" => $origField,
-//                        "value" => $origValue,
-//                        "value_type" => $type,
-//                        "namespace" => "global"
-//                ];
-//            }
-        } else {
-            $ecommObject[$shopifyField] = $origValue;
+        //Recursion inside variants
+        if ($parentDepth == 'variants' && $dataSource) {
+            $i = 0;
+            foreach ($dataSource as $dataObject) {
+                $serverInfo = GeneralUtils::getServerObjectInfo($dataObject, $server);
+                if (!$serverInfo->getSync()) {
+                    $shopifyApi[$parentDepth][$i] = $this->mapServerMultipleField($shopifyApi[$parentDepth][$i],
+                            $fieldMap, $fieldsDepth, $language, $dataObject);
+                }
+                $i++;
+            }
+            return $shopifyApi;
         }
+
+        /**
+         * End of recursion with metafields
+         * @see https://help.shopify.com/en/api/reference/metafield
+         * TODO: could be exported as a self sustainable function, but for now it's not necessary
+         */
+        if ($parentDepth == 'metafields') {
+            if ( method_exists($dataSource, 'current') ) {
+                $dataSource = $dataSource->getObjects()[0];
+            }
+            $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
+            $apiField = $fieldsDepth[0];
+            $fieldType = is_integer($fieldValue) ? 'integer' : 'string';
+            $customValue = [
+                    'key' => $apiField,
+                    'value' => $fieldType === 'string' ? (string)$fieldValue : $fieldValue,
+                    'value_type' => $fieldType,
+                    // Namespace is intentional like this so we know it was generated by SintraPimcoreBundle
+                    'namespace' => 'SintraPimcore',
+            ];
+            $shopifyApi[$parentDepth][] = $customValue;
+            return $shopifyApi;
+        }
+
+        /**
+         * Recursion level > 1
+         * For now, on shopify there is no nested field mapping except metafields & variants
+         * It should never reach this point with shopify.
+         * TODO: image implementation should be developed in the future here for field mapping
+         */
+        return $this->mapServerMultipleField($shopifyApi[$parentDepth], $fieldMap, $fieldsDepth, $language, $dataSource, $server);
     }
+    
 }

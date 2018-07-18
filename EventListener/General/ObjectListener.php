@@ -21,6 +21,7 @@ class ObjectListener extends AbstractObjectListener{
     /**
      * Dispatch the preAdd event to the specific class listener
      * If the object class is not managed for the preUpdate event, do nothing
+     * For folder data objects the classname is null
      * 
      * @param Concrete $dataObject the object to update
      */
@@ -29,6 +30,7 @@ class ObjectListener extends AbstractObjectListener{
 
         switch ($className) {
 
+            case null:
             case "targetserver":
                 break;
 
@@ -42,6 +44,7 @@ class ObjectListener extends AbstractObjectListener{
     /**
      * Dispatch the preUpdate event to the specific class listener
      * If the object class is not managed for the preUpdate event, do nothing
+     * For folder data objects the classname is null
      * 
      * @param Concrete $dataObject the object to update
      */
@@ -50,6 +53,7 @@ class ObjectListener extends AbstractObjectListener{
 
         switch ($className) {
 
+            case null:
             case "targetserver":
                 break;
 
@@ -64,6 +68,7 @@ class ObjectListener extends AbstractObjectListener{
     /**
      * Dispatch the postUpdate event to the specific class listener
      * If the object class is not managed for the postUpdate event, do nothing
+     * For folder data objects the classname is null
      * 
      * @param Concrete $dataObject the updated object
      */
@@ -72,6 +77,7 @@ class ObjectListener extends AbstractObjectListener{
 
         switch ($className) {
 
+            case null:
             case "targetserver":
                 break;
 

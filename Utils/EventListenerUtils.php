@@ -71,12 +71,14 @@ class EventListenerUtils {
             
         $targetServer = $exportServer->getServer();
         $exportFields = TargetServerUtils::getClassExportFields($targetServer, $dataObject->getClassName());
-        $languages = $targetServer->getLanguages();
+        if($exportFields != null){
+            $languages = $targetServer->getLanguages();
 
-        foreach ($exportFields as $field) {
-            if(!self::compareFieldValues($dataObject, $oldDataObject, $field, $languages)){
-                $export = true;
-                break;
+            foreach ($exportFields as $field) {
+                if(!self::compareFieldValues($dataObject, $oldDataObject, $field, $languages)){
+                    $export = true;
+                    break;
+                }
             }
         }
         

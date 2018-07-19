@@ -9,6 +9,7 @@
 namespace SintraPimcoreBundle\ApiManager\Shopify;
 
 use Pimcore\Logger;
+use Pimcore\Tool\RestClient\Exception;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use Pimcore\Model\DataObject\TargetServer;
 
@@ -72,6 +73,28 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
     
     public function deleteEntity($entityKey, TargetServer $server) {
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ShopifyProductAPIManager'");
+    }
+
+    public function getInventoryInfo ($filters, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->InventoryLevel->get($filters);
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('GET SHOPIFY INVENTORY LEVELS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateInventoryInfo ($payload, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->InventoryLevel->post($payload, $apiClient->InventoryLevel->generateUrl([], 'adjust'));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('UPDATE SHOPIFY INVENTORY LEVELS FAILED:' . $e->getMessage());
+            return false;
+        }
     }
 
 }

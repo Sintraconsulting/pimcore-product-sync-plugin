@@ -70,7 +70,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $this->setSyncProducts($result, $targetServer);
             $shopifyObj->updateShopifyResponse($result);
             $shopifyObj->updateInventoryApiResponse();
-            $shopifyObj->updateVariantsInventories();
+            $shopifyObj->updateVariantsInventories(count($search) === 0);
         } catch (\Exception $e) {
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
@@ -114,11 +114,13 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     public function prepareVariants($shopifyApi, $products, TargetServer $server) {
         $shopifyApi['variants'] = [];
         foreach ($products as $product) {
+            /** @var ServerObjectInfo $serverObjectInfo */
             $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $server);
             $varId = $serverObjectInfo->getVariant_id();
             if ($varId) {
                 $shopifyApi['variants'][] = [
-                        'id' => $varId
+                        'id' => $varId,
+                        'inventory_management' => 'shopify'
                 ];
             } else {
                 $shopifyApi['variants'][] = [

@@ -89,7 +89,8 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
     public function updateInventoryInfo ($payload, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
-            $result = $apiClient->InventoryLevel->post($payload, $apiClient->InventoryLevel->generateUrl([], 'adjust'));
+            Logger::warn('URL GENERATED');
+            $result = $apiClient->InventoryLevel->post($payload, $apiClient->InventoryLevel->generateUrl([], 'adjust'), false);
             return $result;
         } catch (\Exception $e) {
             Logger::err('UPDATE SHOPIFY INVENTORY LEVELS FAILED:' . $e->getMessage());

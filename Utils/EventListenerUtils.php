@@ -95,7 +95,11 @@ class EventListenerUtils {
      */
     private static function compareFieldValues($dataObject, $oldDataObject, $field, $languages){
         $match = false;
-        $methodName = "get". ucfirst($field);
+        
+        $classname = strtolower($dataObject->getClassName())."_";
+        $fieldname = substr_replace($field, "", 0, strlen($classname));
+        
+        $methodName = "get". ucfirst($fieldname);
         
         $method = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\". ucfirst($dataObject->getClassName()),$methodName);
         $params = $method->getParameters();

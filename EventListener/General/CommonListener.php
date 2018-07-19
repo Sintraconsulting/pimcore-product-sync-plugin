@@ -54,9 +54,11 @@ class CommonListener extends ObjectListener implements InterfaceListener{
              * Load the previous version of object in order to check 
              * if fields to export are changed in respect to the new values
              */
-            $class = $dataObject->getClass();
-            $oldDataObject = $class->getById($dataObject->getId(), true);
-
+            $classname = $dataObject->getClassName();
+            $getByIdMethod = new \ReflectionMethod("\\Pimcore\\Model\\DataObject\\".$classname, "getById");
+            
+            $oldDataObject = $getByIdMethod->invoke(null,$dataObject->getId(), true);
+            
             /**
              * For each server field changes evaluation is done separately
              * If at least a field to export in the server has changed,

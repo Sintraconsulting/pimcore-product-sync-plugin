@@ -20,6 +20,10 @@ class TargetServerUtils {
      * @return array fields to export
      */
     public static function getClassExportFields(TargetServer $targetServer, $classname){
+        if(!$targetServer->getEnabled() || $targetServer->getExportFields() == null){
+            return null;
+        }
+        
         $exportFieldsInfos = $targetServer->getExportFields()->getItems();
         
         $exportFields= null;

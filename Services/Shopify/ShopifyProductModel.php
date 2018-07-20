@@ -35,11 +35,6 @@ class ShopifyProductModel {
      */
     protected $shopifyApiReq;
     /**
-     * Inventory update JSON Prebuilt
-     * @var array $inventoryApiReq
-     */
-    protected $inventoryApiReq;
-    /**
      * Target Server for export
      * @var TargetServer $targetServer
      */
@@ -92,15 +87,11 @@ class ShopifyProductModel {
                 $payload = [
                         'inventory_item_id' => $inventoryJson['inventory_item_id'],
                         'location_id' => $inventoryJson['location_id'],
-                        'available_adjustment' => $firstUpdate ? $preparedVar['quantity'] - 1 : $preparedVar['quantity']
+                        'available' => $preparedVar['quantity']
                 ];
                 $response = $this->apiManager->updateInventoryInfo($payload, $this->targetServer);
                 try{
                     $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
-                    Logger::warn('FIELDNAME');
-                    $quantityFieldName = explode('product_', $this->getQuantityFieldServerMapping())[1];
-                    Logger::warn(ucfirst($quantityFieldName));
-                    $variant->{'set'.ucfirst($quantityFieldName)}(0);
                     $variant->update(true);
                 } catch (\Exception $e) {
                     Logger::warn('COULD NOT SAVE PRODUCT WHILE UPDATING QUANTITY ID: ' . $variant->getId() . ' ' . $e->getMessage());

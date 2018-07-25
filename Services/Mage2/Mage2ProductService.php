@@ -148,8 +148,8 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             Logger::info("PRODUCT ATTRIBUTE: ".print_r($productAttribute,true));
             
             $productOption = array(
-                "attribute_id" => $productAttribute["attribute_id"],
-                "label" => $productAttribute["default_frontend_label"]
+                "attribute_id" => $productAttribute->getAttributeId(),
+                "label" => $productAttribute->getDefaultFrontendLabel()
             );
             
             $values = [];

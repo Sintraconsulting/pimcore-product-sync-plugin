@@ -3,6 +3,7 @@
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductAttributeRepositoryV1Api;
+use SpringImport\Swagger\Magento2\Client\Model\CatalogDataProductAttributeInterface;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 
@@ -21,6 +22,12 @@ class ProductAttributesAPIManager extends BaseMage2APIManager implements APIMana
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ProductAttributesAPIManager'");
     }
 
+    /**
+     * 
+     * @param type $entityKey
+     * @param TargetServer $server
+     * @return CatalogDataProductAttributeInterface|boolean
+     */
     public static function getEntityByKey($entityKey, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
         

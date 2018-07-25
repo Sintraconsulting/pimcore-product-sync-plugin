@@ -22,7 +22,7 @@ use Pimcore\Model\DataObject\Objectbrick\Data\Mage2ServerInfo;
  */
 class BaseMage2APIManager extends AbstractAPIManager{
 
-    public function getApiInstance(TargetServer $server) {
+    protected function getApiInstance(TargetServer $server) {
         $serverInfo = $this->getServerInfo($server);
 
         $baseUrl = $server->getServerBaseUrl() . '/rest';

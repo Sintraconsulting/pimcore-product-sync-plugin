@@ -13,15 +13,15 @@ use SintraPimcoreBundle\ApiManager\APIManagerInterface;
  */
 class ProductAttributesAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
-    public function createEntity($entity, TargetServer $server) {
+    public static function createEntity($entity, TargetServer $server) {
         throw new \Exception("ERROR - Method 'createEntity' not implemented in 'ProductAttributesAPIManager'");
     }
 
-    public function deleteEntity($entityKey, TargetServer $server) {
+    public static function deleteEntity($entityKey, TargetServer $server) {
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ProductAttributesAPIManager'");
     }
 
-    public function getEntityByKey($entityKey, TargetServer $server) {
+    public static function getEntityByKey($entityKey, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         
         $productAttributesInstance = new CatalogProductAttributeRepositoryV1Api($apiClient);
@@ -35,7 +35,7 @@ class ProductAttributesAPIManager extends BaseMage2APIManager implements APIMana
         }
     }
 
-    public function updateEntity($entityKey, $entity, TargetServer $server) {
+    public static function updateEntity($entityKey, $entity, TargetServer $server) {
         throw new \Exception("ERROR - Method 'updateEntity' not implemented in 'ProductAttributesAPIManager'");
     }
 

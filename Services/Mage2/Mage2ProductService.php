@@ -46,22 +46,21 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         /** @var Product $dataObject */
         $dataObject = $dataObjects->current();
 
-        $apiManager = Mage2ProductAPIManager::getInstance();
         $sku = $dataObject->getSku();
-        $search = $apiManager->searchProducts($targetServer,"sku", $sku);
+        $search = Mage2ProductAPIManager::searchProducts($targetServer,"sku", $sku);
 
         if($search["totalCount"] === 0){
             //product is new, need to save price
             $this->toEcomm($magento2Product, $dataObjects, $targetServer, $dataObject->getClassName(), true);
             Logger::debug("MAGENTO CR PRODUCT: ".json_encode($magento2Product));
 
-            $result = $apiManager->createEntity($magento2Product, $targetServer);
+            $result = Mage2ProductAPIManager::createEntity($magento2Product, $targetServer);
         }else{
             //product already exists, we may want to not update prices
             $this->toEcomm($magento2Product, $dataObjects, $targetServer, $dataObject->getClassName(), MagentoConfig::$updateProductPrices);
             Logger::debug("MAGENTO UP PRODUCT: ".json_encode($magento2Product));
 
-            $result = $apiManager->updateEntity($sku,$magento2Product, $targetServer);
+            $result = Mage2ProductAPIManager::updateEntity($sku,$magento2Product, $targetServer);
         }
         Logger::debug("UPDATED PRODUCT: ".$result->__toString());
 
@@ -144,8 +143,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         if($parentDepth == 'configurable_product_options'){
             $apiField = $fieldsDepth[0];
             
-            $productAttributesAPIManager = ProductAttributesAPIManager::getInstance();
-            $productAttribute = $productAttributesAPIManager->getEntityByKey($apiField, $server);
+            $productAttribute = ProductAttributesAPIManager::getEntityByKey($apiField, $server);
             
             Logger::info("PRODUCT ATTRIBUTE: ".print_r($productAttribute,true));
             

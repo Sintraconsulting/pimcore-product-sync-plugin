@@ -19,7 +19,7 @@ use Pimcore\Model\DataObject\TargetServer;
  */
 class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManagerInterface{
 
-    public function getEntityByKey($entityKey, TargetServer $server) {
+    public static function getEntityByKey($entityKey, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
 
         try {
@@ -31,7 +31,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
-    public function searchShopifyProducts ($filters, TargetServer $server) {
+    public static function searchShopifyProducts ($filters, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
 
         try {
@@ -43,7 +43,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
-    public function createEntity($entity, TargetServer $server) {
+    public static function createEntity($entity, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
 
         try {
@@ -58,7 +58,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
-    public function updateEntity($entityKey, $entity, TargetServer $server) {
+    public static function updateEntity($entityKey, $entity, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
 
         try {
@@ -70,7 +70,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
-    public function deleteEntity($entityKey, TargetServer $server) {
+    public static function deleteEntity($entityKey, TargetServer $server) {
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ShopifyProductAPIManager'");
     }
 

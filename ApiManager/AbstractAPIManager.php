@@ -11,21 +11,12 @@ namespace SintraPimcoreBundle\ApiManager;
 use Pimcore\Model\DataObject\TargetServer;
 
 /**
- * Magento Rest API Manager 
+ * Abstract API Manager 
  *
  * @author Marco Guiducci
  */
 abstract class AbstractAPIManager {
-
-    protected static $instance;
-
-    public static function getInstance() {
-        if (is_null(static::$instance)) {
-            static::$instance = new static();
-        }
-        return static::$instance;
-    }
     
-    public abstract function getApiInstance(TargetServer $server);
+    protected static abstract function getApiInstance(TargetServer $server);
 
 }

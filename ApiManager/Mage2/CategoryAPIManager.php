@@ -20,7 +20,7 @@ use SintraPimcoreBundle\ApiManager\APIManagerInterface;
  */
 class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
-    public function createEntity($entity, TargetServer $server) {
+    public static function createEntity($entity, TargetServer $server) {
         
         $apiClient = $this->getApiInstance($server);
         
@@ -37,7 +37,7 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         }
     }
 
-    public function deleteEntity($categoryId, TargetServer $server) {
+    public static function deleteEntity($categoryId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
@@ -51,7 +51,7 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         }
     }
 
-    public function getEntityByKey($categoryId, TargetServer $server) {
+    public static function getEntityByKey($categoryId, TargetServer $server) {
         return $this->getEntity($server, $categoryId);
     }
     
@@ -69,7 +69,7 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         }
     }
 
-    public function updateEntity($categoryId, $entity, TargetServer $server) {
+    public static function updateEntity($categoryId, $entity, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);

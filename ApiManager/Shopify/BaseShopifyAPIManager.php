@@ -16,7 +16,7 @@ use Pimcore\Logger;
  */
 class BaseShopifyAPIManager extends AbstractAPIManager{
     
-    public function getApiInstance(TargetServer $server) {
+    protected function getApiInstance(TargetServer $server) {
         $serverInfo = $this->getServerInfo($server);
         
         $config = [

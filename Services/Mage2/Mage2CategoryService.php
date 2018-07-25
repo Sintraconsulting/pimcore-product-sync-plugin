@@ -23,8 +23,6 @@ class Mage2CategoryService extends BaseMagento2Service implements InterfaceServi
         
         /** @var Product $dataObject */
         $dataObject = $dataObjects->current();
-
-        $apiManager = CategoryAPIManager::getInstance();
         
         $objectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);                
         $magentoId = $objectInfo->getObject_id();
@@ -33,14 +31,14 @@ class Mage2CategoryService extends BaseMagento2Service implements InterfaceServi
             $this->toEcomm($magento2Category, $dataObjects, $targetServer, $dataObject->getClassName(), true);
             Logger::debug("MAGENTO CR CATEGORY: ".json_encode($magento2Category));
             
-            $result = $apiManager->createEntity($magento2Category, $targetServer);
+            $result = CategoryAPIManager::createEntity($magento2Category, $targetServer);
 
         }else{
             //product is new, need to save price
             $this->toEcomm($magento2Category, $dataObjects, $targetServer, $dataObject->getClassName(), true);
             Logger::debug("MAGENTO CR CATEGORY: ".json_encode($magento2Category));
             
-            $result = $apiManager->updateEntity($magentoId, $magento2Category, $targetServer);
+            $result = CategoryAPIManager::updateEntity($magentoId, $magento2Category, $targetServer);
         }
         
         Logger::debug("UPDATED CATEGORY: ".$result->__toString());

@@ -29,15 +29,13 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         
         $shopifyApi = [];
         
-        /** @var ShopifyProductAPIManager $apiManager */
-        $apiManager = ShopifyProductAPIManager::getInstance();
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 
         $shopifyId = $serverObjectInfo->getObject_id();
 
         $search = array();
         if($shopifyId != null && !empty($shopifyId)){
-            $search = $apiManager->searchShopifyProducts(['ids' => $shopifyId],$targetServer);
+            $search = ShopifyProductAPIManager::searchShopifyProducts(['ids' => $shopifyId],$targetServer);
             Logger::info("SEARCH RESULT: $shopifyId".json_encode($search));
         }
 
@@ -47,7 +45,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
 
             /** @var ShopifyProductAPIManager $apiManager */
-            $result = $apiManager->createEntity($shopifyApi, $targetServer);
+            $result = ShopifyProductAPIManager::createEntity($shopifyApi, $targetServer);
         } else if (count($search) === 1){
             $shopifyApi["id"] = $search[0]['id'];
 
@@ -55,7 +53,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
             /** @var ShopifyProductAPIManager $apiManager */
-            $result = $apiManager->updateEntity($shopifyId, $shopifyApi, $targetServer);
+            $result = ShopifyProductAPIManager::updateEntity($shopifyId, $shopifyApi, $targetServer);
         }
         Logger::debug("SHOPIFY UPDATED PRODUCT: " . json_encode($result));
 

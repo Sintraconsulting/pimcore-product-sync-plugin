@@ -19,8 +19,8 @@ use Pimcore\Model\DataObject\TargetServer;
  */
 class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManagerInterface{
 
-    public function getEntityByKey($entityKey, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function getEntityByKey($entityKey, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product($entityKey)->get();
@@ -31,8 +31,8 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
-    public function searchShopifyProducts ($filters, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function searchShopifyProducts ($filters, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product->get($filters);
@@ -43,8 +43,8 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
-    public function createEntity($entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function createEntity($entity, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product->post($entity);
@@ -58,8 +58,8 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
-    public function updateEntity($entityKey, $entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function updateEntity($entityKey, $entity, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product($entityKey)->put($entity);
@@ -70,7 +70,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
-    public function deleteEntity($entityKey, TargetServer $server) {
+    public static function deleteEntity($entityKey, TargetServer $server) {
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ShopifyProductAPIManager'");
     }
 

@@ -76,14 +76,13 @@ class BaseSyncController {
         $classDef = ClassDefinition::getByName($class);
         $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
         $classId = $classDef->getId();
-        $objectTableClass = 'object_query_' . $classId;
         $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
         
         $db = Db::get();
         $objIds = $db->fetchAll(
             "SELECT dependencies.sourceid FROM dependencies"
             . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.name=? AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
-            . " INNER JOIN $objectTableClass as prod ON (prod.oo_id = dependencies.sourceid AND prod.oo_className = ? )"
+            . " INNER JOIN objects as obj ON (obj.o_id = dependencies.sourceid AND obj.o_className = ? AND obj.o_type = 'object')"
             . " WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'"
             . " ORDER BY dependencies.sourceid ASC"
             . " LIMIT $limit",

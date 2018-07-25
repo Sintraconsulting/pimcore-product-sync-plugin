@@ -145,8 +145,6 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             
             $productAttribute = ProductAttributesAPIManager::getEntityByKey($apiField, $server);
             
-            Logger::info("PRODUCT ATTRIBUTE: ".print_r($productAttribute,true));
-            
             $productOption = array(
                 "attribute_id" => $productAttribute->getAttributeId(),
                 "label" => $productAttribute->getDefaultFrontendLabel()

@@ -22,7 +22,7 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
     }
     
     public static function getAllAttributeSet(TargetServer $server){
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -40,7 +40,7 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
     }
 
     public static function getEntityByKey($entityKey, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -54,7 +54,7 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
     }
     
     public static function searchAttributeSet(TargetServer $server, $field, $value, $conditionType = null){
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         

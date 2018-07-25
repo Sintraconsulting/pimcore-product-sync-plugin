@@ -25,7 +25,7 @@ use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
     public static function createEntity($entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -42,7 +42,7 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
     }
     
     public static function deleteEntity($sku, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -60,7 +60,7 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
     }
 
     public static function getEntity(TargetServer $server, $sku, $editMode = null, $storeId = null, $forceReload = null) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -93,7 +93,7 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
      * - null:       Null
      */
     public static function searchProducts(TargetServer $server, $field, $value, $conditionType = null) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -107,7 +107,7 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
     }
     
     public static function updateEntity($sku, $entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 

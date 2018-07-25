@@ -22,7 +22,7 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
     
     public static function createEntity($entity, TargetServer $server) {
         
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -38,7 +38,7 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
     }
 
     public static function deleteEntity($categoryId, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -56,7 +56,7 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
     }
     
     public function getEntity(TargetServer $server, $categoryId, $storeId = null) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         
@@ -70,7 +70,7 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
     }
 
     public static function updateEntity($categoryId, $entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $categoryInstance = new CatalogCategoryRepositoryV1Api($apiClient);
         

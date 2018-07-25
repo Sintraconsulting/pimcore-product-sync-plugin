@@ -22,7 +22,7 @@ class ProductAttributesAPIManager extends BaseMage2APIManager implements APIMana
     }
 
     public static function getEntityByKey($entityKey, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
         
         $productAttributesInstance = new CatalogProductAttributeRepositoryV1Api($apiClient);
         

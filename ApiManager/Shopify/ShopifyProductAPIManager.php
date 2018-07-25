@@ -20,7 +20,7 @@ use Pimcore\Model\DataObject\TargetServer;
 class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManagerInterface{
 
     public static function getEntityByKey($entityKey, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product($entityKey)->get();
@@ -32,7 +32,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
     }
     
     public static function searchShopifyProducts ($filters, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product->get($filters);
@@ -44,7 +44,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
     }
     
     public static function createEntity($entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product->post($entity);
@@ -59,7 +59,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
     }
 
     public static function updateEntity($entityKey, $entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+        $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product($entityKey)->put($entity);

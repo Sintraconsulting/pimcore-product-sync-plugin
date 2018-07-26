@@ -14,6 +14,8 @@ use SintraPimcoreBundle\ApiManager\Shopify\ShopifyProductAPIManager;
 
 class ShopifyProductModel {
 
+    /** @var Product\Listing */
+    protected $rawVariants;
     /**
      * Product Objects from PimCore database
      * @var array $variants
@@ -24,6 +26,14 @@ class ShopifyProductModel {
      * @var array $metafields
      */
     protected $metafields = [];
+    /**
+     * Metafields to be updated
+     * @var array $updateMetafields
+     */
+    protected $updateMetafields = [
+            'product' => [],
+            'variants' => []
+    ];
     /**
      * Shopify Object from search / create
      * @var array $shopifyModel
@@ -51,36 +61,93 @@ class ShopifyProductModel {
     protected $serverInfos = [];
 
     public function __construct (Product\Listing $variants, $shopifyApiReq, $shopifyModel, $targetServer) {
+        $this->rawVariants = $variants;
         $this->shopifyApiReq = $shopifyApiReq;
         $this->shopifyModel = $shopifyModel;
         $this->targetServer = $targetServer;
         $this->apiManager = (new ShopifyProductAPIManager());
         $this->buildCustomModelInfo($variants);
+        $this->metafields = $this->getAllMetafields();
     }
 
     public function updateShopifyResponse (array $shopifyModel) {
         if (is_array($shopifyModel)) {
             $this->shopifyModel = $shopifyModel;
         }
+        $this->buildCustomModelInfo($this->rawVariants);
     }
 
-    public function getParsedShopifyApiRequest () {
+    public function getParsedShopifyApiRequest ($isCreate = true) {
         $cpyShopifyApiReq = $this->shopifyApiReq;
-        unset($cpyShopifyApiReq['metafields']);
-        foreach ($cpyShopifyApiReq['variants'] as &$variant) {
-            unset($variant['metafields']);
-        }
-        return $cpyShopifyApiReq;
+        return $isCreate ?
+                $this->removeMetafieldsFromApiReq($cpyShopifyApiReq) :
+                $this->stripMetafields($cpyShopifyApiReq);
     }
 
-    public function updateVariantsInventories ($firstUpdate = false) : void {
+    public function updateAndCacheMetafields () {
+
+    }
+
+    protected function stripMetafields ($apiReq) {
+        unset($apiReq['metafields']);
+        if (is_array($apiReq) && count($apiReq)) {
+            foreach ($apiReq['variants'] as &$variant) {
+                unset($variant['metafields']);
+            }
+        }
+        return $apiReq;
+    }
+
+    /** Function prepared for */
+    protected function removeMetafieldsFromApiReq ($apiReq) {
+        $apiReqProdMetafields = $apiReq['metafields'];
+        # Parse general product metafields
+        foreach ($apiReqProdMetafields as $key => $metafield) {
+            Logger::log('METT1');
+            Logger::log(json_encode($metafield));
+            if($this->isMetafieldInTarget($metafield['key'], $this->metafields['product']) === true) {
+                $this->updateMetafields['product'] += $metafield;
+                unset($apiReq['metafields'][$key]);
+            }
+        }
+        # Parse variant specific metafields
+        foreach ($apiReq['variants'] as $pKey => $variant) {
+            $varMetafields = &$variant['metafields'];
+            $varId = $variant['id'];
+            if ($varId && $varMetafields && count($varMetafields)) {
+                $this->updateMetafields['variants'] += [$varId => []];
+                foreach ($varMetafields as $cKey => $metafield) {
+                    Logger::log('METT2');
+                    Logger::log(json_encode($metafield));
+                    if ($this->metafields['variants'][$varId] && $this->isMetafieldInTarget($metafield['key'], $this->metafields['variants'][$varId]) === true) {
+                        $this->updateMetafields['variants'][$varId] += $metafield;
+                        unset($apiReq[$pKey][$cKey]);
+                    }
+                }
+            }
+        }
+        return $apiReq;
+    }
+
+    protected function isMetafieldInTarget ($metafieldKey, array $targetMetafields) : bool {
+        if(count($targetMetafields)) {
+            foreach ($targetMetafields as $metafield) {
+                if ($metafield['key'] === $metafieldKey) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public function updateVariantsInventories () : void {
         /** @var Product $variant */
         foreach($this->variants as $variant) {
             /** @var ServerObjectInfo $serverInfo */
             $serverInfo = $this->serverInfos[$variant->getId()];
-            $preparedVar = $this->getVariantFromApiReq($serverInfo->getVariant_id());
-            Logger::warn('PREPARED VAR');
-            Logger::warn(print_r($preparedVar, true));
+            $preparedVar = $this->getVariantFromApiReq($variant->getSku());
+            Logger::log('WOWWW');
+            Logger::log(json_encode($preparedVar));
             $inventoryJson = json_decode($serverInfo->getInventory_json(), true);
 
             if ($preparedVar['quantity'] != 0) {
@@ -119,6 +186,36 @@ class ShopifyProductModel {
         } else {
             Logger::warn('NO INVENTORY LEVELS FOR IDS: ' . implode(',', $inventoryIds));
         }
+    }
+
+    protected function getAllMetafields () {
+        $metafields = [
+                'product' => [],
+                'variants' => []
+        ];
+        /**
+         * @var int $varId
+         * @var ServerObjectInfo $serverInfo
+         */
+        foreach ($this->serverInfos as $varId => $serverInfo) {
+            $metafieldJson = $serverInfo->getMetafields_json();
+            $metafieldJson = json_decode($metafieldJson);
+            /** If it's the first time going through the variants since the
+             *  product metafields are the same inside every variant json
+             */
+            if (count($metafields['product']) === 0 && $metafieldJson->product && count($metafieldJson->product)) {
+                foreach ($metafieldJson->product as $metafield) {
+                    $metafields['product'] += $metafield;
+                }
+            }
+            if ($metafieldJson->variant && count($metafieldJson->variant)) {
+                $metafields['variants'] += [ $varId => [] ];
+                foreach ($metafieldJson->variant as $metafield) {
+                    $metafields['variants'][$varId] += $metafield;
+                }
+            }
+        }
+        return $metafields;
     }
 
     protected function getQuantityFieldServerMapping () {
@@ -178,10 +275,10 @@ class ShopifyProductModel {
         return null;
     }
 
-    protected function getVariantFromApiReq ($varId) {
+    protected function getVariantFromApiReq ($sku) {
         foreach ($this->shopifyApiReq['variants'] as $variant) {
             Logger::warn(json_encode($variant));
-            if ($variant['id'] == $varId) {
+            if ($variant['sku'] == $sku) {
                 return $variant;
             }
         }
@@ -189,6 +286,9 @@ class ShopifyProductModel {
     }
 
     protected function buildCustomModelInfo (Product\Listing $variants) : void {
+        $this->variants = [];
+        $this->serverInfos = [];
+
         $variants = $variants->getItems(0, $variants->getCount());
         /** @var Product $variant */
         foreach ($variants as $variant) {

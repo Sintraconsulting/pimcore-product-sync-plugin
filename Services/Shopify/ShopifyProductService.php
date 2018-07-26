@@ -45,10 +45,10 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         if (count($search) === 0) {
             //product is new, need to save price
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
-            Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
 
             $shopifyObj = new ShopifyProductModel($dataObjects, $shopifyApi, null, $targetServer);
             $shopifyApi = $shopifyObj->getParsedShopifyApiRequest();
+            Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
 
             /** @var ShopifyProductAPIManager $apiManager */
             $result = $apiManager->createEntity($shopifyApi, $targetServer);
@@ -61,6 +61,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $shopifyApi = $shopifyObj->getParsedShopifyApiRequest();
 
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
+            return;
             /** @var ShopifyProductAPIManager $apiManager */
             $result = $apiManager->updateEntity($shopifyId, $shopifyApi, $targetServer);
         }
@@ -69,8 +70,9 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         try {
             $this->setSyncProducts($result, $targetServer);
             $shopifyObj->updateShopifyResponse($result);
+            $shopifyObj->updateAndCacheMetafields();
             $shopifyObj->updateInventoryApiResponse();
-            $shopifyObj->updateVariantsInventories(count($search) === 0);
+            $shopifyObj->updateVariantsInventories();
         } catch (\Exception $e) {
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }

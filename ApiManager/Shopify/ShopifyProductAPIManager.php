@@ -98,4 +98,56 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    public function getProductMetafields ($productId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Metafield->get();
+            Logger::log('PRODUCT METAFIELDS');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('GET SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getProductVariantMetafields ($productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield->get();
+            Logger::log('PRODUCT VARIANT METAFIELDS');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('GET SHOPIFY VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function createProductMetafield ($payload, $productId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Metafield->post($payload);
+            Logger::log('PRODUCT METAFIELDS CREATE');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function createProductVariantMetafield ($payload, $productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield->post($payload);
+            Logger::log('PRODUCT VARIANT METAFIELDS CREATE');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
 }

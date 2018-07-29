@@ -90,7 +90,7 @@ class ShopifyProductModel {
         if ($isCreate) {
             $productCache = $this->apiManager->getProductMetafields($serverInfo->getObject_id(), $this->targetServer);
         } else {
-            $productCache = [];
+            $productCache = json_decode($serverInfo->getMetafields_json(), true)['product'];
             $productMetafields = $this->shopifyApiReq['metafields'];
             foreach ($productMetafields as $metafield) {
                 $metafieldCache = $this->apiManager->createProductMetafield($metafield, $serverInfo->getObject_id(), $this->targetServer);
@@ -99,32 +99,51 @@ class ShopifyProductModel {
         }
         /** @var Product $variant */
         foreach ($this->variants as $variant) {
-            $this->updateAndCacheVariant($productCache, $variant);
+            $this->updateAndCacheVariant($productCache, $variant, $isCreate);
         }
     }
 
-    protected function updateAndCacheVariant ($prodCache, Product $productVar) {
+    protected function updateAndCacheVariant ($prodCache, Product $productVar, bool $isCreate = false) {
         /** @var ServerObjectInfo $serverInfo */
         $serverInfo = $this->serverInfos[$productVar->getId()];
 
-        if (isset($prodCache)) {
+        if ($isCreate) {
+            # We are working with a previous cached product
             $varCache = $this->apiManager->getProductVariantMetafields($serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
         } else {
             $varCache = [];
             $metafields = $this->getVariantFromApiReq($productVar->getSku())['metafields'];
             if($metafields && count($metafields)) {
                 foreach ($metafields as $metafield) {
+
                     $metafieldCache = $this->apiManager->createProductVariantMetafield($metafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
                     $varCache += $metafieldCache;
                 }
             }
         }
         try{
-            $productVar->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
+            $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
             $productVar->update(true);
         } catch (\Exception $e) {
-            Logger::warn('COULD NOT SAVE PRODUCT WHILE UPDATING QUANTITY ID: ' . $variant->getId() . ' ' . $e->getMessage());
+            Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING METAFIELDS ID: ' . $productVar->getId() . ' ' . $e->getMessage());
         }
+    }
+
+    protected function getMetafieldUpdatedServerInfosProduct (Product $variant, array $varCache, array $prodCache) {
+        $exportServers = $variant->getExportServers();
+        /** @var ServerObjectInfo $exportServer */
+        foreach ($exportServers as $exportServer) {
+            if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
+                Logger::warn('METAFIELDS JSON');
+                $exportServer->setMetafields_json(json_encode([
+                        'product' => $prodCache,
+                        'variant' => $varCache
+                ]));
+                Logger::warn($exportServer->getMetafields_json());
+                break;
+            }
+        }
+        return $exportServers;
     }
 
     protected function stripMetafields ($apiReq) {
@@ -237,6 +256,7 @@ class ShopifyProductModel {
             $metafieldJson = json_decode($metafieldJson);
             /** If it's the first time going through the variants since the
              *  product metafields are the same inside every variant json
+             *  => do it only once per variants read
              */
             if (count($metafields['product']) === 0 && $metafieldJson->product && count($metafieldJson->product)) {
                 foreach ($metafieldJson->product as $metafield) {

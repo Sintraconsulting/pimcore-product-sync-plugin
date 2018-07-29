@@ -47,7 +47,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
 
             $shopifyObj = new ShopifyProductModel($dataObjects, $shopifyApi, null, $targetServer);
-            $shopifyApi = $shopifyObj->getParsedShopifyApiRequest();
+            $shopifyApi = $shopifyObj->getParsedShopifyApiRequest(true);
             Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
 
             /** @var ShopifyProductAPIManager $apiManager */
@@ -58,10 +58,10 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
 
             $shopifyObj = new ShopifyProductModel($dataObjects, $shopifyApi, $search[0], $targetServer);
-            $shopifyApi = $shopifyObj->getParsedShopifyApiRequest();
+            $shopifyApi = $shopifyObj->getParsedShopifyApiRequest(false);
 
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
-            $shopifyObj->updateAndCacheMetafields();
+//            $shopifyObj->updateAndCacheMetafields();
             return;
             /** @var ShopifyProductAPIManager $apiManager */
             $result = $apiManager->updateEntity($shopifyId, $shopifyApi, $targetServer);

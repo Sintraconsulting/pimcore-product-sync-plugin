@@ -137,10 +137,40 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    public function updateProductMetafield ($payload, $productId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            unset($payload['namespace']);
+            unset($payload['key']);
+            $result = $apiClient->Product($productId)->Metafield($payload['id'])->put($payload);
+            Logger::log('PRODUCT METAFIELDS CREATE');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function createProductVariantMetafield ($payload, $productId, $varId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Variant($varId)->Metafield->post($payload);
+            Logger::log('PRODUCT VARIANT METAFIELDS CREATE');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateProductVariantMetafield ($payload, $productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            unset($payload['namespace']);
+            unset($payload['key']);
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield($payload['id'])->put($payload);
             Logger::log('PRODUCT VARIANT METAFIELDS CREATE');
             Logger::log(json_encode($result));
             return $result;

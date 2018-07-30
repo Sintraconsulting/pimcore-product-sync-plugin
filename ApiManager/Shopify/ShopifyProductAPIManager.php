@@ -143,7 +143,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             unset($payload['namespace']);
             unset($payload['key']);
             $result = $apiClient->Product($productId)->Metafield($payload['id'])->put($payload);
-            Logger::log('PRODUCT METAFIELDS CREATE');
+            Logger::log('PRODUCT METAFIELDS UPDATE');
             Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
@@ -171,7 +171,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             unset($payload['namespace']);
             unset($payload['key']);
             $result = $apiClient->Product($productId)->Variant($varId)->Metafield($payload['id'])->put($payload);
-            Logger::log('PRODUCT VARIANT METAFIELDS CREATE');
+            Logger::log('PRODUCT VARIANT METAFIELDS UPDATED');
             Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {

@@ -40,6 +40,7 @@ abstract class BaseEcommerceService extends SingletonService{
      */
     protected function getObjectsToExport($objectId, $classname){
         $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
+        /** @var Listing $listing */
         $listing = $listingClass->newInstance();
 
         $listing->setCondition("oo_id = ".$listing->quote($objectId));

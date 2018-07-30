@@ -124,6 +124,7 @@ class BaseSyncController {
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$productId.": ".$e->getMessage();
                 Logger::err($e->getMessage());
+                Logger::err($e->getTraceAsString());
 
                 $elementsWithError++;
             }

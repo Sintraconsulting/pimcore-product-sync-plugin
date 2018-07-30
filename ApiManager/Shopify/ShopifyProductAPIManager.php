@@ -9,6 +9,7 @@
 namespace SintraPimcoreBundle\ApiManager\Shopify;
 
 use Pimcore\Logger;
+use Pimcore\Tool\RestClient\Exception;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use Pimcore\Model\DataObject\TargetServer;
 
@@ -72,6 +73,111 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
     
     public static function deleteEntity($entityKey, TargetServer $server) {
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ShopifyProductAPIManager'");
+    }
+
+    public function getInventoryInfo ($filters, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->InventoryLevel->get($filters);
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('GET SHOPIFY INVENTORY LEVELS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateInventoryInfo ($payload, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            Logger::warn('URL GENERATED');
+            $result = $apiClient->InventoryLevel->post($payload, $apiClient->InventoryLevel->generateUrl([], 'set'), false);
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('UPDATE SHOPIFY INVENTORY LEVELS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getProductMetafields ($productId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Metafield->get();
+            Logger::log('PRODUCT METAFIELDS');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('GET SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getProductVariantMetafields ($productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield->get();
+            Logger::log('PRODUCT VARIANT METAFIELDS');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('GET SHOPIFY VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function createProductMetafield ($payload, $productId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Metafield->post($payload);
+            Logger::log('PRODUCT METAFIELDS CREATE');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateProductMetafield ($payload, $productId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            unset($payload['namespace']);
+            unset($payload['key']);
+            $result = $apiClient->Product($productId)->Metafield($payload['id'])->put($payload);
+            Logger::log('PRODUCT METAFIELDS UPDATE');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function createProductVariantMetafield ($payload, $productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield->post($payload);
+            Logger::log('PRODUCT VARIANT METAFIELDS CREATE');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function updateProductVariantMetafield ($payload, $productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            unset($payload['namespace']);
+            unset($payload['key']);
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield($payload['id'])->put($payload);
+            Logger::log('PRODUCT VARIANT METAFIELDS UPDATED');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('CREATE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
     }
 
 }

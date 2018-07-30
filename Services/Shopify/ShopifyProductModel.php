@@ -93,14 +93,38 @@ class ShopifyProductModel {
             $productCache = json_decode($serverInfo->getMetafields_json(), true)['product'];
             $productMetafields = $this->shopifyApiReq['metafields'];
             foreach ($productMetafields as $metafield) {
-                $metafieldCache = $this->apiManager->createProductMetafield($metafield, $serverInfo->getObject_id(), $this->targetServer);
-                $productCache += $metafieldCache;
+                $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['product']);
+
+                if (isset($changedMetafield)) {
+                    $newProductCacheEl = $this->apiManager->updateProductMetafield($changedMetafield, $serverInfo->getObject_id(), $this->targetServer);
+                    foreach ($productCache as $key => $value) {
+                        if ($value["key"] === $newProductCacheEl["key"]){
+                            $productCache[$key] = $newProductCacheEl;
+                            break;
+                        }
+                    }
+                } elseif (!$this->isMetafieldInTarget($metafield['key'], $productCache)) {
+                    $productCacheCreate = $this->apiManager->createProductMetafield($metafield, $serverInfo->getObject_id(), $this->targetServer);
+                    if ($productCacheCreate) {
+                        $productCache[] = $productCacheCreate;
+                    }
+                }
             }
         }
         /** @var Product $variant */
         foreach ($this->variants as $variant) {
             $this->updateAndCacheVariant($productCache, $variant, $isCreate);
         }
+    }
+
+    protected function getMetafieldChanged ($newMetafield, $targetMetafields) {
+        foreach ($targetMetafields as $metafield) {
+            if ($metafield["key"] === $newMetafield["key"] && $metafield['value'] !== $newMetafield['value']) {
+                $newMetafield['id'] = $metafield['id'];
+                return $newMetafield;
+            }
+        }
+        return null;
     }
 
     protected function updateAndCacheVariant ($prodCache, Product $productVar, bool $isCreate = false) {
@@ -111,13 +135,25 @@ class ShopifyProductModel {
             # We are working with a previous cached product
             $varCache = $this->apiManager->getProductVariantMetafields($serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
         } else {
-            $varCache = [];
+            $varCache = json_decode($serverInfo->getMetafields_json(), true)['variant'];
             $metafields = $this->getVariantFromApiReq($productVar->getSku())['metafields'];
             if($metafields && count($metafields)) {
                 foreach ($metafields as $metafield) {
-
-                    $metafieldCache = $this->apiManager->createProductVariantMetafield($metafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
-                    $varCache += $metafieldCache;
+                    $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['variants'][$productVar->getId()]);
+                    if (isset($changedMetafield)) {
+                        $updatedMetafieldCache = $this->apiManager->updateProductVariantMetafield($changedMetafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
+                        foreach ($varCache as $key => $value) {
+                            if ($value["key"] === $updatedMetafieldCache["key"]){
+                                $varCache[$key] = $updatedMetafieldCache;
+                                break;
+                            }
+                        }
+                    } elseif (!$this->isMetafieldInTarget($metafield['key'], $varCache)) {
+                        $resultCreate = $this->apiManager->createProductVariantMetafield($metafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
+                        if ($resultCreate) {
+                            $varCache[] = $resultCreate;
+                        }
+                    }
                 }
             }
         }
@@ -136,8 +172,8 @@ class ShopifyProductModel {
             if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
                 Logger::warn('METAFIELDS JSON');
                 $exportServer->setMetafields_json(json_encode([
-                        'product' => $prodCache,
-                        'variant' => $varCache
+                        'product' => ($prodCache),
+                        'variant' => ($varCache)
                 ]));
                 Logger::warn($exportServer->getMetafields_json());
                 break;
@@ -162,7 +198,7 @@ class ShopifyProductModel {
         # Parse general product metafields
         foreach ($apiReqProdMetafields as $key => $metafield) {
             if($this->isMetafieldInTarget($metafield['key'], $this->metafields['product']) === true) {
-                $this->updateMetafields['product'] += $metafield;
+                $this->updateMetafields['product'][] = $metafield;
                 unset($apiReq['metafields'][$key]);
             }
         }
@@ -174,7 +210,7 @@ class ShopifyProductModel {
                 $this->updateMetafields['variants'] += [$varId => []];
                 foreach ($varMetafields as $cKey => $metafield) {
                     if ($this->metafields['variants'][$varId] && $this->isMetafieldInTarget($metafield['key'], $this->metafields['variants'][$varId]) === true) {
-                        $this->updateMetafields['variants'][$varId] += $metafield;
+                        $this->updateMetafields['variants'][$varId][] = $metafield;
                         unset($apiReq[$pKey][$cKey]);
                     }
                 }
@@ -200,8 +236,6 @@ class ShopifyProductModel {
             /** @var ServerObjectInfo $serverInfo */
             $serverInfo = $this->serverInfos[$variant->getId()];
             $preparedVar = $this->getVariantFromApiReq($variant->getSku());
-            Logger::log('WOWWW');
-            Logger::log(json_encode($preparedVar));
             $inventoryJson = json_decode($serverInfo->getInventory_json(), true);
 
             if ($preparedVar['quantity'] != 0) {
@@ -253,20 +287,20 @@ class ShopifyProductModel {
          */
         foreach ($this->serverInfos as $varId => $serverInfo) {
             $metafieldJson = $serverInfo->getMetafields_json();
-            $metafieldJson = json_decode($metafieldJson);
+            $metafieldJson = json_decode($metafieldJson, true);
             /** If it's the first time going through the variants since the
              *  product metafields are the same inside every variant json
              *  => do it only once per variants read
              */
-            if (count($metafields['product']) === 0 && $metafieldJson->product && count($metafieldJson->product)) {
-                foreach ($metafieldJson->product as $metafield) {
-                    $metafields['product'] += $metafield;
+            if (count($metafields['product']) === 0 && $metafieldJson['product'] && count($metafieldJson['product'])) {
+                foreach ($metafieldJson['product'] as $metafield) {
+                    $metafields['product'][] = $metafield;
                 }
             }
-            if ($metafieldJson->variant && count($metafieldJson->variant)) {
+            if ($metafieldJson['variant'] && count($metafieldJson['variant'])) {
                 $metafields['variants'] += [ $varId => [] ];
-                foreach ($metafieldJson->variant as $metafield) {
-                    $metafields['variants'][$varId] += $metafield;
+                foreach ($metafieldJson['variant'] as $metafield) {
+                    $metafields['variants'][$varId][] = $metafield;
                 }
             }
         }
@@ -288,9 +322,7 @@ class ShopifyProductModel {
         /** @var ServerObjectInfo $exportServer */
         foreach ($exportServers as $exportServer) {
             if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
-                Logger::warn('INVENTORY JSON');
                 $exportServer->setInventory_json($this->getInventoryJsonByInventoryId($exportServer->getInventory_id(), $json));
-                Logger::warn($exportServer->getInventory_json());
                 break;
             }
         }

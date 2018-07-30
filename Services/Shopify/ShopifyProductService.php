@@ -61,8 +61,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $shopifyApi = $shopifyObj->getParsedShopifyApiRequest(false);
 
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
-//            $shopifyObj->updateAndCacheMetafields();
-            return;
+            $shopifyObj->updateAndCacheMetafields();
             /** @var ShopifyProductAPIManager $apiManager */
             $result = $apiManager->updateEntity($shopifyId, $shopifyApi, $targetServer);
         }

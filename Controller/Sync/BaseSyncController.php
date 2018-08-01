@@ -14,6 +14,19 @@ use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 class BaseSyncController {
 
     /**
+     * Get the list of enabled TargetServer
+     * 
+     * @return \Pimcore\Model\DataObject\TargetServer\Listing
+     */
+    public function getEnabledServers(){
+        $servers = new TargetServer\Listing();
+        $servers->addConditionParam('enabled', true);
+        
+        return $servers;
+    }
+    
+    
+    /**
      * Dispatch syncronization invoking the server related syncronization service
      * 
      * @param TargetServer $server

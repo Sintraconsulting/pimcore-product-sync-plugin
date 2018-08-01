@@ -3,7 +3,6 @@
 namespace SintraPimcoreBundle\Controller;
 
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
-use Pimcore\Model\DataObject;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
 use Pimcore\Controller\Controller;
@@ -12,6 +11,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use SintraPimcoreBundle\Utils\GeneralUtils;
+
+use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 
 /**
@@ -52,13 +53,25 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             throw new \Exception("Invalid class '".$class."'. Please choose a value in ['". implode("','", $availableClasses)."']");
         }
         
+        $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
+        $namespace = $customizationInfo["namespace"];
+        
         $response = [];
         try {
             
+            if ($namespace) {
+                $ctrName = $namespace . '\SintraPimcoreBundle\Controller\Sync\CustomBaseSyncController';
+            } 
+
+            if($ctrName != null && class_exists($ctrName)){
+                $syncCTRClass =  new \ReflectionClass($ctrName);
+                $syncCTR = $syncCTRClass->newInstance();
+            }else {
+                $syncCTR = new BaseSyncController();
+            }
+        
+            $servers = $syncCTR->getEnabledServers();
             
-            $syncCTR = new BaseSyncController();
-            $servers = new DataObject\TargetServer\Listing();
-            $servers->addConditionParam('enabled', true);
             foreach ($servers as $server) {
                 $response[] = ($syncCTR->syncServerObjects($server, $class));
             }

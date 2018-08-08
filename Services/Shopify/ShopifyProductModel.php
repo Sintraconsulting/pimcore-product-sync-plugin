@@ -56,7 +56,7 @@ class ShopifyProductModel {
     protected $apiManager;
     /**
      * Product Server Information
-     * @var ServerObjectInfo
+     * @var array
      */
     protected $serverInfos = [];
 
@@ -68,6 +68,23 @@ class ShopifyProductModel {
         $this->apiManager = (new ShopifyProductAPIManager());
         $this->buildCustomModelInfo($variants);
         $this->metafields = $this->getAllMetafields();
+    }
+
+    public function getProductsImagesArray () {
+        $imgsArray = [];
+        /**
+         * @var int $id
+         * @var Product $variant
+         */
+        foreach ($this->variants as $id => $variant) {
+            $prodImgsArray = (new ShopifyProductImageModel($variant, $this->serverInfos[$variant->getId()]));
+            $imgsArray = array_merge_recursive($imgsArray, $prodImgsArray->getImagesArray());
+        }
+        return $imgsArray;
+    }
+
+    public function updateImages ($justCreated) {
+
     }
 
     public function updateShopifyResponse (array $shopifyModel) {

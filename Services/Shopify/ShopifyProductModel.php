@@ -70,7 +70,7 @@ class ShopifyProductModel {
         $this->metafields = $this->getAllMetafields();
     }
 
-    public function getProductsImagesArray () {
+    protected function getProductsImagesArray () {
         $imgsArray = [];
         /**
          * @var int $id
@@ -83,8 +83,45 @@ class ShopifyProductModel {
         return $imgsArray;
     }
 
-    public function updateImages ($justCreated) {
-
+    public function updateImagesAndCache () {
+        /** @var ServerObjectInfo $serverInfo */
+        $serverInfo = $this->serverInfos[reset($this->variants)->getId()];
+        $updateImagesApiReq = [
+                'id' => $serverInfo->getObject_id(),
+                'images' => $this->getProductsImagesArray()
+        ];
+        Logger::log('BEFORE UPDATE IMAGES!');
+        Logger::log(json_encode($updateImagesApiReq));
+        $result = $this->apiManager::updateEntity($serverInfo->getObject_id(), $updateImagesApiReq, $this->targetServer);
+        Logger::log('UPDATE IMAGES RESPONSE!');
+        Logger::log(json_encode($result));
+        if (isset($result['images']) && count($result['images'])) {
+            /** @var Product $currentVar */
+            $currentVar = null;
+            $currentVarImgs = [];
+            foreach ($result['images'] as $i => $image) {
+                if (isset($image['variant_ids']) && count($image['variant_ids'])) {
+                    if (isset($currentVar) && count($currentVarImgs) > 0) {
+                        $this->updateImagesCache($currentVar->getId(), $currentVarImgs);
+                    }
+                    $currentVar = $this->getVariantByShopifyVariantId($image['variant_ids'][0]);
+                    $currentVarImgs = [];
+                }
+                $currentVarImgs[] = [
+                        'id' => $image['id'],
+                        'position' => $image['position'],
+                        'product_id' => $this->serverInfos[$currentVar->getId()]->getObject_id(),
+                        'hash' => $updateImagesApiReq['images'][$i]['hash'],
+                        'name' => $updateImagesApiReq['images'][$i]['name'],
+                        'pimcore_index' => $updateImagesApiReq['images'][$i]['pimcore_index']
+                ];
+                if (count($result['images']) == $i+1) {
+                    if (isset($currentVar)) {
+                        $this->updateImagesCache($currentVar->getId(), $currentVarImgs);
+                    }
+                }
+            }
+        }
     }
 
     public function updateShopifyResponse (array $shopifyModel) {
@@ -132,6 +169,30 @@ class ShopifyProductModel {
         foreach ($this->variants as $variant) {
             $this->updateAndCacheVariant($productCache, $variant, $isCreate);
         }
+    }
+
+    protected function updateImagesCache (int $varId, array $apiResponse) {
+        try{
+            /** @var Product $variation */
+            $variation = $this->variants[$varId];
+            $variation->setExportServers($this->getImagesUpdatedServerInfosProduct($variation, $apiResponse));
+            $variation->update(true);
+        } catch (\Exception $e) {
+            Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING IMAGES; ID: ' . $variation->getId() . ' ' . $e->getMessage());
+        }
+    }
+
+    protected function getVariantByShopifyVariantId ($shopifyVarId) {
+        /**
+         * @var int $varId
+         * @var ServerObjectInfo $serverInfo
+         */
+        foreach ($this->serverInfos as $varId => $serverInfo) {
+            if ($serverInfo->getVariant_id() == $shopifyVarId) {
+                return $this->variants[$varId];
+            }
+        }
+        return null;
     }
 
     protected function getMetafieldChanged ($newMetafield, $targetMetafields) {
@@ -193,6 +254,21 @@ class ShopifyProductModel {
                         'variant' => ($varCache)
                 ]));
                 Logger::warn($exportServer->getMetafields_json());
+                break;
+            }
+        }
+        return $exportServers;
+    }
+
+    protected function getImagesUpdatedServerInfosProduct (Product $variant, array $imagesCache) {
+        $exportServers = $variant->getExportServers();
+        /** @var ServerObjectInfo $exportServer */
+        foreach ($exportServers as $exportServer) {
+            if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
+                Logger::warn('IMAGES JSON');
+                $exportServer->setImages_json(json_encode($imagesCache));
+                $exportServer->setImages_sync(true);
+                Logger::warn($exportServer->getImages_json());
                 break;
             }
         }

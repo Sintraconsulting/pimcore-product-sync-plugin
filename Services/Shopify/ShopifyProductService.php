@@ -59,7 +59,6 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $shopifyApi = $shopifyObj->getParsedShopifyApiRequest(false);
 
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
-            $shopifyObj->updateAndCacheMetafields();
             /** @var ShopifyProductAPIManager $apiManager */
             $result = ShopifyProductAPIManager::updateEntity($shopifyId, $shopifyApi, $targetServer);
         }
@@ -69,6 +68,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $this->setSyncProducts($result, $targetServer);
             $shopifyObj->updateShopifyResponse($result);
             $shopifyObj->updateAndCacheMetafields(count($search) === 0);
+            $shopifyObj->updateImagesAndCache();
             $shopifyObj->updateInventoryApiResponse();
             $shopifyObj->updateVariantsInventories();
         } catch (\Exception $e) {

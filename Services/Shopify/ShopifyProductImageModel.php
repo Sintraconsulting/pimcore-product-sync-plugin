@@ -30,7 +30,8 @@ class ShopifyProductImageModel {
     }
 
     protected function getParsedImagesJsonFromServerInfo () {
-        return json_decode($this->serverInfo->getImages_json(), true);
+        $jsonArray = json_decode($this->serverInfo->getImages_json(), true);
+        return $jsonArray;
     }
 
     protected function parseImagesFromVariant () {
@@ -41,11 +42,15 @@ class ShopifyProductImageModel {
         $imagesArray = [];
         /** @var ImageInfo $images */
         $images = $this->variant->getImages();
-        $imagesJson = $this->imagesJson[$this->variant->getId()] ?? [];
+        $imagesJson = $this->imagesJson ?? [];
+        Logger::log('IMG JSON!!');
+        Logger::log(json_encode($imagesJson));
         if (isset($images)) {
             /** @var ImageInfo $image */
             foreach ($images as $key => $image) {
                 $shouldUploadImg = $this->shouldUploadImage($image, $imagesJson);
+                Logger::log('IMG JSON UPDATE!!');
+                Logger::log($shouldUploadImg);
                 $imagesArray[] = $this->buildImageArray($image, $imagesJson, $shouldUploadImg, $key === 0 ? $this->variant->getId() : null);
             }
         }
@@ -54,17 +59,40 @@ class ShopifyProductImageModel {
 
     protected function buildImageArray (ImageInfo $imageInfo, array $imagesJson, bool $shouldUpload = false, $firstVarId = null) : array {
         $imgArray = [];
+        $imagesShouldSync = $this->serverInfo->getImages_sync();
         $imgCache = $this->getImageInfoFromCache($imageInfo, $imagesJson);
-        if ($shouldUpload) {
-            $imgArray += ['src' => $imageInfo->getImageurl()->getUrl()];
+        if (!isset($imagesShouldSync) || !$imagesShouldSync) {
+            if ($shouldUpload) {
+                $imgArray += ['src' => $imageInfo->getImageurl()->getUrl()];
+            } else {
+                $imageInfoIndex = $imageInfo->getIndex() + 1;
+                Logger::log('IMG CACHER INDEX');
+                Logger::log(json_encode($imgCache));
+                $imgArray += ['id' => $imgCache['id']];
+                if ($imageInfoIndex != $imgCache['position']) {
+                    $imgArray += ['position' => $imageInfoIndex];
+                }
+            }
+            if (isset($imgCache) && count($imgCache['variant_ids'])) {
+                $imgArray += ['variant_ids' => $imgCache['variant_ids']];
+            } elseif (isset($firstVarId)) {
+                $imgArray += ['variant_ids' => [$this->serverInfo->getVariant_id()]];
+            } else {
+                $imgArray += ['variant_ids' => []];
+            }
         } else {
-            $imgArray += ['id' => $imgCache];
+            $imgArray += ['id' => $imgCache['id']];
+            $imageInfoIndex = $imageInfo->getIndex() + 1;
+            Logger::log('IMG CACHER INDEX');
+            Logger::log(json_encode($imgCache));
+            if ($imageInfoIndex != $imgCache['position']) {
+                $imgArray += ['position' => $imageInfoIndex];
+            }
         }
-        if (isset($imgCache) && count($imgCache['variant_ids'])) {
-            $imgArray += ['variant_ids' => $imgCache['variant_ids']];
-        } elseif (isset($firstVarId)) {
-            $imgArray += ['variant_ids' => [$this->serverInfo->getVariant_id()]];
-        }
+
+        $imgArray += ['hash' => $imageInfo->getHash()];
+        $imgArray += ['name' => $imageInfo->getFilename()];
+        $imgArray += ['pimcore_index' => $imageInfo->getIndex()];
         return $imgArray;
     }
 
@@ -78,7 +106,7 @@ class ShopifyProductImageModel {
 
     protected function getImageInfoFromCache (ImageInfo $imageInfo, array $imagesCache) {
         foreach ($imagesCache as $imgCache) {
-            if ($imageInfo->getFilename() === $imgCache['fileName']) {
+            if ($imageInfo->getFilename() === $imgCache['name']) {
                 return $imgCache;
             }
         }

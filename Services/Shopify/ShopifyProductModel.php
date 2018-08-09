@@ -76,9 +76,10 @@ class ShopifyProductModel {
          * @var int $id
          * @var Product $variant
          */
+        $i = 0;
         foreach ($this->variants as $id => $variant) {
-            $prodImgsArray = (new ShopifyProductImageModel($variant, $this->serverInfos[$variant->getId()]));
-            $imgsArray = array_merge_recursive($imgsArray, $prodImgsArray->getImagesArray());
+            $prodImgsArray = (new ShopifyProductImageModel($variant, $this->serverInfos[$variant->getId()], $i++));
+            $imgsArray = array_merge($imgsArray, $prodImgsArray->getImagesArray());
         }
         return $imgsArray;
     }
@@ -100,7 +101,7 @@ class ShopifyProductModel {
             $currentVar = null;
             $currentVarImgs = [];
             foreach ($result['images'] as $i => $image) {
-                if (isset($image['variant_ids']) && count($image['variant_ids'])) {
+                if (isset($image['variant_ids']) && count($image['variant_ids']) > 0) {
                     if (isset($currentVar) && count($currentVarImgs) > 0) {
                         $this->updateImagesCache($currentVar->getId(), $currentVarImgs);
                     }
@@ -110,10 +111,11 @@ class ShopifyProductModel {
                 $currentVarImgs[] = [
                         'id' => $image['id'],
                         'position' => $image['position'],
-                        'product_id' => $this->serverInfos[$currentVar->getId()]->getObject_id(),
+                        'product_id' => $image['product_id'],
                         'hash' => $updateImagesApiReq['images'][$i]['hash'],
                         'name' => $updateImagesApiReq['images'][$i]['name'],
-                        'pimcore_index' => $updateImagesApiReq['images'][$i]['pimcore_index']
+                        'pimcore_index' => $updateImagesApiReq['images'][$i]['pimcore_index'],
+                        'variant_ids' => $image['variant_ids']
                 ];
                 if (count($result['images']) == $i+1) {
                     if (isset($currentVar)) {
@@ -133,9 +135,25 @@ class ShopifyProductModel {
 
     public function getParsedShopifyApiRequest ($isCreate = true) {
         $cpyShopifyApiReq = $this->shopifyApiReq;
-        return $isCreate ?
+        $cpyShopifyApiReq =  $isCreate ?
                 $this->removeMetafieldsFromApiReq($cpyShopifyApiReq) :
                 $this->stripMetafields($cpyShopifyApiReq);
+        $cpyShopifyApiReq = $this->mergeVariantsTags($cpyShopifyApiReq);
+        return $cpyShopifyApiReq;
+    }
+
+    protected function mergeVariantsTags (array $shopifyApiReq) {
+        $tags = isset($shopifyApiReq['tags']) ? explode(", ", $shopifyApiReq['tags']): [];
+        foreach ($shopifyApiReq['variants'] as $key => $variant) {
+            $varTags = explode(", ", $variant['tags']);
+            if (empty($varTags[count($varTags) - 1])) {
+                array_pop($varTags);
+            }
+            $tags = array_merge($varTags, $tags);
+            unset($shopifyApiReq[$key][$variant]['tags']);
+        }
+        $shopifyApiReq['tags'] = implode(", ", $tags);
+        return $shopifyApiReq;
     }
 
     public function updateAndCacheMetafields ($isCreate = false) {
@@ -215,7 +233,7 @@ class ShopifyProductModel {
         } else {
             $varCache = json_decode($serverInfo->getMetafields_json(), true)['variant'];
             $metafields = $this->getVariantFromApiReq($productVar->getSku())['metafields'];
-            if($metafields && count($metafields)) {
+            if(is_array($metafields) && count($metafields)) {
                 foreach ($metafields as $metafield) {
                     $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['variants'][$productVar->getId()]);
                     if (isset($changedMetafield)) {

@@ -62,6 +62,10 @@ abstract class BaseEcommerceService extends SingletonService{
         // TODO: special cases managing here
         if($serverFieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue){
             return $this->insertServerSingleField($apiObject, $serverFieldValue->getValue(), $apiField);
+        } elseif (isset($apiObject[$apiField])) {
+            #if the value already exists, override instead of adding
+            $apiObject[$apiField] = $serverFieldValue;
+            return $apiObject;
         }
         
         return $this->insertServerSingleField($apiObject, $serverFieldValue, $apiField);

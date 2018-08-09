@@ -109,8 +109,17 @@ abstract class BaseEcommerceService extends SingletonService{
             $objectMethod = $objectReflection->getMethod($methodName);
             
             $relatedObject = $objectMethod->invoke($dataObject);
-            
-            return $this->getField($relatedField, $language, $relatedObject);
+
+            $relatedFieldValues = [];
+            if(is_array($relatedObject)){
+                foreach ($relatedObject as $object) {
+                    $relatedFieldValues[] = self::getField($relatedField, $language, $object);
+                }
+            }else{
+                $relatedFieldValues[] = self::getField($relatedField, $language, $relatedObject);
+            }
+
+            return implode(", ", $relatedFieldValues);
         }else{
             return $this->getField($fieldname, $language, $dataObject);
         }

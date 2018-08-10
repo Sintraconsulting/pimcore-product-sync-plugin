@@ -6,6 +6,7 @@ use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
 use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Cache;
 use Pimcore\Controller\Controller;
+use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Logger;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -70,10 +71,22 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
                 $syncCTR = new BaseSyncController();
             }
         
-            $servers = $syncCTR->getEnabledServers();
+            $servers = new TargetServer\Listing();
             
-            foreach ($servers as $server) {
-                $response[] = ($syncCTR->syncServerObjects($server, $class));
+            if($request->get("server") != null && !empty($request->get("server"))){
+                $servers->setCondition("o_key = ?",$request->get("server"));
+            }else{
+                $servers = $syncCTR->getEnabledServers();
+            }
+            
+            $limit = $request->get("limit");
+            
+            foreach ($servers->getObjects() as $server) {
+                if($limit != null && !empty($limit) && (ctype_digit($limit) || is_int($limit))){
+                    $response[] = ($syncCTR->syncServerObjects($server, $class, $limit));
+                }else{
+                    $response[] = ($syncCTR->syncServerObjects($server, $class));
+                }
             }
 
             Cache::clearTag("output");

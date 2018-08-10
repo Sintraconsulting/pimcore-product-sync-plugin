@@ -33,7 +33,7 @@ class BaseSyncController {
      * @param $class
      * @throws \ReflectionException
      */
-    public function syncServerObjects ($server, $class) {
+    public function syncServerObjects ($server, $class, $limit = 10) {
         $serverType = $server->getServer_type();
 
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
@@ -51,9 +51,9 @@ class BaseSyncController {
             $syncControllerClass =  new ReflectionClass($ctrName);
             
             $syncController = $syncControllerClass->newInstance();
-            $dataObjects = $syncController->getServerToSyncObjects($server, $class);
+            $dataObjects = $syncController->getServerToSyncObjects($server, $class, $limit);
         }else {
-            $dataObjects = $this->getServerToSyncObjects($server, $class);
+            $dataObjects = $this->getServerToSyncObjects($server, $class, $limit);
         }
         
         if($serviceName == null || !class_exists($serviceName)){
@@ -81,7 +81,7 @@ class BaseSyncController {
      * @param $class
      * @param int $limit
      */
-    public function getServerToSyncObjects (TargetServer $server, $class, $limit = 10) {
+    public function getServerToSyncObjects (TargetServer $server, $class, $limit) {
         /**
          * dynamically get syncronization info tablename starting from class definition.
          * take the field collection type from the exportServers field allowed types.

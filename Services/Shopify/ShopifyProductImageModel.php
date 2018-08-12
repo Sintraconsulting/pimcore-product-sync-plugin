@@ -18,14 +18,14 @@ class ShopifyProductImageModel {
     /** @var ServerObjectInfo */
     protected $serverInfo;
     /** @var int */
-    protected $variantNumber;
+    protected $size;
 
-    function __construct (Product $variant, ServerObjectInfo $serverInfo, $index) {
+    function __construct (Product $variant, ServerObjectInfo $serverInfo, int $countSize = 0) {
         $this->variant = $variant;
         $this->serverInfo = $serverInfo;
         $this->imagesJson = $this->getParsedImagesJsonFromServerInfo();
+        $this->size = $countSize;
         $this->images = $this->parseImagesFromVariant();
-        $this->variantNumber = $index;
     }
 
     public function getImagesArray() {
@@ -68,16 +68,17 @@ class ShopifyProductImageModel {
             if ($shouldUpload) {
                 $imgArray += ['src' => $imageInfo->getImageurl()->getUrl()];
             } else {
-                $imageInfoIndex = $imageInfo->getIndex() * $this->variantNumber + 1;
+                $imageInfoIndex = $imageInfo->getIndex() + $this->size + 1;
                 Logger::log('IMG CACHER INDEX');
-                Logger::log(json_encode($imgCache));
+                Logger::log($this->size);
+                Logger::log($imageInfoIndex);
                 $imgArray += ['id' => $imgCache['id']];
                 if ($imageInfoIndex != $imgCache['position']) {
                     $imgArray += ['position' => $imageInfoIndex];
                 }
             }
 
-            if (isset($firstVarId)) {
+            if (isset($firstVarId) || $imageInfo->getIndex() === 0) {
                 if (isset($imgCache) && count($imgCache['variant_ids'])) {
                     $imgArray += ['variant_ids' => $imgCache['variant_ids']];
                 } else {
@@ -88,7 +89,7 @@ class ShopifyProductImageModel {
             }
         } else {
             $imgArray += ['id' => $imgCache['id']];
-            $imageInfoIndex = $imageInfo->getIndex() * $this->variantNumber + 1;
+            $imageInfoIndex = $imageInfo->getIndex() + $this->size + 1;
             Logger::log('IMG CACHER INDEX');
             Logger::log(json_encode($imgCache));
             if ($imageInfoIndex != $imgCache['position']) {

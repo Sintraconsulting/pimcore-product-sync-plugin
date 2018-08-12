@@ -98,7 +98,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
-    public function getProductMetafields ($productId, TargetServer $server) {
+    public function getProductMetafields ($productId, TargetServer $server) : array {
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Metafield->get();
@@ -107,7 +107,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             return $result;
         } catch (\Exception $e) {
             Logger::err('GET SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
-            return false;
+            return [];
         }
     }
 
@@ -147,7 +147,20 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
-            Logger::err('CREATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            Logger::err('UPDATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteProductMetafield ($metafieldId, $productId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Metafield($metafieldId)->delete();
+            Logger::log('PRODUCT METAFIELDS DELETED');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('DELETE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
             return false;
         }
     }
@@ -176,6 +189,19 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             return $result;
         } catch (\Exception $e) {
             Logger::err('CREATE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteProductVariantMetafield ($metafieldId, $productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield($metafieldId)->delete();
+            Logger::log('PRODUCT VARIANT METAFIELDS DELETED');
+            Logger::log(json_encode($result));
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('DELETE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
             return false;
         }
     }

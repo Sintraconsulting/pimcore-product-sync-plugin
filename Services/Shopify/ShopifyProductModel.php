@@ -22,7 +22,7 @@ class ShopifyProductModel {
      */
     protected $variants = [];
     /**
-     * Metafields parsed
+     * Metafields parsed from cache
      * @var array $metafields
      */
     protected $metafields = [];
@@ -76,9 +76,9 @@ class ShopifyProductModel {
          * @var int $id
          * @var Product $variant
          */
-        $i = 0;
         foreach ($this->variants as $id => $variant) {
-            $prodImgsArray = (new ShopifyProductImageModel($variant, $this->serverInfos[$variant->getId()], $i++));
+            $i = count($imgsArray);
+            $prodImgsArray = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $i);
             $imgsArray = array_merge($imgsArray, $prodImgsArray->getImagesArray());
         }
         return $imgsArray;
@@ -165,9 +165,11 @@ class ShopifyProductModel {
             $productCache = json_decode($serverInfo->getMetafields_json(), true)['product'];
             $productMetafields = $this->shopifyApiReq['metafields'];
             foreach ($productMetafields as $metafield) {
+                # Check if the metafield is changed
                 $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['product']);
 
                 if (isset($changedMetafield)) {
+                    # Update metafield
                     $newProductCacheEl = $this->apiManager->updateProductMetafield($changedMetafield, $serverInfo->getObject_id(), $this->targetServer);
                     foreach ($productCache as $key => $value) {
                         if ($value["key"] === $newProductCacheEl["key"]){
@@ -176,6 +178,7 @@ class ShopifyProductModel {
                         }
                     }
                 } elseif (!$this->isMetafieldInTarget($metafield['key'], $productCache)) {
+                    # Create metafield
                     $productCacheCreate = $this->apiManager->createProductMetafield($metafield, $serverInfo->getObject_id(), $this->targetServer);
                     if ($productCacheCreate) {
                         $productCache[] = $productCacheCreate;
@@ -183,6 +186,8 @@ class ShopifyProductModel {
                 }
             }
         }
+        $productCache = $this->trimDeletedMetafields($productCache, $serverInfo);
+
         /** @var Product $variant */
         foreach ($this->variants as $variant) {
             $this->updateAndCacheVariant($productCache, $variant, $isCreate);
@@ -214,10 +219,12 @@ class ShopifyProductModel {
     }
 
     protected function getMetafieldChanged ($newMetafield, $targetMetafields) {
-        foreach ($targetMetafields as $metafield) {
-            if ($metafield["key"] === $newMetafield["key"] && $metafield['value'] !== $newMetafield['value']) {
-                $newMetafield['id'] = $metafield['id'];
-                return $newMetafield;
+        if (is_array($targetMetafields) && count($targetMetafields) > 0) {
+            foreach ($targetMetafields as $metafield) {
+                if ($metafield["key"] === $newMetafield["key"] && $metafield['value'] !== $newMetafield['value']) {
+                    $newMetafield['id'] = $metafield['id'];
+                    return $newMetafield;
+                }
             }
         }
         return null;
@@ -229,6 +236,8 @@ class ShopifyProductModel {
 
         if ($isCreate) {
             # We are working with a previous cached product
+            # Step done only if it's the first time we create the product
+            # Case made for performance improvements
             $varCache = $this->apiManager->getProductVariantMetafields($serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
         } else {
             $varCache = json_decode($serverInfo->getMetafields_json(), true)['variant'];
@@ -237,6 +246,7 @@ class ShopifyProductModel {
                 foreach ($metafields as $metafield) {
                     $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['variants'][$productVar->getId()]);
                     if (isset($changedMetafield)) {
+                        # Update metafield
                         $updatedMetafieldCache = $this->apiManager->updateProductVariantMetafield($changedMetafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
                         foreach ($varCache as $key => $value) {
                             if ($value["key"] === $updatedMetafieldCache["key"]){
@@ -245,6 +255,7 @@ class ShopifyProductModel {
                             }
                         }
                     } elseif (!$this->isMetafieldInTarget($metafield['key'], $varCache)) {
+                        # Create metafield
                         $resultCreate = $this->apiManager->createProductVariantMetafield($metafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
                         if ($resultCreate) {
                             $varCache[] = $resultCreate;
@@ -252,6 +263,7 @@ class ShopifyProductModel {
                     }
                 }
             }
+            $varCache = $this->trimDeletedMetafields($varCache, $this->serverInfos[$productVar->getId()], $productVar->getSku());
         }
         try{
             $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
@@ -259,6 +271,37 @@ class ShopifyProductModel {
         } catch (\Exception $e) {
             Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING METAFIELDS ID: ' . $productVar->getId() . ' ' . $e->getMessage());
         }
+    }
+
+    protected function trimDeletedMetafields(array $metaCaches, ServerObjectInfo $objectInfo, $varSku = null) {
+        if (isset($varSku)) {
+            # Trim a variant's metafields
+            $metafields = $this->getVariantFromApiReq($varSku)['metafields'];
+        } else {
+            # Trim general product's metafields
+            $metafields = $this->shopifyApiReq['metafields'];
+        }
+        if (is_array($metafields) && count($metafields) > 0 && count($metaCaches) > 0) {
+            foreach ($metaCaches as $key => $metaCache) {
+                if ($metaCache['key'] && !$this->isMetafieldInTarget($metaCache['key'], $metafields)) {
+                    if (isset($varSku)) {
+                        $result = $this->apiManager->deleteProductVariantMetafield($metaCache['id'], $objectInfo->getObject_id(), $objectInfo->getVariant_id(), $this->targetServer);
+                    } else {
+                        $result = $this->apiManager->deleteProductMetafield($metaCache['id'], $objectInfo->getObject_id(), $this->targetServer);
+                    }
+                    Logger::log('RESPONSE DELETE');
+                    Logger::log(print_r($result, true));
+                    Logger::log(print_r($key, true));
+                    Logger::log($key);
+                    Logger::log(print_r($metaCaches[$key], true));
+                    # IF delete is successful, remove it from cache as well
+                    if (is_array($result) && count($result) === 0) {
+                        unset($metaCaches[$key]);
+                    }
+                }
+            }
+        }
+        return $metaCaches;
     }
 
     protected function getMetafieldUpdatedServerInfosProduct (Product $variant, array $varCache, array $prodCache) {

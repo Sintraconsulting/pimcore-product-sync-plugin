@@ -22,7 +22,7 @@ class ShopifyProductModel {
      */
     protected $variants = [];
     /**
-     * Metafields parsed
+     * Metafields parsed from cache
      * @var array $metafields
      */
     protected $metafields = [];
@@ -56,7 +56,7 @@ class ShopifyProductModel {
     protected $apiManager;
     /**
      * Product Server Information
-     * @var ServerObjectInfo
+     * @var array
      */
     protected $serverInfos = [];
 
@@ -70,6 +70,62 @@ class ShopifyProductModel {
         $this->metafields = $this->getAllMetafields();
     }
 
+    protected function getProductsImagesArray () {
+        $imgsArray = [];
+        /**
+         * @var int $id
+         * @var Product $variant
+         */
+        foreach ($this->variants as $id => $variant) {
+            $i = count($imgsArray);
+            $prodImgsArray = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $i);
+            $imgsArray = array_merge($imgsArray, $prodImgsArray->getImagesArray());
+        }
+        return $imgsArray;
+    }
+
+    public function updateImagesAndCache () {
+        /** @var ServerObjectInfo $serverInfo */
+        $serverInfo = $this->serverInfos[reset($this->variants)->getId()];
+        $updateImagesApiReq = [
+                'id' => $serverInfo->getObject_id(),
+                'images' => $this->getProductsImagesArray()
+        ];
+        Logger::log('BEFORE UPDATE IMAGES!');
+        Logger::log(json_encode($updateImagesApiReq));
+        $result = $this->apiManager::updateEntity($serverInfo->getObject_id(), $updateImagesApiReq, $this->targetServer);
+        Logger::log('UPDATE IMAGES RESPONSE!');
+        Logger::log(json_encode($result));
+        if (isset($result['images']) && count($result['images'])) {
+            /** @var Product $currentVar */
+            $currentVar = null;
+            $currentVarImgs = [];
+            foreach ($result['images'] as $i => $image) {
+                if (isset($image['variant_ids']) && count($image['variant_ids']) > 0) {
+                    if (isset($currentVar) && count($currentVarImgs) > 0) {
+                        $this->updateImagesCache($currentVar->getId(), $currentVarImgs);
+                    }
+                    $currentVar = $this->getVariantByShopifyVariantId($image['variant_ids'][0]);
+                    $currentVarImgs = [];
+                }
+                $currentVarImgs[] = [
+                        'id' => $image['id'],
+                        'position' => $image['position'],
+                        'product_id' => $image['product_id'],
+                        'hash' => $updateImagesApiReq['images'][$i]['hash'],
+                        'name' => $updateImagesApiReq['images'][$i]['name'],
+                        'pimcore_index' => $updateImagesApiReq['images'][$i]['pimcore_index'],
+                        'variant_ids' => $image['variant_ids']
+                ];
+                if (count($result['images']) == $i+1) {
+                    if (isset($currentVar)) {
+                        $this->updateImagesCache($currentVar->getId(), $currentVarImgs);
+                    }
+                }
+            }
+        }
+    }
+
     public function updateShopifyResponse (array $shopifyModel) {
         if (is_array($shopifyModel)) {
             $this->shopifyModel = $shopifyModel;
@@ -79,9 +135,25 @@ class ShopifyProductModel {
 
     public function getParsedShopifyApiRequest ($isCreate = true) {
         $cpyShopifyApiReq = $this->shopifyApiReq;
-        return $isCreate ?
+        $cpyShopifyApiReq =  $isCreate ?
                 $this->removeMetafieldsFromApiReq($cpyShopifyApiReq) :
                 $this->stripMetafields($cpyShopifyApiReq);
+        $cpyShopifyApiReq = $this->mergeVariantsTags($cpyShopifyApiReq);
+        return $cpyShopifyApiReq;
+    }
+
+    protected function mergeVariantsTags (array $shopifyApiReq) {
+        $tags = isset($shopifyApiReq['tags']) ? explode(", ", $shopifyApiReq['tags']): [];
+        foreach ($shopifyApiReq['variants'] as $key => $variant) {
+            $varTags = explode(", ", $variant['tags']);
+            if (empty($varTags[count($varTags) - 1])) {
+                array_pop($varTags);
+            }
+            $tags = array_merge($varTags, $tags);
+            unset($shopifyApiReq[$key][$variant]['tags']);
+        }
+        $shopifyApiReq['tags'] = implode(", ", $tags);
+        return $shopifyApiReq;
     }
 
     public function updateAndCacheMetafields ($isCreate = false) {
@@ -93,9 +165,11 @@ class ShopifyProductModel {
             $productCache = json_decode($serverInfo->getMetafields_json(), true)['product'];
             $productMetafields = $this->shopifyApiReq['metafields'];
             foreach ($productMetafields as $metafield) {
+                # Check if the metafield is changed
                 $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['product']);
 
                 if (isset($changedMetafield)) {
+                    # Update metafield
                     $newProductCacheEl = $this->apiManager->updateProductMetafield($changedMetafield, $serverInfo->getObject_id(), $this->targetServer);
                     foreach ($productCache as $key => $value) {
                         if ($value["key"] === $newProductCacheEl["key"]){
@@ -104,6 +178,7 @@ class ShopifyProductModel {
                         }
                     }
                 } elseif (!$this->isMetafieldInTarget($metafield['key'], $productCache)) {
+                    # Create metafield
                     $productCacheCreate = $this->apiManager->createProductMetafield($metafield, $serverInfo->getObject_id(), $this->targetServer);
                     if ($productCacheCreate) {
                         $productCache[] = $productCacheCreate;
@@ -111,17 +186,45 @@ class ShopifyProductModel {
                 }
             }
         }
+        $productCache = $this->trimDeletedMetafields($productCache, $serverInfo);
+
         /** @var Product $variant */
         foreach ($this->variants as $variant) {
             $this->updateAndCacheVariant($productCache, $variant, $isCreate);
         }
     }
 
+    protected function updateImagesCache (int $varId, array $apiResponse) {
+        try{
+            /** @var Product $variation */
+            $variation = $this->variants[$varId];
+            $variation->setExportServers($this->getImagesUpdatedServerInfosProduct($variation, $apiResponse));
+            $variation->update(true);
+        } catch (\Exception $e) {
+            Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING IMAGES; ID: ' . $variation->getId() . ' ' . $e->getMessage());
+        }
+    }
+
+    protected function getVariantByShopifyVariantId ($shopifyVarId) {
+        /**
+         * @var int $varId
+         * @var ServerObjectInfo $serverInfo
+         */
+        foreach ($this->serverInfos as $varId => $serverInfo) {
+            if ($serverInfo->getVariant_id() == $shopifyVarId) {
+                return $this->variants[$varId];
+            }
+        }
+        return null;
+    }
+
     protected function getMetafieldChanged ($newMetafield, $targetMetafields) {
-        foreach ($targetMetafields as $metafield) {
-            if ($metafield["key"] === $newMetafield["key"] && $metafield['value'] !== $newMetafield['value']) {
-                $newMetafield['id'] = $metafield['id'];
-                return $newMetafield;
+        if (is_array($targetMetafields) && count($targetMetafields) > 0) {
+            foreach ($targetMetafields as $metafield) {
+                if ($metafield["key"] === $newMetafield["key"] && $metafield['value'] !== $newMetafield['value']) {
+                    $newMetafield['id'] = $metafield['id'];
+                    return $newMetafield;
+                }
             }
         }
         return null;
@@ -133,14 +236,17 @@ class ShopifyProductModel {
 
         if ($isCreate) {
             # We are working with a previous cached product
+            # Step done only if it's the first time we create the product
+            # Case made for performance improvements
             $varCache = $this->apiManager->getProductVariantMetafields($serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
         } else {
             $varCache = json_decode($serverInfo->getMetafields_json(), true)['variant'];
             $metafields = $this->getVariantFromApiReq($productVar->getSku())['metafields'];
-            if($metafields && count($metafields)) {
+            if(is_array($metafields) && count($metafields)) {
                 foreach ($metafields as $metafield) {
                     $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['variants'][$productVar->getId()]);
                     if (isset($changedMetafield)) {
+                        # Update metafield
                         $updatedMetafieldCache = $this->apiManager->updateProductVariantMetafield($changedMetafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
                         foreach ($varCache as $key => $value) {
                             if ($value["key"] === $updatedMetafieldCache["key"]){
@@ -149,6 +255,7 @@ class ShopifyProductModel {
                             }
                         }
                     } elseif (!$this->isMetafieldInTarget($metafield['key'], $varCache)) {
+                        # Create metafield
                         $resultCreate = $this->apiManager->createProductVariantMetafield($metafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
                         if ($resultCreate) {
                             $varCache[] = $resultCreate;
@@ -156,6 +263,7 @@ class ShopifyProductModel {
                     }
                 }
             }
+            $varCache = $this->trimDeletedMetafields($varCache, $this->serverInfos[$productVar->getId()], $productVar->getSku());
         }
         try{
             $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
@@ -163,6 +271,37 @@ class ShopifyProductModel {
         } catch (\Exception $e) {
             Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING METAFIELDS ID: ' . $productVar->getId() . ' ' . $e->getMessage());
         }
+    }
+
+    protected function trimDeletedMetafields(array $metaCaches, ServerObjectInfo $objectInfo, $varSku = null) {
+        if (isset($varSku)) {
+            # Trim a variant's metafields
+            $metafields = $this->getVariantFromApiReq($varSku)['metafields'];
+        } else {
+            # Trim general product's metafields
+            $metafields = $this->shopifyApiReq['metafields'];
+        }
+        if (is_array($metafields) && count($metafields) > 0 && count($metaCaches) > 0) {
+            foreach ($metaCaches as $key => $metaCache) {
+                if ($metaCache['key'] && !$this->isMetafieldInTarget($metaCache['key'], $metafields)) {
+                    if (isset($varSku)) {
+                        $result = $this->apiManager->deleteProductVariantMetafield($metaCache['id'], $objectInfo->getObject_id(), $objectInfo->getVariant_id(), $this->targetServer);
+                    } else {
+                        $result = $this->apiManager->deleteProductMetafield($metaCache['id'], $objectInfo->getObject_id(), $this->targetServer);
+                    }
+                    Logger::log('RESPONSE DELETE');
+                    Logger::log(print_r($result, true));
+                    Logger::log(print_r($key, true));
+                    Logger::log($key);
+                    Logger::log(print_r($metaCaches[$key], true));
+                    # IF delete is successful, remove it from cache as well
+                    if (is_array($result) && count($result) === 0) {
+                        unset($metaCaches[$key]);
+                    }
+                }
+            }
+        }
+        return $metaCaches;
     }
 
     protected function getMetafieldUpdatedServerInfosProduct (Product $variant, array $varCache, array $prodCache) {
@@ -176,6 +315,21 @@ class ShopifyProductModel {
                         'variant' => ($varCache)
                 ]));
                 Logger::warn($exportServer->getMetafields_json());
+                break;
+            }
+        }
+        return $exportServers;
+    }
+
+    protected function getImagesUpdatedServerInfosProduct (Product $variant, array $imagesCache) {
+        $exportServers = $variant->getExportServers();
+        /** @var ServerObjectInfo $exportServer */
+        foreach ($exportServers as $exportServer) {
+            if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
+                Logger::warn('IMAGES JSON');
+                $exportServer->setImages_json(json_encode($imagesCache));
+                $exportServer->setImages_sync(true);
+                Logger::warn($exportServer->getImages_json());
                 break;
             }
         }

@@ -35,11 +35,15 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         $shopifyId = $serverObjectInfo->getObject_id();
 
         $search = array();
+        $startTime = $this->millitime();
         if($shopifyId != null && !empty($shopifyId)){
             $search = ShopifyProductAPIManager::searchShopifyProducts(['ids' => $shopifyId],$targetServer);
             Logger::info("SEARCH RESULT: $shopifyId".json_encode($search));
         }
-
+        $endTime = $this->millitime();
+        Logger::log('DURATION SEARCH');
+        Logger::log($endTime - $startTime);
+        $startTime = $this->millitime();
         if (count($search) === 0) {
             //product is new, need to save price
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
@@ -59,21 +63,26 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $shopifyApi = $shopifyObj->getParsedShopifyApiRequest(false);
 
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
-            $shopifyObj->updateAndCacheMetafields();
             /** @var ShopifyProductAPIManager $apiManager */
             $result = ShopifyProductAPIManager::updateEntity($shopifyId, $shopifyApi, $targetServer);
         }
         Logger::debug("SHOPIFY UPDATED PRODUCT: " . json_encode($result));
-
+        $endTime = $this->millitime();
+        Logger::log('DURATION UPDATE1');
+        Logger::log($endTime - $startTime);
         try {
             $this->setSyncProducts($result, $targetServer);
             $shopifyObj->updateShopifyResponse($result);
             $shopifyObj->updateAndCacheMetafields(count($search) === 0);
+            $shopifyObj->updateImagesAndCache();
             $shopifyObj->updateInventoryApiResponse();
             $shopifyObj->updateVariantsInventories();
         } catch (\Exception $e) {
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
+        $endTime = $this->millitime();
+        Logger::log('DURATION!!!');
+        Logger::log($endTime - $startTime);
     }
 
     /**
@@ -146,6 +155,15 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
                 $product->update(true);
             }
         }
+    }
+
+    protected function millitime() {
+        $microtime = microtime();
+        $comps = explode(' ', $microtime);
+
+        // Note: Using a string here to prevent loss of precision
+        // in case of "overflow" (PHP converts it to a double)
+        return sprintf('%d%03d', $comps[1], $comps[0] * 1000);
     }
 
 }

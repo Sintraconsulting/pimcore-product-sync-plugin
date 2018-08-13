@@ -128,6 +128,7 @@ class BaseSyncController {
         $totalElements = 0;
         $syncronizedElements = 0;
         $elementsWithError = 0;
+        $startTime = $this->millitime();
 
         foreach ($dataObjects as $productId) {
             
@@ -145,7 +146,7 @@ class BaseSyncController {
             $totalElements++;
 
         }
-
+        $endTime = $this->millitime();
         try{
             Cache::clearTag("output");
         } catch(\Exception $e){
@@ -156,16 +157,25 @@ class BaseSyncController {
         $response["syncronized elements"] = $syncronizedElements;
         $response["elements with errors"] = $elementsWithError;
 
-        return $this->logSyncedProducts($response, $server->getServer_name(), $class);
+        return $this->logSyncedProducts($response, $server->getServer_name(), $class, null, $endTime-$startTime);
     }
 
-    protected function logSyncedProducts ($response, $ecomm, $class, $finished = null) {
+    protected function logSyncedProducts ($response, $ecomm, $class, $finished = null, $duration) {
         if (!$finished) {
             $finished = date("Y-m-d H:i:s");
         }
         $response["finished"] = $finished;
 
         Logger::info(strtoupper($class)." $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response],true));
-        return ("[$finished] - ".strtoupper($class)." $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response],true).PHP_EOL);
+        return ("[$finished] - ".strtoupper($class)." $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response , 'duration' => $duration . ' ms'],true).PHP_EOL);
+    }
+
+    protected function millitime() {
+        $microtime = microtime();
+        $comps = explode(' ', $microtime);
+
+        // Note: Using a string here to prevent loss of precision
+        // in case of "overflow" (PHP converts it to a double)
+        return sprintf('%d%03d', $comps[1], $comps[0] * 1000);
     }
 }

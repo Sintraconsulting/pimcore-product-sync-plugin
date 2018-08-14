@@ -245,6 +245,9 @@ class ShopifyProductModel {
             if(is_array($metafields) && count($metafields)) {
                 foreach ($metafields as $metafield) {
                     $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['variants'][$productVar->getId()]);
+                    if (!isset($varCache)) {
+                        $varCache = [];
+                    }
                     if (isset($changedMetafield)) {
                         # Update metafield
                         $updatedMetafieldCache = $this->apiManager->updateProductVariantMetafield($changedMetafield, $serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);

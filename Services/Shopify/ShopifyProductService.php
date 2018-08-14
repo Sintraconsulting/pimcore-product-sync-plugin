@@ -27,9 +27,9 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
 
         /** @var Product $dataObject */
         $dataObject = $dataObjects->current();
-        
+
         $shopifyApi = [];
-        
+
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 
         $shopifyId = $serverObjectInfo->getObject_id();
@@ -122,7 +122,12 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
      */
     public function prepareVariants($shopifyApi, $products, TargetServer $server) {
         $shopifyApi['variants'] = [];
+        $published = true;
+        /** @var Product $product */
         foreach ($products as $product) {
+            if ($published && !$product->getPublished()) {
+                $published = false;
+            }
             /** @var ServerObjectInfo $serverObjectInfo */
             $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $server);
             $varId = $serverObjectInfo->getVariant_id();
@@ -136,6 +141,9 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
                         'inventory_management' => 'shopify'
                 ];
             }
+        }
+        if (!$published) {
+            $shopifyApi['published'] = false;
         }
         return $shopifyApi;
     }

@@ -144,6 +144,8 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         }
         if (!$published) {
             $shopifyApi['published'] = false;
+        } else {
+            $shopifyApi['published'] = true;
         }
         return $shopifyApi;
     }
@@ -151,7 +153,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     protected function setSyncProducts ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
-                $product = Product::getBySku($variant['sku'])->current();
+                $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
                 /** @var ServerObjectInfo $serverObjectInfo */
                 $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
                 $serverObjectInfo->setSync(true);

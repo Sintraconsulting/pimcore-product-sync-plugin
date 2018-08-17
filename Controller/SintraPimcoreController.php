@@ -58,41 +58,54 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         $namespace = $customizationInfo["namespace"];
         
         $response = [];
-        try {
-            
-            if ($namespace) {
-                $ctrName = $namespace . '\SintraPimcoreBundle\Controller\Sync\CustomBaseSyncController';
-            } 
-
-            if($ctrName != null && class_exists($ctrName)){
-                $syncCTRClass =  new \ReflectionClass($ctrName);
-                $syncCTR = $syncCTRClass->newInstance();
-            }else {
-                $syncCTR = new BaseSyncController();
-            }
         
-            $servers = new TargetServer\Listing();
+        $semaphore = __DIR__ ."/syncronization.lock";
+        if(!file_exists($semaphore)){
+            $file = fopen($semaphore, "w");
             
-            if($request->get("server") != null && !empty($request->get("server"))){
-                $servers->setCondition("o_key = ?",$request->get("server"));
-            }else{
-                $servers = $syncCTR->getEnabledServers();
-            }
-            
-            $limit = $request->get("limit");
-            
-            foreach ($servers->getObjects() as $server) {
-                if($limit != null && !empty($limit) && (ctype_digit($limit) || is_int($limit))){
-                    $response[] = ($syncCTR->syncServerObjects($server, $class, $limit));
-                }else{
-                    $response[] = ($syncCTR->syncServerObjects($server, $class));
-                }
-            }
+            try {
 
-            Cache::clearTag("output");
-        } catch (\Exception $e) {
-            Logger::err($e->getMessage());
-            echo $e->getMessage();
+                if ($namespace) {
+                    $ctrName = $namespace . '\SintraPimcoreBundle\Controller\Sync\CustomBaseSyncController';
+                } 
+
+                if($ctrName != null && class_exists($ctrName)){
+                    $syncCTRClass =  new \ReflectionClass($ctrName);
+                    $syncCTR = $syncCTRClass->newInstance();
+                }else {
+                    $syncCTR = new BaseSyncController();
+                }
+
+                $servers = new TargetServer\Listing();
+
+                if($request->get("server") != null && !empty($request->get("server"))){
+                    $servers->setCondition("o_key = ?",$request->get("server"));
+                }else{
+                    $servers = $syncCTR->getEnabledServers();
+                }
+
+                $limit = $request->get("limit");
+
+                foreach ($servers->getObjects() as $server) {
+                    if($limit != null && !empty($limit) && (ctype_digit($limit) || is_int($limit))){
+                        $response[] = ($syncCTR->syncServerObjects($server, $class, $limit));
+                    }else{
+                        $response[] = ($syncCTR->syncServerObjects($server, $class));
+                    }
+                }
+
+                Cache::clearTag("output");
+
+                fclose($file);
+                unlink($semaphore);
+
+            } catch (\Exception $e) {
+                fclose($file);
+                unlink($semaphore);
+
+                Logger::err($e->getMessage());
+                echo $e->getMessage();
+            }
         }
 
         return new Response(implode('<br>'.PHP_EOL, $response));

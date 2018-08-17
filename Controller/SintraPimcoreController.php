@@ -47,6 +47,8 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
      */
     public function syncObjectsAction(Request $request)
     {
+        set_time_limit(480);
+        
         $class = $request->get("class");
         $availableClasses = GeneralUtils::getAvailableClasses();
         

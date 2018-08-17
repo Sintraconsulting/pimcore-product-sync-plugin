@@ -36,9 +36,9 @@ class SkuResolver extends AbstractResolver{
             $keyColumnId = $this->getKeyColumnId($config);
             if(!empty($keyColumnId)){
                 $key = trim($rowData[$keyColumnId]);
-                $product->setKey($sku." - ".$key);
+                $product->setKey(str_replace("/","\\",$sku." - ".$key));
             }else{
-                $product->setKey($sku);
+                $product->setKey(str_replace("/","\\",$sku));
             }
         }
         

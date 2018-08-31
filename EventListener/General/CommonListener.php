@@ -70,10 +70,10 @@ class CommonListener extends ObjectListener implements InterfaceListener{
                 if($exportServer->getExport() && ($oldDataObject == null || EventListenerUtils::checkServerUpdate($exportServer, $dataObject, $oldDataObject))){
                     $exportServer->setSync(false);
                 }
-                $lastHook = $exportServer->getLastSyncHook();
-                if ($dataObject->getRadice() !== $lastHook) {
-                    $exportServer->setVariant_id(null);
-                }
+//                $lastHook = $exportServer->getLastSyncHook();
+//                if ($dataObject->getRadice() !== $lastHook) {
+//                    $exportServer->setVariant_id(null);
+//                }
             }
 
             $dataObject->setExportServers($exportServers);

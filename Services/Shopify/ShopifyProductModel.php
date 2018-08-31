@@ -59,6 +59,11 @@ class ShopifyProductModel {
      * @var array
      */
     protected $serverInfos = [];
+    /**
+     * Variant unifier
+     * @var string
+     */
+    protected $hook;
 
     public function __construct (Product\Listing $variants, $shopifyApiReq, $shopifyModel, $targetServer) {
         $this->rawVariants = $variants;
@@ -82,6 +87,11 @@ class ShopifyProductModel {
             $imgsArray = array_merge($imgsArray, $prodImgsArray->getImagesArray());
         }
         return $imgsArray;
+    }
+
+    public function setSyncHook ($hook) {
+        $this->hook = $hook;
+        $this->buildCustomModelInfo($this->rawVariants);
     }
 
     public function updateImagesAndCache () {
@@ -536,12 +546,15 @@ class ShopifyProductModel {
         $variants = $variants->getItems(0, $variants->getCount());
         /** @var Product $variant */
         foreach ($variants as $variant) {
-
+            $serverInfo = $this->getServerInfoByVariant($variant);
+            $lastHook = $serverInfo->getLastSyncHook();
+            if (isset($lastHook) && !empty($lastHook) && $this->hook && $lastHook !== $variant->{'get'.ucfirst($this->hook)}()) {
+                continue;
+            }
             $this->variants += [
                     $variant->getId() => $variant
             ];
 
-            $serverInfo = $this->getServerInfoByVariant($variant);
             if ($serverInfo !== null) {
                 $this->serverInfos += [
                         $variant->getId() => $serverInfo

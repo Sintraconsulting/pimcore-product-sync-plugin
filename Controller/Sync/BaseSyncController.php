@@ -157,16 +157,20 @@ class BaseSyncController {
         $response["syncronized elements"] = $syncronizedElements;
         $response["elements with errors"] = $elementsWithError;
 
-        return $this->logSyncedProducts($response, $server->getServer_name(), $class, null, $endTime-$startTime);
+        return $this->logSyncedProducts($response, $server->getServer_name(), $class, $endTime-$startTime, null);
     }
 
-    protected function logSyncedProducts ($response, $ecomm, $class, $finished = null, $duration) {
+    protected function logSyncedProducts ($response, $ecomm, $class, $duration, $finished = null) {
         if (!$finished) {
             $finished = date("Y-m-d H:i:s");
         }
         $response["finished"] = $finished;
+        
+        $syncLogFile = fopen(PIMCORE_LOG_DIRECTORY . "/syncObjects.log", "a") or die("Unable to open file!");
+        $syncLog = "[" . Date("Y-m-d H:i:s") . "] - ".strtoupper($class)." $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response, 'duration' => $duration . ' ms'],true);
+        fwrite($syncLogFile, $syncLog . PHP_EOL);
+        fclose($syncLogFile);
 
-        Logger::info(strtoupper($class)." $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response],true));
         return ("[$finished] - ".strtoupper($class)." $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response , 'duration' => $duration . ' ms'],true).PHP_EOL);
     }
 

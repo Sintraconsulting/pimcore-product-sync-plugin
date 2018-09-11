@@ -15,47 +15,47 @@ class BaseSyncController {
 
     /**
      * Get the list of enabled TargetServer
-     * 
+     *
      * @return \Pimcore\Model\DataObject\TargetServer\Listing
      */
     public function getEnabledServers(){
         $servers = new TargetServer\Listing();
         $servers->addConditionParam('enabled', true);
-        
+
         return $servers;
     }
-    
-    
+
+
     /**
      * Dispatch syncronization invoking the server related syncronization service
-     * 
+     *
      * @param TargetServer $server
      * @param $class
      * @throws \ReflectionException
      */
-    public function syncServerObjects ($server, $class, $limit = 10) {
+    public function syncServerObjects ($server, $class, $limit = 10, $customFilters = []) {
         $serverType = $server->getServer_type();
 
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
         $namespace = $customizationInfo["namespace"];
         $ctrName = null;
         $serviceName = null;
-        
+
         if ($namespace) {
             $ctrName = $namespace . '\SintraPimcoreBundle\Controller\Sync\\' . ucfirst($serverType) . 'SyncController';
             $serviceName = $namespace . '\SintraPimcoreBundle\Services\\' . ucfirst($serverType) . '\\' . ucfirst($serverType) . ucfirst($class) . 'Service';
-        } 
-        
+        }
+
         $syncController = null;
         if($ctrName != null && class_exists($ctrName)){
             $syncControllerClass =  new ReflectionClass($ctrName);
-            
+
             $syncController = $syncControllerClass->newInstance();
-            $dataObjects = $syncController->getServerToSyncObjects($server, $class, $limit);
+            $dataObjects = $syncController->getServerToSyncObjects($server, $class, $limit, $customFilters);
         }else {
             $dataObjects = $this->getServerToSyncObjects($server, $class, $limit);
         }
-        
+
         if($serviceName == null || !class_exists($serviceName)){
             $serviceName = "\SintraPimcoreBundle\Services\\" . ucfirst($serverType) . '\\' . ucfirst($serverType) . ucfirst($class) . 'Service';
         }
@@ -64,19 +64,19 @@ class BaseSyncController {
             $dataObjectServiceClass = new ReflectionClass($serviceName);
             $dataObjectService = $dataObjectServiceClass->newInstanceWithoutConstructor();
             $dataObjectService = $dataObjectService::getInstance();
-            
+
             return $syncController != null ?
-                    ($syncController->exportDataObjects($dataObjectService, $dataObjects, $server, $class)) :
+                    ($syncController->exportDataObjects($dataObjectService, $dataObjects, $server, $class, $customFilters)) :
                     ($this->exportDataObjects($dataObjectService, $dataObjects, $server, $class));
         }
-        
+
         Logger::info("BaseSyncController - There are no $class to sync for '".$server->getServer_name()."' server");
         return "BaseSyncController - There are no $class to sync for '".$server->getServer_name()."' server";
     }
 
     /**
      * get a batch of ids of objects that need to be syncronized in a specific server
-     * 
+     *
      * @param TargetServer $server
      * @param $class
      * @param int $limit
@@ -90,7 +90,7 @@ class BaseSyncController {
         $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
         $classId = $classDef->getId();
         $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
-        
+
         $db = Db::get();
         $objIds = $db->fetchAll(
             "SELECT dependencies.sourceid FROM dependencies"
@@ -100,7 +100,7 @@ class BaseSyncController {
             . " ORDER BY dependencies.sourceid ASC"
             . " LIMIT $limit",
             [ $server->getKey(), $class, $server->getId() ]);
-        
+
         $ids = [];
         foreach ($objIds as $id) {
             $ids[] = $id['sourceid'];
@@ -115,7 +115,7 @@ class BaseSyncController {
      * @param TargetServer $server
      * @return string
      */
-    protected function exportDataObjects (InterfaceService $dataObjectService, $dataObjects, TargetServer $server, $class) {
+    protected function exportDataObjects (InterfaceService $dataObjectService, $dataObjects, TargetServer $server, $class, $customFilters = []) {
         $response = array(
                 "started" => date("Y-m-d H:i:s"),
                 "finished" => "",
@@ -131,7 +131,7 @@ class BaseSyncController {
         $startTime = $this->millitime();
 
         foreach ($dataObjects as $productId) {
-            
+
             try{
                 $dataObjectService->export($productId, $server);
                 $syncronizedElements++;
@@ -165,7 +165,7 @@ class BaseSyncController {
             $finished = date("Y-m-d H:i:s");
         }
         $response["finished"] = $finished;
-        
+
         $syncLogFile = fopen(PIMCORE_LOG_DIRECTORY . "/syncObjects.log", "a") or die("Unable to open file!");
         $syncLog = "[" . Date("Y-m-d H:i:s") . "] - ".strtoupper($class)." $ecomm SYNCRONIZATION RESULT: ".print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response, 'duration' => $duration . ' ms'],true);
         fwrite($syncLogFile, $syncLog . PHP_EOL);

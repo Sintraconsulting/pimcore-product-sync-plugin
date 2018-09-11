@@ -102,7 +102,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
                     if($limit != null && !empty($limit) && (ctype_digit($limit) || is_int($limit))){
                         $response[] = ($syncCTR->syncServerObjects($server, $class, $limit, $customFilters));
                     }else{
-                        $response[] = ($syncCTR->syncServerObjects($server, $class, 1000, $customFilters));
+                        $response[] = ($syncCTR->syncServerObjects($server, $class, 10, $customFilters));
                     }
                 }
 

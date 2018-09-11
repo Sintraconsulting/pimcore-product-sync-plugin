@@ -39,37 +39,44 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
     {
         return false;
     }
-    
+
     /**
      * Syncronize objects in all enabled servers
-     * 
+     *
      * @Route("/sync_objects")
      */
     public function syncObjectsAction(Request $request)
     {
         set_time_limit(480);
-        
+
         $class = $request->get("class");
         $availableClasses = GeneralUtils::getAvailableClasses();
-        
+
         if(!in_array($class, $availableClasses)){
             throw new \Exception("Invalid class '".$class."'. Please choose a value in ['". implode("','", $availableClasses)."']");
         }
-        
+
+        $customFilters = [];
+        if ($execTime = $request->get('execTime') && $maxSyncTime = $request->get('maxSyncTime') && $typicalSyncTime = $request->get('typicalSyncTime')) {
+            $customFilters += ['execTime' => $execTime];
+            $customFilters += ['maxSyncTime' => $maxSyncTime];
+            $customFilters += ['typicalSyncTime' => $typicalSyncTime];
+        }
+
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
         $namespace = $customizationInfo["namespace"];
-        
+
         $response = [];
-        
+
         $semaphore = __DIR__ ."/syncronization.lock";
         if(!file_exists($semaphore)){
             $file = fopen($semaphore, "w");
-            
+
             try {
 
                 if ($namespace) {
                     $ctrName = $namespace . '\SintraPimcoreBundle\Controller\Sync\CustomBaseSyncController';
-                } 
+                }
 
                 if($ctrName != null && class_exists($ctrName)){
                     $syncCTRClass =  new \ReflectionClass($ctrName);
@@ -90,9 +97,9 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
 
                 foreach ($servers->getObjects() as $server) {
                     if($limit != null && !empty($limit) && (ctype_digit($limit) || is_int($limit))){
-                        $response[] = ($syncCTR->syncServerObjects($server, $class, $limit));
+                        $response[] = ($syncCTR->syncServerObjects($server, $class, $limit, $customFilters));
                     }else{
-                        $response[] = ($syncCTR->syncServerObjects($server, $class));
+                        $response[] = ($syncCTR->syncServerObjects($server, $class, 1000, $customFilters));
                     }
                 }
 

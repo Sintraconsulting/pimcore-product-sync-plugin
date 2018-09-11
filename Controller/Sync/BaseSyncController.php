@@ -115,7 +115,7 @@ class BaseSyncController {
      * @param TargetServer $server
      * @return string
      */
-    protected function exportDataObjects (InterfaceService $dataObjectService, $dataObjects, TargetServer $server, $class) {
+    protected function exportDataObjects (InterfaceService $dataObjectService, $dataObjects, TargetServer $server, $class, $customFilters = []) {
         $response = array(
                 "started" => date("Y-m-d H:i:s"),
                 "finished" => "",

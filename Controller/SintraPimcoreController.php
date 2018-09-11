@@ -57,7 +57,10 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         }
 
         $customFilters = [];
-        if ($execTime = $request->get('execTime') && $maxSyncTime = $request->get('maxSyncTime') && $typicalSyncTime = $request->get('typicalSyncTime')) {
+        $execTime = $request->get('execTime');
+        $maxSyncTime = $request->get('maxSyncTime');
+        $typicalSyncTime = $request->get('typicalSyncTime');
+        if ($execTime && $maxSyncTime && $typicalSyncTime) {
             $customFilters += ['execTime' => $execTime];
             $customFilters += ['maxSyncTime' => $maxSyncTime];
             $customFilters += ['typicalSyncTime' => $typicalSyncTime];

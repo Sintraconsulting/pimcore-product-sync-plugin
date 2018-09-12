@@ -5,6 +5,7 @@ namespace SintraPimcoreBundle\Services\Shopify;
 use SintraPimcoreBundle\Services\BaseEcommerceService;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Utils\GeneralUtils;
+use Pimcore\Logger;
 
 abstract class BaseShopifyService extends BaseEcommerceService {
     
@@ -29,8 +30,17 @@ abstract class BaseShopifyService extends BaseEcommerceService {
             }
             $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
             $apiField = $fieldsDepth[0];
+            
             if($fieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue && $apiField == 'weight'){
                 return $this->mapServerField($shopifyApi, $fieldValue->getValue(), $apiField) + $this->mapServerField([], $fieldValue->getUnit()->getAbbreviation(), 'weight_unit');
+            } elseif($apiField == 'price'){
+                
+                if($fieldValue !== null && $fieldValue->getValue() !== null){
+                    return $this->mapServerField($shopifyApi, $fieldValue, $apiField);
+                }else{
+                    return $shopifyApi;
+                }
+                
             } elseif ($apiField === 'tags') {
                 if (isset($shopifyApi['tags'])) {
                     $otherTags = explode(', ', $shopifyApi['tags']);

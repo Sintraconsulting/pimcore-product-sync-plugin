@@ -38,7 +38,7 @@ class RelationResolver extends AbstractResolver{
             $object->setPublished(1);
             
             $setIdMethod = $objectClass->getMethod("set".ucfirst($field));
-            $setIdMethod->invoke($object);
+            $setIdMethod->invoke($object,$objectId);
         }
         
         return $object;

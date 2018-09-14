@@ -4,6 +4,7 @@ namespace SintraPimcoreBundle\Services\Shopify;
 
 
 use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Logger;
@@ -23,47 +24,65 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
      */
     public function export ($productId, TargetServer $targetServer) {
         $dataObjects = $this->getObjectsToExport($productId, "Product");
-        
+
         /** @var Product $dataObject */
         $dataObject = $dataObjects->current();
-        
+
         $shopifyApi = [];
-        
-        /** @var ShopifyProductAPIManager $apiManager */
-        $apiManager = ShopifyProductAPIManager::getInstance();
+
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 
         $shopifyId = $serverObjectInfo->getObject_id();
 
         $search = array();
+        $startTime = $this->millitime();
         if($shopifyId != null && !empty($shopifyId)){
-            $search = $apiManager->searchShopifyProducts(['ids' => $shopifyId],$targetServer);
+            $search = ShopifyProductAPIManager::searchShopifyProducts(['ids' => $shopifyId],$targetServer);
             Logger::info("SEARCH RESULT: $shopifyId".json_encode($search));
         }
-
+        $endTime = $this->millitime();
+        Logger::log('DURATION SEARCH');
+        Logger::log($endTime - $startTime);
+        $startTime = $this->millitime();
         if (count($search) === 0) {
             //product is new, need to save price
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
+
+            $shopifyObj = new ShopifyProductModel($dataObjects, $shopifyApi, null, $targetServer);
+            $shopifyApi = $shopifyObj->getParsedShopifyApiRequest(true);
             Logger::debug("SHOPIFY PRODUCT: " . json_encode($shopifyApi));
 
             /** @var ShopifyProductAPIManager $apiManager */
-            $result = $apiManager->createEntity($shopifyApi, $targetServer);
+            $result = ShopifyProductAPIManager::createEntity($shopifyApi, $targetServer);
         } else if (count($search) === 1){
             $shopifyApi["id"] = $search[0]['id'];
-
             //product already exists, we may want to not update prices
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
+
+            $shopifyObj = new ShopifyProductModel($dataObjects, $shopifyApi, $search[0], $targetServer);
+            $shopifyApi = $shopifyObj->getParsedShopifyApiRequest(false);
+
             Logger::debug("SHOPIFY PRODUCT EDIT: " . json_encode($shopifyApi));
             /** @var ShopifyProductAPIManager $apiManager */
-            $result = $apiManager->updateEntity($shopifyId, $shopifyApi, $targetServer);
+            $result = ShopifyProductAPIManager::updateEntity($shopifyId, $shopifyApi, $targetServer);
         }
         Logger::debug("SHOPIFY UPDATED PRODUCT: " . json_encode($result));
-
+        $endTime = $this->millitime();
+        Logger::log('DURATION UPDATE1');
+        Logger::log($endTime - $startTime);
         try {
             $this->setSyncProducts($result, $targetServer);
+            $shopifyObj->updateShopifyResponse($result);
+            $shopifyObj->updateAndCacheMetafields(count($search) === 0);
+            $shopifyObj->updateImagesAndCache();
+            $shopifyObj->updateInventoryApiResponse();
+            $shopifyObj->updateVariantsInventories();
         } catch (\Exception $e) {
             Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
+        $endTime = $this->millitime();
+        Logger::log('DURATION!!!');
+        Logger::log($endTime - $startTime);
     }
 
     /**
@@ -103,16 +122,30 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
      */
     public function prepareVariants($shopifyApi, $products, TargetServer $server) {
         $shopifyApi['variants'] = [];
+        $published = true;
+        /** @var Product $product */
         foreach ($products as $product) {
+            if ($published && !$product->getPublished()) {
+                $published = false;
+            }
+            /** @var ServerObjectInfo $serverObjectInfo */
             $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $server);
             $varId = $serverObjectInfo->getVariant_id();
             if ($varId) {
                 $shopifyApi['variants'][] = [
-                        'id' => $varId
+                        'id' => $varId,
+                        'inventory_management' => 'shopify'
                 ];
             } else {
-                $shopifyApi['variants'][] = [];
+                $shopifyApi['variants'][] = [
+                        'inventory_management' => 'shopify'
+                ];
             }
+        }
+        if (!$published) {
+            $shopifyApi['published'] = false;
+        } else {
+            $shopifyApi['published'] = true;
         }
         return $shopifyApi;
     }
@@ -120,15 +153,27 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     protected function setSyncProducts ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
-                $product = Product::getBySku($variant['sku'])->current();
+                $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
+                /** @var ServerObjectInfo $serverObjectInfo */
                 $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
                 $serverObjectInfo->setSync(true);
-                $serverObjectInfo->setSync_at($results["updated_at"]);
+                ## Mimic the shopify date format
+                $serverObjectInfo->setSync_at(date('Y-m-d') . 'T'. date('H:i:sP'));
                 $serverObjectInfo->setObject_id($results['id']);
                 $serverObjectInfo->setVariant_id($variant['id']);
+                $serverObjectInfo->setInventory_id($variant['inventory_item_id']);
                 $product->update(true);
             }
         }
+    }
+
+    protected function millitime() {
+        $microtime = microtime();
+        $comps = explode(' ', $microtime);
+
+        // Note: Using a string here to prevent loss of precision
+        // in case of "overflow" (PHP converts it to a double)
+        return sprintf('%d%03d', $comps[1], $comps[0] * 1000);
     }
 
 }

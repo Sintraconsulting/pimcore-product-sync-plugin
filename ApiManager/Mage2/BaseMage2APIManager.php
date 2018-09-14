@@ -22,8 +22,8 @@ use Pimcore\Model\DataObject\Objectbrick\Data\Mage2ServerInfo;
  */
 class BaseMage2APIManager extends AbstractAPIManager{
 
-    public function getApiInstance(TargetServer $server) {
-        $serverInfo = $this->getServerInfo($server);
+    protected static function getApiInstance(TargetServer $server) {
+        $serverInfo = self::getServerInfo($server);
 
         $baseUrl = $server->getServerBaseUrl() . '/rest';
         $token = 'bearer ' . $serverInfo->getApiKey();
@@ -41,7 +41,7 @@ class BaseMage2APIManager extends AbstractAPIManager{
      * @param TargetServer $server the server
      * @return Mage2ServerInfo the server info
      */
-    private function getServerInfo(TargetServer $server){
+    private static function getServerInfo(TargetServer $server){
         $serverInfos = $server->getServerInfo()->getItems();
         
         $serverInfo = $serverInfos[0];

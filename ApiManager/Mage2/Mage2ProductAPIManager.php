@@ -24,8 +24,8 @@ use SintraPimcoreBundle\ApiManager\APIManagerInterface;
  */
 class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
-    public function createEntity($entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function createEntity($entity, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -41,8 +41,8 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
-    public function deleteEntity($sku, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function deleteEntity($sku, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -55,12 +55,12 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
-    public function getEntityByKey($sku, TargetServer $server) {
+    public static function getEntityByKey($sku, TargetServer $server) {
         return $this->getEntity($server,$sku,null,null,null);
     }
 
-    public function getEntity(TargetServer $server, $sku, $editMode = null, $storeId = null, $forceReload = null) {
-        $apiClient = $this->getApiInstance($server);
+    public static function getEntity(TargetServer $server, $sku, $editMode = null, $storeId = null, $forceReload = null) {
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -92,8 +92,8 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
      * - notnull:    Not null
      * - null:       Null
      */
-    public function searchProducts(TargetServer $server, $field, $value, $conditionType = null) {
-        $apiClient = $this->getApiInstance($server);
+    public static function searchProducts(TargetServer $server, $field, $value, $conditionType = null) {
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -106,8 +106,8 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
-    public function updateEntity($sku, $entity, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function updateEntity($sku, $entity, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
 
         $productInstance = new CatalogProductRepositoryV1Api($apiClient);
 
@@ -123,39 +123,4 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
 
-    public function searchShopifyProducts ($filters) {
-        $apiClient = $this->getShopifyApiInstance();
-
-        try {
-            $result = $apiClient->Product->get($filters);
-            return $result;
-        } catch (Exception $e) {
-            Logger::err('SEARCH SHOPIFY PRODUCT ERROR:', $e->getMessage());
-            return false;
-        }
-    }
-
-    public function createShopifyEntity ($data) {
-        $apiClient = $this->getShopifyApiInstance();
-
-        try {
-            $result = $apiClient->Product->post($data);
-            return $result;
-        } catch (Exception $e) {
-            Logger::err('CREATE SHOPIFY PRODUCT ERROR:', $e->getMessage());
-            return false;
-        }
-    }
-
-    public function updateShopifyEntity ($data, $shopifyId) {
-        $apiClient = $this->getShopifyApiInstance();
-
-        try {
-            $result = $apiClient->Product($shopifyId)->put($data);
-            return $result;
-        } catch (Exception $e) {
-            Logger::err('UPDATE SHOPIFY PRODUCT ERROR:', $e->getMessage());
-            return false;
-        }
-    }
 }

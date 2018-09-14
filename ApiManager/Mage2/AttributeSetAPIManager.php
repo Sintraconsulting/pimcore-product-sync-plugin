@@ -13,16 +13,16 @@ use SintraPimcoreBundle\ApiManager\APIManagerInterface;
  */
 class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
-    public function createEntity($entity, TargetServer $server) {
+    public static function createEntity($entity, TargetServer $server) {
         throw new \Exception("ERROR - Method 'createEntity' not implemented in 'AttributeSetAPIManager'");
     }
 
-    public function deleteEntity($entityKey, TargetServer $server) {
+    public static function deleteEntity($entityKey, TargetServer $server) {
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'AttributeSetAPIManager'");
     }
     
-    public function getAllAttributeSet(TargetServer $server){
-        $apiClient = $this->getApiInstance($server);
+    public static function getAllAttributeSet(TargetServer $server){
+        $apiClient = self::getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -35,12 +35,12 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
-    public function getDefaultAttributeSet(TargetServer $server){
+    public static function getDefaultAttributeSet(TargetServer $server){
         return $this->searchAttributeSet($server, "attribute_set_name","Default","eq");
     }
 
-    public function getEntityByKey($entityKey, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
+    public static function getEntityByKey($entityKey, TargetServer $server) {
+        $apiClient = self::getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         
@@ -53,8 +53,8 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
-    public function searchAttributeSet(TargetServer $server, $field, $value, $conditionType = null){
-        $apiClient = $this->getApiInstance($server);
+    public static function searchAttributeSet(TargetServer $server, $field, $value, $conditionType = null){
+        $apiClient = self::getApiInstance($server);
         
         $attributeSetInstance = new CatalogAttributeSetRepositoryV1Api($apiClient);
         

@@ -46,7 +46,7 @@ class QuantityValueOperator extends AbstractOperator{
 
             $quantityValueParts = explode("_", $value);
         
-            if(sizeof($quantityValueParts) === 1 || $this->checkCurrency($quantityValueParts[1])){
+            if(sizeof($quantityValueParts) === 1 || !$this->checkCurrency($quantityValueParts[1])){
                 $quantityValueObject->setValue($value);
                 $quantityValueObject->setUnitId($this->getDefaulCurrency($fieldDefinition));
             }else{

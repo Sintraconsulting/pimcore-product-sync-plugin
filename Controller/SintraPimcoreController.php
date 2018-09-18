@@ -111,6 +111,12 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
                 fclose($file);
                 unlink($semaphore);
 
+            } catch (\Error $e) {
+                fclose($file);
+                unlink($semaphore);
+
+                Logger::err($e->getMessage());
+                echo $e->getMessage();
             } catch (\Exception $e) {
                 fclose($file);
                 unlink($semaphore);

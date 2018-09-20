@@ -118,12 +118,12 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
                 
                 $db = Db::get();
                 $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
-                    "HIGH",
-                    "SintraPimcoreController",
-                    "syncObjectsAction",
-                    "$class Syncronization",
-                    $e->getMessage(),
-                    time()
+                    "gravity" => "HIGH",
+                    "class" => "SintraPimcoreController",
+                    "action" => "syncObjectsAction",
+                    "flow" => "$class Syncronization",
+                    "description" => $e->getMessage(),
+                    "timestamp" => time()
                 ));
 
                 Logger::err($e->getMessage());
@@ -134,12 +134,12 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
                 
                 $db = Db::get();
                 $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
-                    "HIGH",
-                    "SintraPimcoreController",
-                    "syncObjectsAction",
-                    "$class Syncronization",
-                    $e->getMessage(),
-                    time()
+                    "gravity" => "HIGH",
+                    "class" => "SintraPimcoreController",
+                    "action" => "syncObjectsAction",
+                    "flow" => "$class Syncronization",
+                    "description" => $e->getMessage(),
+                    "timestamp" => time()
                 ));
 
                 Logger::err($e->getMessage());

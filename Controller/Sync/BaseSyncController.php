@@ -140,12 +140,12 @@ class BaseSyncController {
                 
                 $db = Db::get();
                 $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
-                    "LOW",
-                    "BaseSyncController",
-                    "exportDataObjects",
-                    "Sync to ".$server->getServer_name(),
-                    "ERROR in exporting object with Id '$productId': ".$e->getMessage(),
-                    time()
+                    "gravity" => "LOW",
+                    "class" => "BaseSyncController",
+                    "action" => "exportDataObjects",
+                    "flow" => "Sync to ".$server->getServer_name(),
+                    "description" => "ERROR in exporting object with Id '$productId': ".$e->getMessage(),
+                    "timestamp" => time()
                 ));
                 
                 Logger::err($e->getMessage());

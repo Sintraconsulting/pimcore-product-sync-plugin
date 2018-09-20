@@ -14,6 +14,7 @@ class SintraPimcoreBundleInstaller extends MigrationInstaller{
             `gravity` VARCHAR(45) NOT NULL,
             `class` VARCHAR(255) NOT NULL,
             `action` VARCHAR(255) NOT NULL,
+            `flow` VARCHAR(255) NOT NULL,
             `description` TEXT NOT NULL,
             `timestamp` TIMESTAMP NOT NULL,
             PRIMARY KEY (`id`));"

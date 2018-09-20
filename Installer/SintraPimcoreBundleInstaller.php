@@ -12,6 +12,7 @@ class SintraPimcoreBundleInstaller extends MigrationInstaller{
         $version->addSql("CREATE TABLE IF NOT EXISTS `custom_log` (
             `id` INT NOT NULL AUTO_INCREMENT,
             `gravity` VARCHAR(45) NOT NULL,
+            `class` VARCHAR(255) NOT NULL,
             `action` VARCHAR(255) NOT NULL,
             `description` TEXT NOT NULL,
             `timestamp` TIMESTAMP NOT NULL,

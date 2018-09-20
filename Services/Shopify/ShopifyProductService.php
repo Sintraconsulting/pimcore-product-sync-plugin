@@ -70,16 +70,14 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         $endTime = $this->millitime();
         Logger::log('DURATION UPDATE1');
         Logger::log($endTime - $startTime);
-        try {
-            $this->setSyncProducts($result, $targetServer);
-            $shopifyObj->updateShopifyResponse($result);
-            $shopifyObj->updateAndCacheMetafields(count($search) === 0);
-            $shopifyObj->updateImagesAndCache();
-            $shopifyObj->updateInventoryApiResponse();
-            $shopifyObj->updateVariantsInventories();
-        } catch (\Exception $e) {
-            Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
-        }
+        
+        $this->setSyncProducts($result, $targetServer);
+        $shopifyObj->updateShopifyResponse($result);
+        $shopifyObj->updateAndCacheMetafields(count($search) === 0);
+        $shopifyObj->updateImagesAndCache();
+        $shopifyObj->updateInventoryApiResponse();
+        $shopifyObj->updateVariantsInventories();
+        
         $endTime = $this->millitime();
         Logger::log('DURATION!!!');
         Logger::log($endTime - $startTime);

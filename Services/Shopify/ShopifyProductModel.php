@@ -205,14 +205,10 @@ class ShopifyProductModel {
     }
 
     protected function updateImagesCache (int $varId, array $apiResponse) {
-        try{
-            /** @var Product $variation */
-            $variation = $this->variants[$varId];
-            $variation->setExportServers($this->getImagesUpdatedServerInfosProduct($variation, $apiResponse));
-            $variation->update(true);
-        } catch (\Exception $e) {
-            Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING IMAGES; ID: ' . $variation->getId() . ' ' . $e->getMessage());
-        }
+        /** @var Product $variation */
+        $variation = $this->variants[$varId];
+        $variation->setExportServers($this->getImagesUpdatedServerInfosProduct($variation, $apiResponse));
+        $variation->update(true);
     }
 
     protected function getVariantByShopifyVariantId ($shopifyVarId) {
@@ -278,12 +274,10 @@ class ShopifyProductModel {
             }
             $varCache = $this->trimDeletedMetafields($varCache, $this->serverInfos[$productVar->getId()], $productVar->getSku());
         }
-        try{
-            $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
-            $productVar->update(true);
-        } catch (\Exception $e) {
-            Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING METAFIELDS ID: ' . $productVar->getId() . ' ' . $e->getMessage());
-        }
+        
+        $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
+        $productVar->update(true);
+        
     }
 
     protected function trimDeletedMetafields(array $metaCaches, ServerObjectInfo $objectInfo, $varSku = null) {
@@ -412,12 +406,8 @@ class ShopifyProductModel {
                         'available' => $preparedVar['quantity']
                 ];
                 $response = $this->apiManager->updateInventoryInfo($payload, $this->targetServer);
-                try{
-                    $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
-                    $variant->update(true);
-                } catch (\Exception $e) {
-                    Logger::warn('COULD NOT SAVE PRODUCT WHILE UPDATING QUANTITY ID: ' . $variant->getId() . ' ' . $e->getMessage());
-                }
+                $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
+                $variant->update(true);
             }
         }
     }
@@ -431,12 +421,8 @@ class ShopifyProductModel {
         if (count($inventoryJsonList) > 0) {
             foreach ($this->variants as $variant) {
                 /** @var ServerObjectInfo $serverInfo */
-                try{
-                    $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, $inventoryJsonList));
-                    $variant->update(true);
-                } catch (\Exception $e) {
-                    Logger::warn('COULD NOT SAVE PRODUCT ID: ' . $variant->getId());
-                }
+                $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, $inventoryJsonList));
+                $variant->update(true);
             }
         } else {
             Logger::warn('NO INVENTORY LEVELS FOR IDS: ' . implode(',', $inventoryIds));

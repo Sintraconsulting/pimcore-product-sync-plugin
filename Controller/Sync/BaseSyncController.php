@@ -137,6 +137,17 @@ class BaseSyncController {
                 $syncronizedElements++;
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$productId.": ".$e->getMessage();
+                
+                $db = Db::get();
+                $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
+                    "LOW",
+                    "BaseSyncController",
+                    "exportDataObjects",
+                    "Sync to ".$server->getServer_name(),
+                    "ERROR in exporting object with Id '$productId': ".$e->getMessage(),
+                    time()
+                ));
+                
                 Logger::err($e->getMessage());
                 Logger::err($e->getTraceAsString());
 

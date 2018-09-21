@@ -71,12 +71,14 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         Logger::log('DURATION UPDATE1');
         Logger::log($endTime - $startTime);
         
-        $this->setSyncProducts($result, $targetServer);
+        $this->setProductServerInfos($result, $targetServer);
         $shopifyObj->updateShopifyResponse($result);
         $shopifyObj->updateAndCacheMetafields(count($search) === 0);
         $shopifyObj->updateImagesAndCache();
         $shopifyObj->updateInventoryApiResponse();
         $shopifyObj->updateVariantsInventories();
+        
+        $this->setSyncProduct($result, $targetServer);
         
         $endTime = $this->millitime();
         Logger::log('DURATION!!!');
@@ -148,19 +150,36 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         return $shopifyApi;
     }
 
-    protected function setSyncProducts ($results, $targetServer) {
+    protected function setProductServerInfos ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
                 $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
-                /** @var ServerObjectInfo $serverObjectInfo */
-                $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
-                $serverObjectInfo->setSync(true);
-                ## Mimic the shopify date format
-                $serverObjectInfo->setSync_at(date('Y-m-d') . 'T'. date('H:i:sP'));
-                $serverObjectInfo->setObject_id($results['id']);
-                $serverObjectInfo->setVariant_id($variant['id']);
-                $serverObjectInfo->setInventory_id($variant['inventory_item_id']);
-                $product->update(true);
+                if($product){
+                    /** @var ServerObjectInfo $serverObjectInfo */
+                    $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
+                    
+                    ## Mimic the shopify date format
+                    $serverObjectInfo->setSync_at(date('Y-m-d') . 'T'. date('H:i:sP'));
+                    $serverObjectInfo->setObject_id($results['id']);
+                    $serverObjectInfo->setVariant_id($variant['id']);
+                    $serverObjectInfo->setInventory_id($variant['inventory_item_id']);
+                    $product->update(true);
+                }
+            }
+        }
+    }
+    
+    protected function setSyncProduct ($results, $targetServer) {
+        if (is_array($results)) {
+            foreach ($results['variants'] as $variant) {
+                /** @var Product $product */
+                $product = Product::getBySku($variant['sku'])->current();
+                if($product){
+                    /** @var ServerObjectInfo $serverObjectInfo */
+                    $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
+                    $serverObjectInfo->setSync(true);
+                    $product->update(true);
+                }
             }
         }
     }

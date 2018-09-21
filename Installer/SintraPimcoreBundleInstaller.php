@@ -15,7 +15,7 @@ class SintraPimcoreBundleInstaller extends MigrationInstaller{
             `action` VARCHAR(255) NOT NULL,
             `flow` VARCHAR(255) NOT NULL,
             `description` TEXT NOT NULL,
-            `timestamp` TIMESTAMP NOT NULL);"
+            `timestamp` INT(11) UNSIGNED NOT NULL);"
         );
     }
 

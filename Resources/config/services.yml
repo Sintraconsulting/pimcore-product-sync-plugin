@@ -15,6 +15,12 @@ services:
         resource: '../../Controller'
         public: true
         tags: ['controller.service_arguments']
+     
+        
+    SintraPimcoreBundle\Installer\SintraPimcoreBundleInstaller:
+        public: true
+        arguments: 
+            $bundle: "@=service('kernel').getBundle('SintraPimcoreBundle')"
 
 # add more services, or override services that need manual wiring
 #    SintraPimcoreBundle\ExampleClass:

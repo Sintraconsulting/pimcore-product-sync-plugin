@@ -12,6 +12,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use SintraPimcoreBundle\Utils\GeneralUtils;
+use Pimcore\Db;
 
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
@@ -114,12 +115,32 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             } catch (\Error $e) {
                 fclose($file);
                 unlink($semaphore);
+                
+                $db = Db::get();
+                $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
+                    "gravity" => "HIGH",
+                    "class" => "SintraPimcoreController",
+                    "action" => "syncObjectsAction",
+                    "flow" => "$class Syncronization",
+                    "description" => $e->getMessage(),
+                    "timestamp" => time()
+                ));
 
                 Logger::err($e->getMessage());
                 echo $e->getMessage();
             } catch (\Exception $e) {
                 fclose($file);
                 unlink($semaphore);
+                
+                $db = Db::get();
+                $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
+                    "gravity" => "HIGH",
+                    "class" => "SintraPimcoreController",
+                    "action" => "syncObjectsAction",
+                    "flow" => "$class Syncronization",
+                    "description" => $e->getMessage(),
+                    "timestamp" => time()
+                ));
 
                 Logger::err($e->getMessage());
                 echo $e->getMessage();

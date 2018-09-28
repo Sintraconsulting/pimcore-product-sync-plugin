@@ -64,8 +64,11 @@ class ShopifyProductModel {
      * @var string
      */
     protected $hook;
+    /** @var int*/
+    protected $imageUploadCount;
 
     public function __construct (Product\Listing $variants, $shopifyApiReq, $shopifyModel, $targetServer) {
+        $this->imageUploadCount = 0;
         $this->rawVariants = $variants;
         $this->shopifyApiReq = $shopifyApiReq;
         $this->shopifyModel = $shopifyModel;
@@ -75,17 +78,23 @@ class ShopifyProductModel {
         $this->metafields = $this->getAllMetafields();
     }
 
-    protected function getProductsImagesArray () {
+    protected function getProductsImagesArray ($maxPerIteration = 10) {
         $imgsArray = [];
+        $currentUploadCount = 0;
+        $currMaxPerIteration = $maxPerIteration;
         /**
          * @var int $id
          * @var Product $variant
          */
         foreach ($this->variants as $id => $variant) {
+            $currMaxPerIteration = $currMaxPerIteration - $currentUploadCount;
             $i = count($imgsArray);
-            $prodImgsArray = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $i);
-            $imgsArray = array_merge($imgsArray, $prodImgsArray->getImagesArray());
+            $prodImgs = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $currMaxPerIteration, $i);
+            $prodImgsArray = $prodImgs->getImagesArray();
+            $currentUploadCount += $prodImgs->getUploadCount();
+            $imgsArray = array_merge($imgsArray, $prodImgsArray);
         }
+        $this->imageUploadCount += $currentUploadCount;
         return $imgsArray;
     }
 
@@ -274,10 +283,10 @@ class ShopifyProductModel {
             }
             $varCache = $this->trimDeletedMetafields($varCache, $this->serverInfos[$productVar->getId()], $productVar->getSku());
         }
-        
+
         $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
         $productVar->update(true);
-        
+
     }
 
     protected function trimDeletedMetafields(array $metaCaches, ServerObjectInfo $objectInfo, $varSku = null) {
@@ -335,7 +344,11 @@ class ShopifyProductModel {
             if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
                 Logger::warn('IMAGES JSON');
                 $exportServer->setImages_json(json_encode($imagesCache));
-                $exportServer->setImages_sync(true);
+                if (count($variant->getImages()->getItems()) <= count($imagesCache)) {
+                    $exportServer->setImages_sync(true);
+                } else {
+                    $exportServer->setImages_sync(false);
+                }
                 Logger::warn($exportServer->getImages_json());
                 break;
             }

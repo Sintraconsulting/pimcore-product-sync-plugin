@@ -70,16 +70,16 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         $endTime = $this->millitime();
         Logger::log('DURATION UPDATE1');
         Logger::log($endTime - $startTime);
-        
+
         $this->setProductServerInfos($result, $targetServer);
         $shopifyObj->updateShopifyResponse($result);
         $shopifyObj->updateAndCacheMetafields(count($search) === 0);
         $shopifyObj->updateImagesAndCache();
         $shopifyObj->updateInventoryApiResponse();
         $shopifyObj->updateVariantsInventories();
-        
+
         $this->setSyncProduct($result, $targetServer);
-        
+
         $endTime = $this->millitime();
         Logger::log('DURATION!!!');
         Logger::log($endTime - $startTime);
@@ -157,7 +157,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
                     $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
-                    
+
                     ## Mimic the shopify date format
                     $serverObjectInfo->setSync_at(date('Y-m-d') . 'T'. date('H:i:sP'));
                     $serverObjectInfo->setObject_id($results['id']);
@@ -168,7 +168,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             }
         }
     }
-    
+
     protected function setSyncProduct ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
@@ -177,11 +177,21 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
                     $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
-                    $serverObjectInfo->setSync(true);
+                    if ($this->checkAllVariantImagesSynced($serverObjectInfo)) {
+                        $serverObjectInfo->setSync(true);
+                    } else {
+                        $serverObjectInfo->setSync(false);
+                    }
                     $product->update(true);
                 }
             }
         }
+    }
+
+    protected function checkAllVariantImagesSynced (ServerObjectInfo $serverObjectInfo) {
+        Logger::log('IMAGE SYNC?');
+        Logger::log($serverObjectInfo->getImages_sync());
+        return (int)$serverObjectInfo->getImages_sync() === 1;
     }
 
     protected function millitime() {

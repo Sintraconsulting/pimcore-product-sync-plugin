@@ -177,7 +177,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
                     $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
-                    if ($this->checkAllVariantImagesSynced($serverObjectInfo)) {
+                    if ($this->checkAllVariantImagesSynced($product, $serverObjectInfo)) {
                         $serverObjectInfo->setSync(true);
                     } else {
                         $serverObjectInfo->setSync(false);
@@ -188,10 +188,9 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         }
     }
 
-    protected function checkAllVariantImagesSynced (ServerObjectInfo $serverObjectInfo) {
-        Logger::log('IMAGE SYNC?');
-        Logger::log($serverObjectInfo->getImages_sync());
-        return (int)$serverObjectInfo->getImages_sync() === 1;
+    protected function checkAllVariantImagesSynced (Product $variant, ServerObjectInfo $serverObjectInfo) {
+        $images = $variant->getImages();
+        return ($images == null || count($images->getItems()) === 0 || (int)$serverObjectInfo->getImages_sync() === 1);
     }
 
     protected function millitime() {

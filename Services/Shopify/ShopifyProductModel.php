@@ -127,12 +127,15 @@ class ShopifyProductModel {
                     $currentVar = $this->getVariantByShopifyVariantId($image['variant_ids'][0]);
                     $currentVarImgs = [];
                 }
+                
+                $position = $image['position'];
+                
                 $currentVarImgs[] = [
                         'id' => $image['id'],
-                        'position' => $image['position'],
+                        'position' => $position,
                         'product_id' => $image['product_id'],
-                        'hash' => $updateImagesApiReq['images'][$i]['hash'],
-                        'name' => $updateImagesApiReq['images'][$i]['name'],
+                        'hash' => $updateImagesApiReq['images'][$position-1]['hash'],
+                        'name' => $updateImagesApiReq['images'][$position-1]['name'],
                         'pimcore_index' => $updateImagesApiReq['images'][$i]['pimcore_index'],
                         'variant_ids' => $image['variant_ids']
                 ];

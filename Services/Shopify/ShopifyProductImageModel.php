@@ -19,17 +19,31 @@ class ShopifyProductImageModel {
     protected $serverInfo;
     /** @var int */
     protected $size;
+    /**
+     * Number of images that require upload in this iteration
+     * Should not exceed the $maxUpload from constructor
+     * @var int
+     */
+    protected $uploadCount;
 
-    function __construct (Product $variant, ServerObjectInfo $serverInfo, int $countSize = 0) {
+    function __construct (Product $variant, ServerObjectInfo $serverInfo, $maxUpload = 10, int $countSize = 0) {
         $this->variant = $variant;
         $this->serverInfo = $serverInfo;
+        $this->serverInfo->setSync(false);
+        $this->serverInfo->setImages_sync(false);
+        $this->variant->update(true);
         $this->imagesJson = $this->getParsedImagesJsonFromServerInfo();
         $this->size = $countSize;
-        $this->images = $this->parseImagesFromVariant();
+        $this->uploadCount = 0;
+        $this->images = $this->parseImagesFromVariant($maxUpload);
     }
 
     public function getImagesArray() {
         return $this->images;
+    }
+
+    public function getUploadCount () {
+        return $this->uploadCount;
     }
 
     protected function getParsedImagesJsonFromServerInfo () {
@@ -37,11 +51,11 @@ class ShopifyProductImageModel {
         return $jsonArray;
     }
 
-    protected function parseImagesFromVariant () {
-        return $this->getVariantImagesFormatted();
+    protected function parseImagesFromVariant ($maxUpload) {
+        return $this->getVariantImagesFormatted($maxUpload);
     }
 
-    protected function getVariantImagesFormatted () : array {
+    protected function getVariantImagesFormatted ($maxUpload) : array {
         $imagesArray = [];
         /** @var ImageInfo $images */
         $images = $this->variant->getImages();
@@ -54,7 +68,12 @@ class ShopifyProductImageModel {
                 $shouldUploadImg = $this->shouldUploadImage($image, $imagesJson);
                 Logger::log('IMG JSON UPDATE!!');
                 Logger::log($shouldUploadImg);
-                $imagesArray[] = $this->buildImageArray($image, $imagesJson, $shouldUploadImg, $key === 0 ? $this->variant->getId() : null);
+                if ( ($shouldUploadImg && $this->uploadCount < $maxUpload) || (!$shouldUploadImg)) {
+                    $imagesArray[] = $this->buildImageArray($image, $imagesJson, $shouldUploadImg, $key === 0 ? $this->variant->getId() : null);
+                    if ($shouldUploadImg) {
+                        $this->uploadCount += 1;
+                    }
+                }
             }
         }
         return $imagesArray;

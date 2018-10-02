@@ -12,6 +12,8 @@ use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection;
 
+use Pimcore\Model\DataObject\Data\QuantityValue;
+
 /**
  * Event Listener Utils
  *
@@ -141,12 +143,24 @@ class EventListenerUtils {
             $newValue = $newValueMethod->invoke($dataObject);
             $oldValue = $oldValueMethod->invoke($oldDataObject);
 
-            if($newValue === $oldValue){
+            if(self::compareValues($newValue, $oldValue)){
                 $match = true;
             }
         }
         
         return $match;
         
+    }
+    
+    private static function compareValues($newValue, $oldValue){
+        if($newValue instanceof QuantityValue && $oldValue instanceof QuantityValue){
+            return ($newValue->getValue() == $oldValue->getValue()) && ($newValue->getUnitId() == $oldValue->getUnitId());
+        }
+        
+        if($newValue instanceof Concrete && $oldValue instanceof Concrete){
+            return ($newValue->getId() == $oldValue->getId());
+        }
+        
+        return ($newValue == $oldValue);
     }
 }

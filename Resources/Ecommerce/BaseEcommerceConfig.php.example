@@ -6,6 +6,7 @@ class BaseEcommerceConfig {
     protected static $url;
     protected static $apiKey;
     protected static $pimcoreBaseUrl = "http://your/pimcore/url";
+    protected static $customLogTablename = "custom_log"; 
 
     public static function getConfig() {
         return array(
@@ -16,6 +17,10 @@ class BaseEcommerceConfig {
 
     public static function getBaseUrl(){
         return static::$pimcoreBaseUrl;
+    }
+    
+    public static function getCustomLogTableName(){
+        return static::$customLogTablename;
     }
     
     public static function getEnabledIntegrations(){

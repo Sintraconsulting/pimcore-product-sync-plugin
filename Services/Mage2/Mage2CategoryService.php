@@ -43,11 +43,7 @@ class Mage2CategoryService extends BaseMagento2Service implements InterfaceServi
         
         Logger::debug("UPDATED CATEGORY: ".$result->__toString());
 
-        try {
-            $this->setSyncObject($dataObject, $result, $targetServer);
-        } catch (\Exception $e) {
-            Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
-        }
+        $this->setSyncObject($dataObject, $result, $targetServer);
     }
 
     public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $update = false) {

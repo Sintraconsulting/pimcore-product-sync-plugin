@@ -70,16 +70,16 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         $endTime = $this->millitime();
         Logger::log('DURATION UPDATE1');
         Logger::log($endTime - $startTime);
-        try {
-            $this->setSyncProducts($result, $targetServer);
-            $shopifyObj->updateShopifyResponse($result);
-            $shopifyObj->updateAndCacheMetafields(count($search) === 0);
-            $shopifyObj->updateImagesAndCache();
-            $shopifyObj->updateInventoryApiResponse();
-            $shopifyObj->updateVariantsInventories();
-        } catch (\Exception $e) {
-            Logger::notice($e->getMessage() . PHP_EOL . $e->getTraceAsString());
-        }
+
+        $this->setProductServerInfos($result, $targetServer);
+        $shopifyObj->updateShopifyResponse($result);
+        $shopifyObj->updateAndCacheMetafields(count($search) === 0);
+        $shopifyObj->updateImagesAndCache();
+        $shopifyObj->updateInventoryApiResponse();
+        $shopifyObj->updateVariantsInventories();
+
+        $this->setSyncProduct($result, $targetServer);
+
         $endTime = $this->millitime();
         Logger::log('DURATION!!!');
         Logger::log($endTime - $startTime);
@@ -150,21 +150,47 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         return $shopifyApi;
     }
 
-    protected function setSyncProducts ($results, $targetServer) {
+    protected function setProductServerInfos ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
                 $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
-                /** @var ServerObjectInfo $serverObjectInfo */
-                $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
-                $serverObjectInfo->setSync(true);
-                ## Mimic the shopify date format
-                $serverObjectInfo->setSync_at(date('Y-m-d') . 'T'. date('H:i:sP'));
-                $serverObjectInfo->setObject_id($results['id']);
-                $serverObjectInfo->setVariant_id($variant['id']);
-                $serverObjectInfo->setInventory_id($variant['inventory_item_id']);
-                $product->update(true);
+                if($product){
+                    /** @var ServerObjectInfo $serverObjectInfo */
+                    $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
+
+                    ## Mimic the shopify date format
+                    $serverObjectInfo->setSync_at(date('Y-m-d') . 'T'. date('H:i:sP'));
+                    $serverObjectInfo->setObject_id($results['id']);
+                    $serverObjectInfo->setVariant_id($variant['id']);
+                    $serverObjectInfo->setInventory_id($variant['inventory_item_id']);
+                    $product->update(true);
+                }
             }
         }
+    }
+
+    protected function setSyncProduct ($results, $targetServer) {
+        if (is_array($results)) {
+            foreach ($results['variants'] as $variant) {
+                /** @var Product $product */
+                $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
+                if($product){
+                    /** @var ServerObjectInfo $serverObjectInfo */
+                    $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
+                    if ($this->checkAllVariantImagesSynced($product, $serverObjectInfo)) {
+                        $serverObjectInfo->setSync(true);
+                    } else {
+                        $serverObjectInfo->setSync(false);
+                    }
+                    $product->update(true);
+                }
+            }
+        }
+    }
+
+    protected function checkAllVariantImagesSynced (Product $variant, ServerObjectInfo $serverObjectInfo) {
+        $images = $variant->getImages();
+        return ($images == null || count($images->getItems()) === 0 || (int)$serverObjectInfo->getImages_sync() === 1);
     }
 
     protected function millitime() {

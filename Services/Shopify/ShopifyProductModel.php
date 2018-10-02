@@ -64,8 +64,11 @@ class ShopifyProductModel {
      * @var string
      */
     protected $hook;
+    /** @var int*/
+    protected $imageUploadCount;
 
     public function __construct (Product\Listing $variants, $shopifyApiReq, $shopifyModel, $targetServer) {
+        $this->imageUploadCount = 0;
         $this->rawVariants = $variants;
         $this->shopifyApiReq = $shopifyApiReq;
         $this->shopifyModel = $shopifyModel;
@@ -75,17 +78,23 @@ class ShopifyProductModel {
         $this->metafields = $this->getAllMetafields();
     }
 
-    protected function getProductsImagesArray () {
+    protected function getProductsImagesArray ($maxPerIteration = 10) {
         $imgsArray = [];
+        $currentUploadCount = 0;
+        $currMaxPerIteration = $maxPerIteration;
         /**
          * @var int $id
          * @var Product $variant
          */
         foreach ($this->variants as $id => $variant) {
+            $currMaxPerIteration = $currMaxPerIteration - $currentUploadCount;
             $i = count($imgsArray);
-            $prodImgsArray = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $i);
-            $imgsArray = array_merge($imgsArray, $prodImgsArray->getImagesArray());
+            $prodImgs = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $currMaxPerIteration, $i);
+            $prodImgsArray = $prodImgs->getImagesArray();
+            $currentUploadCount += $prodImgs->getUploadCount();
+            $imgsArray = array_merge($imgsArray, $prodImgsArray);
         }
+        $this->imageUploadCount += $currentUploadCount;
         return $imgsArray;
     }
 
@@ -118,12 +127,15 @@ class ShopifyProductModel {
                     $currentVar = $this->getVariantByShopifyVariantId($image['variant_ids'][0]);
                     $currentVarImgs = [];
                 }
+                
+                $position = $image['position'];
+                
                 $currentVarImgs[] = [
                         'id' => $image['id'],
-                        'position' => $image['position'],
+                        'position' => $position,
                         'product_id' => $image['product_id'],
-                        'hash' => $updateImagesApiReq['images'][$i]['hash'],
-                        'name' => $updateImagesApiReq['images'][$i]['name'],
+                        'hash' => $updateImagesApiReq['images'][$position-1]['hash'],
+                        'name' => $updateImagesApiReq['images'][$position-1]['name'],
                         'pimcore_index' => $updateImagesApiReq['images'][$i]['pimcore_index'],
                         'variant_ids' => $image['variant_ids']
                 ];
@@ -205,14 +217,10 @@ class ShopifyProductModel {
     }
 
     protected function updateImagesCache (int $varId, array $apiResponse) {
-        try{
-            /** @var Product $variation */
-            $variation = $this->variants[$varId];
-            $variation->setExportServers($this->getImagesUpdatedServerInfosProduct($variation, $apiResponse));
-            $variation->update(true);
-        } catch (\Exception $e) {
-            Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING IMAGES; ID: ' . $variation->getId() . ' ' . $e->getMessage());
-        }
+        /** @var Product $variation */
+        $variation = $this->variants[$varId];
+        $variation->setExportServers($this->getImagesUpdatedServerInfosProduct($variation, $apiResponse));
+        $variation->update(true);
     }
 
     protected function getVariantByShopifyVariantId ($shopifyVarId) {
@@ -278,12 +286,10 @@ class ShopifyProductModel {
             }
             $varCache = $this->trimDeletedMetafields($varCache, $this->serverInfos[$productVar->getId()], $productVar->getSku());
         }
-        try{
-            $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
-            $productVar->update(true);
-        } catch (\Exception $e) {
-            Logger::warn('COULD NOT SAVE PRODUCT WHILE CACHING METAFIELDS ID: ' . $productVar->getId() . ' ' . $e->getMessage());
-        }
+
+        $productVar->setExportServers($this->getMetafieldUpdatedServerInfosProduct($productVar, $varCache, $prodCache));
+        $productVar->update(true);
+
     }
 
     protected function trimDeletedMetafields(array $metaCaches, ServerObjectInfo $objectInfo, $varSku = null) {
@@ -341,7 +347,11 @@ class ShopifyProductModel {
             if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
                 Logger::warn('IMAGES JSON');
                 $exportServer->setImages_json(json_encode($imagesCache));
-                $exportServer->setImages_sync(true);
+                if (count($variant->getImages()->getItems()) <= count($imagesCache)) {
+                    $exportServer->setImages_sync(true);
+                } else {
+                    $exportServer->setImages_sync(false);
+                }
                 Logger::warn($exportServer->getImages_json());
                 break;
             }
@@ -412,12 +422,8 @@ class ShopifyProductModel {
                         'available' => $preparedVar['quantity']
                 ];
                 $response = $this->apiManager->updateInventoryInfo($payload, $this->targetServer);
-                try{
-                    $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
-                    $variant->update(true);
-                } catch (\Exception $e) {
-                    Logger::warn('COULD NOT SAVE PRODUCT WHILE UPDATING QUANTITY ID: ' . $variant->getId() . ' ' . $e->getMessage());
-                }
+                $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
+                $variant->update(true);
             }
         }
     }
@@ -431,12 +437,8 @@ class ShopifyProductModel {
         if (count($inventoryJsonList) > 0) {
             foreach ($this->variants as $variant) {
                 /** @var ServerObjectInfo $serverInfo */
-                try{
-                    $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, $inventoryJsonList));
-                    $variant->update(true);
-                } catch (\Exception $e) {
-                    Logger::warn('COULD NOT SAVE PRODUCT ID: ' . $variant->getId());
-                }
+                $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, $inventoryJsonList));
+                $variant->update(true);
             }
         } else {
             Logger::warn('NO INVENTORY LEVELS FOR IDS: ' . implode(',', $inventoryIds));

@@ -137,6 +137,17 @@ class BaseSyncController {
                 $syncronizedElements++;
             } catch(\Exception $e){
                 $response["errors"][] = "OBJECT ID ".$productId.": ".$e->getMessage();
+
+                $db = Db::get();
+                $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
+                    "gravity" => "LOW",
+                    "class" => "BaseSyncController",
+                    "action" => "exportDataObjects",
+                    "flow" => "Sync to ".$server->getServer_name(),
+                    "description" => "ERROR in exporting object with Id '$productId': ".$e->getMessage(),
+                    "timestamp" => time()
+                ));
+
                 Logger::err($e->getMessage());
                 Logger::err($e->getTraceAsString());
 
@@ -148,7 +159,7 @@ class BaseSyncController {
         }
         $endTime = $this->millitime();
         try{
-            Cache::clearTag("output");
+            Cache::clearAll();
         } catch(\Exception $e){
             Logger::err($e->getMessage());
         }

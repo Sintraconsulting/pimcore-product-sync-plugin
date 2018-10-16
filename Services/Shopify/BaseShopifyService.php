@@ -57,7 +57,12 @@ abstract class BaseShopifyService extends BaseEcommerceService {
             $i = 0;
             foreach ($dataSource as $dataObject) {
                 $serverInfo = GeneralUtils::getServerObjectInfo($dataObject, $server);
-                if (!$serverInfo->getSync()) {
+                
+                /**
+                 * If a variant needs to be synced, do the recursion
+                 * If not, only take tags from the variant
+                 */
+                if (!$serverInfo->getSync() || $fieldsDepth[0] == "tags") {
                     $shopifyApi[$parentDepth][$i] = $this->mapServerMultipleField($shopifyApi[$parentDepth][$i],
                             $fieldMap, $fieldsDepth, $language, $dataObject);
                 }

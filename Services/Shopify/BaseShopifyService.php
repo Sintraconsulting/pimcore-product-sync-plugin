@@ -44,7 +44,7 @@ abstract class BaseShopifyService extends BaseEcommerceService {
             } elseif ($apiField === 'tags') {
                 if (isset($shopifyApi['tags'])) {
                     $otherTags = explode(', ', $shopifyApi['tags']);
-                    $otherTags[] = $fieldValue;
+                    $otherTags[] = is_array($fieldValue) ? implode(', ',$fieldValue) : $fieldValue;
                     $fieldValue = implode(", ", $otherTags);
                 }
             }

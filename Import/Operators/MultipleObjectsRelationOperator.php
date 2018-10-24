@@ -10,15 +10,15 @@ use Pimcore\Model\DataObject\Folder;
  *
  * @author Marco Guiducci
  */
-class ObjectRelationOperator extends AbstractOperator{
+class MultipleObjectsRelationOperator extends AbstractOperator{
     
     /**
      * class: the related object class name
-     * folder: folder containg related class objects (user for create new one)
      * sourcefield: field name in imported object class
+     * relatedfield: field name in related object class
      * 
      * create_if_missing: create a new object if missing (true|false)
-     * relatedfield: field name in related object class
+     * folder: folder containg related class objects (user for create new one)
      * descriptionfield_index: field index for created object description
      */
     private $additionalData;
@@ -36,35 +36,43 @@ class ObjectRelationOperator extends AbstractOperator{
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
 
         $object = null;
-        $value = trim($rowData[$colIndex]);
+        $values = explode("|",$rowData[$colIndex]);
         
         $class = $this->additionalData["class"];
         $sourcefield = $this->additionalData["sourcefield"];
         $relatedfield = $this->additionalData["relatedfield"];
         $createIfMissing = $this->additionalData["create_if_missing"];
         
-        if(!empty($value)){
-            $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$class."\\Listing");
-            $listing = $listingClass->newInstance();
-            
-            $listing->setCondition($relatedfield." = ".$listing->quote($value));
-            $listing->setLimit(1);
+        $objects = [];
+        
+        foreach ($values as $value){
+            if(!empty(trim($value))){
+                $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$class."\\Listing");
+                $listing = $listingClass->newInstance();
 
-            $listing = $listing->load();
+                $listing->setCondition($relatedfield." = ".$listing->quote($value));
+                $listing->setLimit(1);
 
-            if(!$listing && $createIfMissing){
-                $object = $this->createNewObject($rowData, $value, $class, $relatedfield); 
-            }else{
-                $object = $listing[0];               
+                $listing = $listing->load();
+
+                if(!$listing && $createIfMissing){
+                    $object = $this->createNewObject($rowData, $value, $class, $relatedfield, $colIndex);
+                }else{
+                    $object = $listing[0];               
+                }
+                
+                $objects[] = $object;
             }
         }
+        
         $reflectionTarget = new \ReflectionObject($target);
         $setSourceFieldMethod = $reflectionTarget->getMethod('set'. ucfirst($sourcefield));
-        $setSourceFieldMethod->invoke($target, $object);
+        
+        $setSourceFieldMethod->invoke($target, $objects);
         
     }
     
-    private function createNewObject($rowData, $value, $class, $relatedfield){
+    private function createNewObject($rowData, $value, $class, $relatedfield, $colIndex){
         $folder = $this->additionalData["folder"];
         $descriptionfieldIndex = $this->additionalData["descriptionfield_index"];
         
@@ -81,7 +89,7 @@ class ObjectRelationOperator extends AbstractOperator{
         $setFieldMethod = $reflectionObject->getMethod('set'. ucfirst($relatedfield));
         $setFieldMethod->invoke($object, $value);
 
-        $descriptionValue = trim($rowData[$descriptionfieldIndex]);
+        $descriptionValue = $colIndex == $descriptionfieldIndex ? $value : trim($rowData[$descriptionfieldIndex]);
 
         $setDescriptionMethod = $reflectionObject->getMethod('setDescription');
 

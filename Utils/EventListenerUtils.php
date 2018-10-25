@@ -171,6 +171,11 @@ class EventListenerUtils {
             $match = true;
             
             foreach ($newValue as $key => $value) {
+                /**
+                 * Comparison recursion on Pimcore natives array
+                 * Tested and verified, but in future we may need to change
+                 * this part to not compare values by array ID
+                 */
                 if(!self::compareValues($value, $oldValue[$key])){                
                     $match = false;
                     break;

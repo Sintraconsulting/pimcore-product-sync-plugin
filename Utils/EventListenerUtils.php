@@ -161,6 +161,20 @@ class EventListenerUtils {
             return ($newValue->getId() == $oldValue->getId());
         }
         
+        /** In case of multiple objects relation */
+        if(is_array($newValue)){
+            $match = false;
+            
+            foreach ($newValue as $key => $value) {
+                if(self::compareValues($value, $oldValue[$key])){                
+                    $match = true;
+                    break;
+                }
+            }
+            
+            return $match;
+        }
+        
         return ($newValue == $oldValue);
     }
 }

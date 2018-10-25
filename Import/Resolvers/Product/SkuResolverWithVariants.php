@@ -14,6 +14,9 @@ use Pimcore\Model\DataObject\AbstractObject;
 class SkuResolverWithVariants extends AbstractResolver{
 
     public function resolve(\stdClass $config, int $parentId, array $rowData){
+        $params = json_decode($config->resolverSettings->params,true);
+        $nameColumnId = $params["name_column_id"];
+        
         $columnId = $this->getIdColumn($config);
                 
         $sku = trim($rowData[$columnId]);
@@ -53,8 +56,7 @@ class SkuResolverWithVariants extends AbstractResolver{
             /**
              * set object key to avoid import error
              */
-            $nameColumnId = $this->getColumnId($config, "name");
-            if(!empty($nameColumnId)){
+            if($nameColumnId != null && !empty($nameColumnId)){
                 $key = trim($rowData[$nameColumnId]);
                 $product->setKey($sku." - ".$key);
             }else{

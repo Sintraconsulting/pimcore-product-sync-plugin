@@ -13,6 +13,9 @@ use Pimcore\Model\DataObject\Product;
 class SkuResolver extends AbstractResolver{
 
     public function resolve(\stdClass $config, int $parentId, array $rowData){
+        $params = json_decode($config->resolverSettings->params,true);
+        $nameColumnId = $params["name_column_id"];
+        
         $columnId = $this->getIdColumn($config);
         
         $sku = trim($rowData[$columnId]);
@@ -33,9 +36,8 @@ class SkuResolver extends AbstractResolver{
             /**
              * set object key to avoid import error
              */
-            $keyColumnId = $this->getKeyColumnId($config);
-            if(!empty($keyColumnId)){
-                $key = trim($rowData[$keyColumnId]);
+            if($nameColumnId != null && !empty($nameColumnId)){
+                $key = trim($rowData[$nameColumnId]);
                 $product->setKey(str_replace("/","\\",$sku." - ".$key));
             }else{
                 $product->setKey(str_replace("/","\\",$sku));
@@ -46,11 +48,11 @@ class SkuResolver extends AbstractResolver{
         
     }
     
-    private function getKeyColumnId(\stdClass $config){
+    private function getColumnId(\stdClass $config, $columnname){
         $configArray = json_decode(json_encode($config), true);
         $selectedGridColumns = $configArray["selectedGridColumns"];
         
-        $keyColumnId = array_search("name", array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
+        $keyColumnId = array_search($columnname, array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
         
         return $keyColumnId;
     }

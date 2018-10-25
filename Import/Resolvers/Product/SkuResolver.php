@@ -7,6 +7,8 @@ use Pimcore\Model\DataObject\Product;
 
 /**
  * Resolve product by Sku
+ * 
+ * name_column_id: optional additional column Id used for product key generation
  *
  * @author Marco Guiducci
  */
@@ -34,7 +36,9 @@ class SkuResolver extends AbstractResolver{
             $product->setPublished(1);
             
             /**
-             * set object key to avoid import error
+             * Set object key to avoid import error
+             * If the "name_column_id" parameter is set, product key is generated
+             * combining SKU and the value in the "name_column_id" column
              */
             if($nameColumnId != null && !empty($nameColumnId)){
                 $key = trim($rowData[$nameColumnId]);

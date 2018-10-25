@@ -163,11 +163,16 @@ class EventListenerUtils {
         
         /** In case of multiple objects relation */
         if(is_array($newValue)){
-            $match = false;
+            
+            if(sizeof($newValue) != sizeof($oldValue)){
+                return false;
+            }
+            
+            $match = true;
             
             foreach ($newValue as $key => $value) {
-                if(self::compareValues($value, $oldValue[$key])){                
-                    $match = true;
+                if(!self::compareValues($value, $oldValue[$key])){                
+                    $match = false;
                     break;
                 }
             }

@@ -7,12 +7,17 @@ use Pimcore\Model\DataObject\Product;
 
 /**
  * Resolve product by Sku
+ * 
+ * name_column_id: optional additional column Id used for product key generation
  *
  * @author Marco Guiducci
  */
 class SkuResolver extends AbstractResolver{
 
     public function resolve(\stdClass $config, int $parentId, array $rowData){
+        $params = json_decode($config->resolverSettings->params,true);
+        $nameColumnId = $params["name_column_id"];
+        
         $columnId = $this->getIdColumn($config);
         
         $sku = trim($rowData[$columnId]);
@@ -31,11 +36,12 @@ class SkuResolver extends AbstractResolver{
             $product->setPublished(1);
             
             /**
-             * set object key to avoid import error
+             * Set object key to avoid import error
+             * If the "name_column_id" parameter is set, product key is generated
+             * combining SKU and the value in the "name_column_id" column
              */
-            $keyColumnId = $this->getKeyColumnId($config);
-            if(!empty($keyColumnId)){
-                $key = trim($rowData[$keyColumnId]);
+            if($nameColumnId != null && !empty($nameColumnId)){
+                $key = trim($rowData[$nameColumnId]);
                 $product->setKey(str_replace("/","\\",$sku." - ".$key));
             }else{
                 $product->setKey(str_replace("/","\\",$sku));
@@ -46,11 +52,11 @@ class SkuResolver extends AbstractResolver{
         
     }
     
-    private function getKeyColumnId(\stdClass $config){
+    private function getColumnId(\stdClass $config, $columnname){
         $configArray = json_decode(json_encode($config), true);
         $selectedGridColumns = $configArray["selectedGridColumns"];
         
-        $keyColumnId = array_search("name", array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
+        $keyColumnId = array_search($columnname, array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
         
         return $keyColumnId;
     }

@@ -95,7 +95,7 @@ class BaseSyncController {
         $objIds = $db->fetchAll(
             "SELECT dependencies.sourceid FROM dependencies"
             . " INNER JOIN $fieldCollectionTable as srv ON (dependencies.sourceid = srv.o_id AND srv.name=? AND srv.export = 1 AND (srv.sync = 0 OR srv.sync IS NULL))"
-            . " INNER JOIN objects as obj ON (obj.o_id = dependencies.sourceid AND obj.o_className = ? AND obj.o_type = 'object')"
+            . " INNER JOIN objects as obj ON (obj.o_id = dependencies.sourceid AND obj.o_className = ? AND obj.o_type = 'object' AND obj.o_published = 1)"
             . " WHERE dependencies.targetid = ? AND dependencies.targettype LIKE 'object' AND dependencies.sourcetype LIKE 'object'"
             . " ORDER BY dependencies.sourceid ASC"
             . " LIMIT $limit",

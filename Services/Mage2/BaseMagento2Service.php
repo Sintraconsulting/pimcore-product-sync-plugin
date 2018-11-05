@@ -1,51 +1,53 @@
 <?php
+
 namespace SintraPimcoreBundle\Services\Mage2;
 
 use SintraPimcoreBundle\Services\BaseEcommerceService;
-use Pimcore\Model\DataObject\Listing;
+use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Utils\GeneralUtils;
 use SintraPimcoreBundle\Utils\TargetServerUtils;
+
 /**
  * Magento 2 Shop level logic
  * Needs to implement BaseEcommerceService abstract functions
  * Class Magento2Service
  */
 abstract class BaseMagento2Service extends BaseEcommerceService {
-    
+
     /**
      * 
      * @param $dataObject
      * @param $results
      * @param TargetServer $targetServer
      */
-    protected function setSyncObject ($dataObject, $results, TargetServer $targetServer) {
+    protected function setSyncObject($dataObject, $results, TargetServer $targetServer) {
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
         $serverObjectInfo->setSync(true);
         $serverObjectInfo->setSync_at($results["updatedAt"]);
         $serverObjectInfo->setObject_id($results["id"]);
         $dataObject->update(true);
     }
-    
+
     /**
      * Get the mapping of field to export from the server definition.
      * For localized fields, the first valid language will be used.
      *
      * @param $ecommObject
-     * @param Listing $dataObjects
+     * @param Concrete $dataObject
      * @param TargetServer $targetServer
      * @param $classname
-     * @param bool $update
+     * @param bool $isNew
      */
-    protected function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $isNew = false) {
+    protected function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, $classname, bool $isNew = false) {
         /**
          * In a general approach, API calls will be referred to the main website
          */
-        $ecommObject["extension_attributes"]["website_ids"][] = 1; 
-        
+        $ecommObject["extension_attributes"]["website_ids"][] = 1;
+
         $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, $classname);
         $languages = $targetServer->getLanguages();
-        
+
         /** @var FieldMapping $fieldMap */
         foreach ($fieldsMap as $fieldMap) {
 
@@ -53,43 +55,27 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
             $apiField = $fieldMap->getServerField();
 
             $fieldsDepth = explode('.', $apiField);
-            $ecommObject = $this->mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $languages[0], $dataObjects, $targetServer);
-
+            $ecommObject = $this->mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $languages[0], $dataObject, $targetServer);
         }
-
     }
-    
-    protected function mapServerMultipleField ($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null) {
-        // End of recursion
-        if(count($fieldsDepth) == 1) {
-            /** @var Listing $dataSource */
-            if ( method_exists($dataSource, 'current') ) {
-                $dataSource = $dataSource->getObjects()[0];
-            }
-            $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
-            $apiField = $fieldsDepth[0];
-            
-            return $this->mapServerField($ecommObject, $fieldValue, $apiField);
-        }
-        
-        $parentDepth = array_shift($fieldsDepth);
 
+    protected function mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null) {
+
+        $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
+
+        // End of recursion
+        if (count($fieldsDepth) == 1) {
+            return $this->mapServerField($ecommObject, $fieldValue, $fieldsDepth[0]);
+        }
+
+        $parentDepth = array_shift($fieldsDepth);
+        $apiField = $fieldsDepth[0];
 
         /**
          * End of recursion with custom_attributes
          */
         if ($parentDepth == 'custom_attributes') {
-            if ( method_exists($dataSource, 'current') ) {
-                $dataSource = $dataSource->getObjects()[0];
-            }
-            $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
-            $apiField = $fieldsDepth[0];
-            
-            $customValue = [
-                    'attribute_code' => $apiField,
-                    'value' => $fieldValue
-            ];
-            $ecommObject[$parentDepth][] = $customValue;
+            $this->extractCustomAttribute($ecommObject, $apiField, $fieldValue);
             return $ecommObject;
         }
 
@@ -101,4 +87,14 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
          */
         return $this->mapServerMultipleField($ecommObject[$parentDepth], $fieldMap, $fieldsDepth, $language, $dataSource, $server);
     }
+
+    protected function extractCustomAttribute(&$ecommObject, $apiField, $fieldValue) {
+        $customValue = [
+            'attribute_code' => $apiField,
+            'value' => $fieldValue
+        ];
+
+        $ecommObject["custom_attributes"][] = $customValue;
+    }
+
 }

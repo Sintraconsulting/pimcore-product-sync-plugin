@@ -33,7 +33,7 @@ class SkuResolver extends AbstractResolver{
             $product = new Product();
             $product->setParentId($parentId);
             $product->setSku($sku);
-            $product->setPublished(1);
+            $product->setPublished(0);
             
             /**
              * Set object key to avoid import error

@@ -34,7 +34,7 @@ class SkuResolverWithVariants extends AbstractResolver{
         }else{
             $product = new Product();
             $product->setSku($sku);
-            $product->setPublished(1);
+            $product->setPublished(0);
             
             $typeColumnId = $config->resolverSettings->columnObjectType;
             $type = $rowData[$typeColumnId];

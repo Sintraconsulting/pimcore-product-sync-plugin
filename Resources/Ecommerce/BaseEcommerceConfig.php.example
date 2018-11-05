@@ -2,7 +2,6 @@
 namespace SintraPimcoreBundle\Resources\Ecommerce;
 
 class BaseEcommerceConfig {
-    public static $updateProductPrices = false;
     protected static $url;
     protected static $apiKey;
     protected static $pimcoreBaseUrl = "http://your/pimcore/url";

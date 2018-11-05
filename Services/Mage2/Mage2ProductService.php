@@ -6,13 +6,10 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\ApiManager\Mage2\ProductAttributesAPIManager;
-use SintraPimcoreBundle\Resources\Ecommerce\MagentoConfig;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
 
 class Mage2ProductService extends BaseMagento2Service implements InterfaceService {
-
-    private $configFile = __DIR__ . '/../config/product.json';
 
     /**
      * Return Product to export with its variants
@@ -39,7 +36,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @return mixed|void
      */
     public function export ($productId, TargetServer $targetServer) {
-        $magento2Product = json_decode(file_get_contents($this->configFile), true)[$targetServer->getKey()];
+        $ecommObject = array();
         
         $dataObjects = $this->getObjectsToExport($productId, "Product");
         
@@ -51,14 +48,14 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
         if($search["totalCount"] === 0){
             //product is new, need to save price
-            $this->toEcomm($magento2Product, $dataObjects, $targetServer, $dataObject->getClassName(), true);
-            Logger::debug("MAGENTO CR PRODUCT: ".json_encode($magento2Product));
+            $this->toEcomm($ecommObject, $dataObjects, $targetServer, $dataObject->getClassName(), true);
+            Logger::debug("MAGENTO CR PRODUCT: ".json_encode($ecommObject));
 
             $result = Mage2ProductAPIManager::createEntity($magento2Product, $targetServer);
         }else{
             //product already exists, we may want to not update prices
-            $this->toEcomm($magento2Product, $dataObjects, $targetServer, $dataObject->getClassName(), MagentoConfig::$updateProductPrices);
-            Logger::debug("MAGENTO UP PRODUCT: ".json_encode($magento2Product));
+            $this->toEcomm($ecommObject, $dataObjects, $targetServer, $dataObject->getClassName());
+            Logger::debug("MAGENTO UP PRODUCT: ".json_encode($ecommObject));
 
             $result = Mage2ProductAPIManager::updateEntity($sku,$magento2Product, $targetServer);
         }
@@ -75,15 +72,10 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @param Product\Listing $dataObjects
      * @param TargetServer $targetServer
      * @param $classname
-     * @param bool $updateProductPrices
+     * @param bool $isNew
      */
-    public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $updateProductPrices = false) {
-        parent::toEcomm($ecommObject, $dataObjects, $targetServer, $classname, $updateProductPrices);
-        
-        if(!$updateProductPrices){
-            unset($ecommObject["price"]);
-        }
-
+    public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $isNew = false) {
+        parent::toEcomm($ecommObject, $dataObjects, $targetServer, $classname, $isNew);
     }
     
     /**

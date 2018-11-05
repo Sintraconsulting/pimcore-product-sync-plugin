@@ -7,6 +7,7 @@ use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Utils\GeneralUtils;
 use SintraPimcoreBundle\Utils\TargetServerUtils;
+use Pimcore\Model\DataObject\AbstractObject;
 
 /**
  * Magento 2 Shop level logic
@@ -17,15 +18,23 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
 
     /**
      * 
-     * @param $dataObject
-     * @param $results
+     * @param Concrete $dataObject
+     * @param $result
      * @param TargetServer $targetServer
+     * @param $parentId
      */
-    protected function setSyncObject($dataObject, $results, TargetServer $targetServer) {
+    protected function setSyncObject($dataObject, $result, TargetServer $targetServer, $parentId = '') {
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
         $serverObjectInfo->setSync(true);
-        $serverObjectInfo->setSync_at($results["updatedAt"]);
-        $serverObjectInfo->setObject_id($results["id"]);
+        $serverObjectInfo->setSync_at($result["updatedAt"]);
+        
+        if($dataObject->getType() === AbstractObject::OBJECT_TYPE_OBJECT){
+            $serverObjectInfo->setObject_id($result["id"]);
+        }else{
+            $serverObjectInfo->setObject_id($parentId);
+            $serverObjectInfo->setVariant_id($result["id"]);
+        }
+        
         $dataObject->update(true);
     }
 
@@ -39,7 +48,7 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
      * @param $classname
      * @param bool $isNew
      */
-    protected function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, $classname, bool $isNew = false) {
+    public function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, $classname, bool $isNew = false) {
         /**
          * In a general approach, API calls will be referred to the main website
          */

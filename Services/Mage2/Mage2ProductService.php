@@ -7,6 +7,7 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\ApiManager\Mage2\ProductAttributesAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\ConfigurableProductLinkAPIManager;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
 
@@ -37,44 +38,60 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @return mixed|void
      */
     public function export($productId, TargetServer $targetServer) {
-        $ecommObject = array();
 
         $dataObjects = $this->getObjectsToExport($productId, "Product");
-
-        /** @var Product $dataObject */
         $dataObject = $dataObjects->current();
+
+        if($dataObject instanceof Product){
+            
+            $result = $this->createOrUpdateProduct($dataObject, $targetServer);
+            Logger::info("UPLOADED PRODUCT: ".$result->__toString());
+
+            if($dataObject->getType_id() === "configurable"){
+                $parentId = $result["id"];
+                $this->createVariantsForConfigurableProduct($dataObjects, $targetServer, $parentId);
+            }
+
+            $this->setSyncObject($dataObject, $result, $targetServer);
+        }
+    }
+
+    private function createOrUpdateProduct(Product $dataObject, TargetServer $targetServer, $isVariant = false) {
+        $ecommObject = array();
 
         $sku = $dataObject->getSku();
         $search = Mage2ProductAPIManager::searchProducts($targetServer, "sku", $sku);
 
         if ($search["totalCount"] === 0) {
             $this->toEcomm($ecommObject, $dataObject, $targetServer, $dataObject->getClassName(), true);
-            Logger::debug("MAGENTO CR PRODUCT: " . json_encode($ecommObject));
+            Logger::info("MAGENTO CR PRODUCT: " . json_encode($ecommObject));
 
-            $result = Mage2ProductAPIManager::createEntity($magento2Product, $targetServer);
+            $result = Mage2ProductAPIManager::createEntity($ecommObject, $targetServer);
         } else {
             $this->toEcomm($ecommObject, $dataObject, $targetServer, $dataObject->getClassName());
-            Logger::debug("MAGENTO UP PRODUCT: " . json_encode($ecommObject));
+            Logger::info("MAGENTO UP PRODUCT: " . json_encode($ecommObject));
 
-            $result = Mage2ProductAPIManager::updateEntity($sku,$magento2Product, $targetServer);
+            $result = Mage2ProductAPIManager::updateEntity($sku, $ecommObject, $targetServer);
         }
-        Logger::debug("UPLOADED PRODUCT: ".$result->__toString());
         
-        $this->setSyncObject($dataObject, $result, $targetServer);
+        if($isVariant){
+            $parentObject = $dataObject->getParent();
+            ConfigurableProductLinkAPIManager::addChildToProduct($parentObject->getSku(), $sku, $targetServer);
+        }
+        
+        return $result;
     }
 
-    /**
-     * Get the mapping of field to export from the server definition.
-     * For localized fields, the first valid language will be used.
-     *
-     * @param $ecommObject
-     * @param Product $dataObject
-     * @param TargetServer $targetServer
-     * @param $classname
-     * @param bool $isNew
-     */
-    public function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, $classname, bool $isNew = false) {
-        parent::toEcomm($ecommObject, $dataObject, $targetServer, $classname, $isNew);
+    private function createVariantsForConfigurableProduct(Product\Listing $dataObjects, TargetServer $targetServer, $parentId) {
+        
+        foreach ($dataObjects->getObjects() as $dataObject) {
+            if($dataObject instanceof Product && $dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT){
+                $variant = $this->createOrUpdateProduct($dataObject, $targetServer, true);
+                Logger::info("UPLOADED VARIANT: ".$variant->__toString());
+                
+                $this->setSyncObject($dataObject, $variant, $targetServer, $parentId);
+            }
+        }
     }
 
     /**
@@ -92,8 +109,8 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      */
     protected function mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null) {
 
-        $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);   
-        
+        $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
+
         // End of recursion
         if (count($fieldsDepth) == 1) {
             return $this->mapServerField($ecommObject, $fieldValue, $fieldsDepth[0]);
@@ -117,7 +134,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
             if ($dataSource->getType() === AbstractObject::OBJECT_TYPE_OBJECT) {
                 $this->extractConfigurableProductOptions($ecommObject, $apiField, $fieldMap, $language, $dataSource, $server);
-            } else {                
+            } else {
                 $this->extractCustomAttribute($ecommObject, $apiField, $fieldValue);
             }
 
@@ -155,7 +172,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
                 );
             }
 
-            $ecommObject["configurable_product_options"][] = $productOption;
+            $ecommObject["extension_attributes"]["configurable_product_options"][] = $productOption;
         }
     }
 

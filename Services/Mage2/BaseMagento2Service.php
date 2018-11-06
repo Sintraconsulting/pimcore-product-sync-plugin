@@ -17,11 +17,12 @@ use Pimcore\Model\DataObject\AbstractObject;
 abstract class BaseMagento2Service extends BaseEcommerceService {
 
     /**
+     * Update synchronization info for an object
      * 
-     * @param Concrete $dataObject
-     * @param $result
-     * @param TargetServer $targetServer
-     * @param $parentId
+     * @param Concrete $dataObject the object to update
+     * @param $result the result of the API call
+     * @param TargetServer $targetServer the server in which the product was synchronized
+     * @param $parentId (optional) the partent id in case of object variant
      */
     protected function setSyncObject($dataObject, $result, TargetServer $targetServer, $parentId = '') {
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
@@ -41,6 +42,11 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
     /**
      * Get the mapping of field to export from the server definition.
      * For localized fields, the first valid language will be used.
+     * 
+     * In order to perform the recursion, the fieldname is expressed
+     * dividing the sublevels of the API object by the "." (dot) character.
+     * 
+     * e.g. custom_attributes.description
      *
      * @param $ecommObject
      * @param Concrete $dataObject
@@ -63,6 +69,7 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
             //get the value of each object field
             $apiField = $fieldMap->getServerField();
 
+            //get the object tree exploding field name by the level separator
             $fieldsDepth = explode('.', $apiField);
             $ecommObject = $this->mapServerMultipleField($ecommObject, $fieldMap, $fieldsDepth, $languages[0], $dataObject, $targetServer);
         }
@@ -72,11 +79,16 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
 
         $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
 
-        // End of recursion
+        /**
+         *  End of recursion
+         */
         if (count($fieldsDepth) == 1) {
             return $this->mapServerField($ecommObject, $fieldValue, $fieldsDepth[0]);
         }
 
+        /**
+         * Start recursion for a sublevel
+         */
         $parentDepth = array_shift($fieldsDepth);
         $apiField = $fieldsDepth[0];
 
@@ -90,13 +102,17 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
 
         /**
          * Recursion level > 1
-         * For now, on magento2 there is no nested field mapping except custom_attributes
-         * It should never reach this point with magento2.
-         * TODO: image implementation should be developed in the future here for field mapping
          */
         return $this->mapServerMultipleField($ecommObject[$parentDepth], $fieldMap, $fieldsDepth, $language, $dataSource, $server);
     }
 
+    /**
+     * Add a custom attribute to the API object
+     * 
+     * @param array $ecommObject the API object
+     * @param type $apiField the field name
+     * @param type $fieldValue the field value
+     */
     protected function extractCustomAttribute(&$ecommObject, $apiField, $fieldValue) {
         $customValue = [
             'attribute_code' => $apiField,

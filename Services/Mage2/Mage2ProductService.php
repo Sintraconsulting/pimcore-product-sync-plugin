@@ -33,6 +33,13 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
     }
 
     /**
+     * Given a product id, retrieve the product and its variants.
+     * Create or update the product in a specific Magento2 server and
+     * attach variants to it in case of configurable product.
+     * 
+     * If all the previous operations are completed succesfully,
+     * update product's synchronization info.
+     * 
      * @param $productId
      * @param TargetServer $targetServer
      * @return mixed|void
@@ -56,6 +63,16 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         }
     }
 
+    /**
+     * Check the existance of the product in the Magento2 server by the sku field.
+     * Create or update the product depending on the previous check.
+     * If the product is a variant, attach it to the configurable object.
+     * 
+     * @param Product $dataObject the product to synchronize
+     * @param TargetServer $targetServer the server in which the product must be synchronize
+     * @param bool $isVariant flag that specify if the product is a variant or not
+     * @return mixed the API result
+     */
     private function createOrUpdateProduct(Product $dataObject, TargetServer $targetServer, $isVariant = false) {
         $ecommObject = array();
 
@@ -82,6 +99,13 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         return $result;
     }
 
+    /**
+     * In case of configurable product, create or update the product variants
+     * 
+     * @param \Pimcore\Model\DataObject\Product\Listing $dataObjects listing of product and its variants
+     * @param TargetServer $targetServer the server in which variants must be synchronized
+     * @param type $parentId the configurable product id on the server
+     */
     private function createVariantsForConfigurableProduct(Product\Listing $dataObjects, TargetServer $targetServer, $parentId) {
         
         foreach ($dataObjects->getObjects() as $dataObject) {
@@ -129,6 +153,8 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
         /**
          * End of recursion with configurable_product_options
+         * For the configurable product, we must create the configurable options.
+         * For a single variant, we should pass the configuration as a custom attribute.
          */
         if ($parentDepth == 'configurable_product_options') {
 
@@ -148,6 +174,19 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         return $ecommObject;
     }
 
+    /**
+     * Get the attribute id given the attribute name.
+     * 
+     * Then, get all the variants for the configurable product
+     * and get the configuration for each of them.
+     * 
+     * @param array $ecommObject the API object
+     * @param String $apiField the attribute name
+     * @param \Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping $fieldMap the field mapping 
+     * @param String $language the selected language
+     * @param Product $dataSource the configurable product
+     * @param TargetServer $server the server in which the product must be synchronized.
+     */
     private function extractConfigurableProductOptions(&$ecommObject, $apiField, $fieldMap, $language, Product $dataSource, TargetServer $server) {
         $productAttribute = ProductAttributesAPIManager::getEntityByKey($apiField, $server);
 

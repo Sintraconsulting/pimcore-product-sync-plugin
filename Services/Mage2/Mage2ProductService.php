@@ -10,6 +10,7 @@ use SintraPimcoreBundle\ApiManager\Mage2\ProductAttributesAPIManager;
 use SintraPimcoreBundle\ApiManager\Mage2\ConfigurableProductLinkAPIManager;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
+use SintraPimcoreBundle\Utils\GeneralUtils;
 
 class Mage2ProductService extends BaseMagento2Service implements InterfaceService {
 
@@ -106,10 +107,11 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @param TargetServer $targetServer the server in which variants must be synchronized
      * @param type $parentId the configurable product id on the server
      */
-    private function createVariantsForConfigurableProduct(Product\Listing $dataObjects, TargetServer $targetServer, $parentId) {
-        
+    private function createVariantsForConfigurableProduct(Product\Listing $dataObjects, TargetServer $targetServer, $parentId) {   
         foreach ($dataObjects->getObjects() as $dataObject) {
-            if($dataObject instanceof Product && $dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT){
+            $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
+            
+            if($dataObject instanceof Product && $dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT && $serverObjectInfo->getExport() && $serverObjectInfo->getComplete()){
                 $variant = $this->createOrUpdateProduct($dataObject, $targetServer, true);
                 Logger::info("UPLOADED VARIANT: ".$variant->__toString());
                 

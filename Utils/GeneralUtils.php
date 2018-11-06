@@ -4,6 +4,7 @@ namespace SintraPimcoreBundle\Utils;
 
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 
 /**
  * Target Server Utils

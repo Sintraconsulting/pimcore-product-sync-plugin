@@ -64,12 +64,18 @@ class CommonListener extends ObjectListener implements InterfaceListener{
              * For each server field changes evaluation is done separately
              * If at least a field to export in the server has changed,
              * mark the object as "to sync" for that server.
+             * 
+             * If at least one required field for the server is empty
+             * mark the object as not completed for that server
              */
             /** @var Fieldcollection\Data\ServerObjectInfo $exportServer */
             foreach ($exportServers as $exportServer) {
                 if($exportServer->getExport() && ($oldDataObject == null || EventListenerUtils::checkServerUpdate($exportServer, $dataObject, $oldDataObject))){
                     $exportServer->setSync(false);
                 }
+                
+                $complete = EventListenerUtils::checkObjectCompleted($exportServer, $dataObject);
+                $exportServer->setComplete($complete);
             }
 
             $dataObject->setExportServers($exportServers);

@@ -120,7 +120,7 @@ abstract class BaseEcommerceService extends SingletonService{
                 $relatedFieldValues[] = self::getField($relatedField, $language, $relatedObject);
             }
 
-            return implode(", ", $relatedFieldValues);
+            return $relatedFieldValues;
         }else{
             return $this->getField($fieldname, $language, $dataObject);
         }

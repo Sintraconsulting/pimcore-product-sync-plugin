@@ -2,11 +2,13 @@
 
 namespace SintraPimcoreBundle\Services\Mage2;
 
+use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\AbstractObject;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\ApiManager\Mage2\ProductAttributesAPIManager;
+use SintraPimcoreBundle\ApiManager\Mage2\ProductAttributeMediaGalleryAPIManager;
 use SintraPimcoreBundle\ApiManager\Mage2\ConfigurableProductLinkAPIManager;
 use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
@@ -50,12 +52,12 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         $dataObjects = $this->getObjectsToExport($productId, "Product");
         $dataObject = $dataObjects->current();
 
-        if($dataObject instanceof Product){
-            
-            $result = $this->createOrUpdateProduct($dataObject, $targetServer);
-            Logger::info("UPLOADED PRODUCT: ".$result->__toString());
+        if ($dataObject instanceof Product) {
 
-            if($dataObject->getType_id() === "configurable"){
+            $result = $this->createOrUpdateProduct($dataObject, $targetServer);
+            Logger::info("UPLOADED PRODUCT: " . $result->__toString());
+
+            if ($dataObject->getType_id() === "configurable") {
                 $parentId = $result["id"];
                 $this->createVariantsForConfigurableProduct($dataObjects, $targetServer, $parentId);
             }
@@ -91,12 +93,14 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
             $result = Mage2ProductAPIManager::updateEntity($sku, $ecommObject, $targetServer);
         }
-        
-        if($isVariant){
+
+        $this->manageProductImages($dataObject, $targetServer);
+
+        if ($isVariant) {
             $parentObject = $dataObject->getParent();
             ConfigurableProductLinkAPIManager::addChildToProduct($parentObject->getSku(), $sku, $targetServer);
         }
-        
+
         return $result;
     }
 
@@ -107,14 +111,14 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @param TargetServer $targetServer the server in which variants must be synchronized
      * @param type $parentId the configurable product id on the server
      */
-    private function createVariantsForConfigurableProduct(Product\Listing $dataObjects, TargetServer $targetServer, $parentId) {   
+    private function createVariantsForConfigurableProduct(Product\Listing $dataObjects, TargetServer $targetServer, $parentId) {
         foreach ($dataObjects->getObjects() as $dataObject) {
             $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
-            
-            if($dataObject instanceof Product && $dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT && $serverObjectInfo->getExport() && $serverObjectInfo->getComplete()){
+
+            if ($dataObject instanceof Product && $dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT && $serverObjectInfo->getExport() && $serverObjectInfo->getComplete()) {
                 $variant = $this->createOrUpdateProduct($dataObject, $targetServer, true);
-                Logger::info("UPLOADED VARIANT: ".$variant->__toString());
-                
+                Logger::info("UPLOADED VARIANT: " . $variant->__toString());
+
                 $this->setSyncObject($dataObject, $variant, $targetServer, $parentId);
             }
         }
@@ -215,6 +219,102 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
             $ecommObject["extension_attributes"]["configurable_product_options"][] = $productOption;
         }
+    }
+
+    private function manageProductImages(Product $dataObject, TargetServer $targetServer) {
+        $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
+
+        if (!$serverObjectInfo->getImages_sync()) {
+            $imagesData = array();
+
+            $savedImagesData = json_decode($serverObjectInfo->getImages_json(), true);
+            $imagesInfo = GeneralUtils::getObjectImagesInfo($dataObject);
+
+            foreach ($imagesInfo as $position => $imageInfo) {
+                $image = $imageInfo->getImage();
+
+                $index = array_search($image->getId(), array_column($savedImagesData, "id"));
+
+                if (!$index) {
+                    $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
+                } else {
+                    $savedImage = $savedImagesData[$index];
+                    $entryId = $savedImage["server_id"];
+                    $serverImage = ProductAttributeMediaGalleryAPIManager::getProductEntry($dataObject->getSku(), $entryId, $targetServer);
+                    if (!$serverImage) {
+                        $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
+                    } else {
+                        if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
+                            $this->updateImageOnServer($imagesData, $dataObject, $image, $position, $entryId, $targetServer);
+                        }
+                    }
+
+                    unset($savedImagesData[$index]);
+                }
+                
+                $this->cacheImageData($imagesData, $image, $position, $result);
+            }
+            
+            foreach ($savedImagesData as $savedImage) {
+                $entryId = $savedImage["server_id"];
+                ProductAttributeMediaGalleryAPIManager::deleteProductEntry($dataObject->getSku(), $entryId, $targetServer);
+            }
+
+            $this->syncImagesData($dataObject, $targetServer, $imagesData);
+        }
+    }
+
+    private function createEntryAPIObject(Image $image, $position) {
+        $title = $image->getMetadata("title");
+        $imageBinaryData = base64_encode(file_get_contents($image->getFileSystemPath()));
+
+        $entry = array(
+            "media_type" => "image",
+            "disabled" => false,
+            "position" => $position,
+            "label" => $title !== null && !empty($title) ? $title : $image->getFilename(),
+            "types" => $position === 0 ? array("swatch_image", "image", "small_image", "thumbnail") : array(),
+            "content" => array(
+                "type" => $image->getMimetype(),
+                "name" => $image->getFilename(),
+                "base64_encoded_data" => $imageBinaryData
+            )
+        );
+
+        return $entry;
+    }
+
+    private function createImageOnServer(&$imagesData, Product $dataObject, Image $image, $position, TargetServer $targetServer) {
+        $entry = $this->createEntryAPIObject($image, $position);
+        $result = ProductAttributeMediaGalleryAPIManager::addEntryToProduct($dataObject->getSku(), $entry, $targetServer);
+    }
+
+    private function updateImageOnServer(&$imagesData, Product $dataObject, Image $image, $position, $entryId, TargetServer $targetServer) {
+        $entry = $this->createEntryAPIObject($image, $position);
+        $entry["id"] = $entryId;
+        $result = ProductAttributeMediaGalleryAPIManager::updateProductEntry($dataObject->getSku(), $entryId, $entry, $targetServer);
+    }
+
+    private function cacheImageData(&$imagesData, Image $image, $position, $result) {
+        if (!is_array($result) || !array_key_exists("ApiException", $result)) {
+            $imagesData[] = array(
+                "id" => $image->getId(),
+                "server_id" => $result,
+                "position" => $position,
+                "hash" => $image->getFileSize()
+            );
+        } else {
+            throw new \Exception("ERROR ON IMAGE UPLOAD - IMAGE: " . $result["ApiException"]);
+        }
+    }
+
+    private function syncImagesData(Product $dataObject, TargetServer $targetServer, array $imagesData) {
+        $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
+
+        $serverObjectInfo->setImages_sync(true);
+        $serverObjectInfo->setImages_json(json_encode($imagesData));
+
+        $dataObject->update(true);
     }
 
 }

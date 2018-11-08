@@ -8,6 +8,7 @@
 
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
+use SpringImport\Swagger\Magento2\Client\ApiException;
 use Pimcore\Model\DataObject\TargetServer;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductAttributeMediaGalleryManagementV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body29;
@@ -49,11 +50,11 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         $productAttributeMediaGalleryInstance = new CatalogProductAttributeMediaGalleryManagementV1Api($apiClient);
         
         try {
-            $result = $productAttributeMediaGalleryInstance->catalogProductAttributeMediaGalleryManagementV1CreatePost($sku, new Body29(array("childSku" => $entry)));
+            $result = $productAttributeMediaGalleryInstance->catalogProductAttributeMediaGalleryManagementV1CreatePost($sku, new Body29(array("entry" => $entry)));
             return $result;
-        } catch (\Exception $e) {
-            Logger::err($e->getMessage());
-            return false;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            return array("ApiException" => $e->getResponseBody()->message);
         }
     }
     
@@ -63,11 +64,11 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         $productAttributeMediaGalleryInstance = new CatalogProductAttributeMediaGalleryManagementV1Api($apiClient);
         
         try {
-            $result = $productAttributeMediaGalleryInstance->catalogProductAttributeMediaGalleryManagementV1UpdatePut($sku, $entryId, new Body29(array("childSku" => $entry)));
+            $result = $productAttributeMediaGalleryInstance->catalogProductAttributeMediaGalleryManagementV1UpdatePut($sku, $entryId, new Body29(array("entry" => $entry)));
             return $result;
-        } catch (\Exception $e) {
-            Logger::err($e->getMessage());
-            return false;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            return array("ApiException" => $e->getResponseBody()->message);
         }
     }
     

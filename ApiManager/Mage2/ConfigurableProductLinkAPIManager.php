@@ -8,7 +8,6 @@
 
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
-use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use Pimcore\Model\DataObject\TargetServer;
 use SpringImport\Swagger\Magento2\Client\Api\ConfigurableProductLinkManagementV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body108;
@@ -19,7 +18,7 @@ use Pimcore\Logger;
  *
  * @author Marco Guiducci
  */
-class ConfigurableProductLinkAPIManager extends BaseMage2APIManager implements APIManagerInterface{
+class ConfigurableProductLinkAPIManager extends BaseMage2APIManager{
     
     public static function addChildToProduct($sku, $childSku, TargetServer $server){
         $apiClient = self::getApiInstance($server);
@@ -33,22 +32,6 @@ class ConfigurableProductLinkAPIManager extends BaseMage2APIManager implements A
             Logger::err($e->getMessage());
             return false;
         }
-    }
-    
-    public static function createEntity($entity, TargetServer $server) {
-        throw new \Exception("ERROR - Method 'createEntity' not implemented in 'ConfigurableProductLinkAPIManager'");        
-    }
-
-    public static function deleteEntity($entityKey, TargetServer $server) {
-        throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ConfigurableProductLinkAPIManager'");
-    }
-
-    public static function getEntityByKey($entityKey, TargetServer $server) {
-        throw new \Exception("ERROR - Method 'getEntityByKey' not implemented in 'ConfigurableProductLinkAPIManager'");
-    }
-
-    public static function updateEntity($entityKey, $entity, TargetServer $server) {
-        throw new \Exception("ERROR - Method 'updateEntity' not implemented in 'ConfigurableProductLinkAPIManager'");
     }
 
 }

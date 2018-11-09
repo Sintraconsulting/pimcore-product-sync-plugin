@@ -252,7 +252,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             $imagesInfo = GeneralUtils::getObjectImagesInfo($dataObject);
 
             try {
-                $this->synchronizeImagesOnServer($dataObject, $imagesInfo, $imagesData, $imagesData, $targetServer);
+                $this->synchronizeImagesOnServer($dataObject, $imagesInfo, $savedImagesData, $imagesData, $targetServer);
             } catch (\Exception $e) {
                 $this->syncImagesData($dataObject, $targetServer, array_merge($imagesData, $savedImagesData), false);
                 throw $e;
@@ -351,7 +351,12 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
     private function createImageOnServer(array &$imagesData, Product $dataObject, Image $image, $position, TargetServer $targetServer) {
         $entry = $this->createEntryAPIObject($image, $position);
         $result = ProductAttributeMediaGalleryAPIManager::addEntryToProduct($dataObject->getSku(), $entry, $targetServer);
-        $this->cacheImageData($imagesData, $image, $position, $result);
+        
+        if(!is_array($result) || !array_key_exists("ApiException", $result)){
+            $this->cacheImageData($imagesData, $image, $position, $result);
+        } else {
+            throw new \Exception("ERROR ON IMAGE UPLOAD - IMAGE: " . $result["ApiException"]);
+        }
     }
 
     /**
@@ -369,7 +374,12 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         $entry = $this->createEntryAPIObject($image, $position);
         $entry["id"] = $entryId;
         $result = ProductAttributeMediaGalleryAPIManager::updateProductEntry($dataObject->getSku(), $entryId, $entry, $targetServer);
-        $this->cacheImageData($imagesData, $image, $position, $result);
+        
+        if(!is_array($result) || !array_key_exists("ApiException", $result)){
+            $this->cacheImageData($imagesData, $image, $position, $entryId);
+        } else {
+            throw new \Exception("ERROR ON IMAGE UPLOAD - IMAGE: " . $result["ApiException"]);
+        }
     }
 
     /**
@@ -406,20 +416,16 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @param array $imagesData current images informations
      * @param Image $image the current image
      * @param int $position position of the current image on Pimcore
-     * @param mixed $result the API call results.
+     * @param int $entryId The image Id on the server
      * @throws \Exception
      */
-    private function cacheImageData(array &$imagesData, Image $image, $position, $result) {
-        if (!is_array($result) || !array_key_exists("ApiException", $result)) {
-            $imagesData[] = array(
-                "id" => $image->getId(),
-                "server_id" => $result,
-                "position" => $position,
-                "hash" => $image->getFileSize()
-            );
-        } else {
-            throw new \Exception("ERROR ON IMAGE UPLOAD - IMAGE: " . $result["ApiException"]);
-        }
+    private function cacheImageData(array &$imagesData, Image $image, $position, $entryId) {
+        $imagesData[] = array(
+            "id" => $image->getId(),
+            "server_id" => $entryId,
+            "position" => $position,
+            "hash" => $image->getFileSize()
+        );
     }
 
     /**

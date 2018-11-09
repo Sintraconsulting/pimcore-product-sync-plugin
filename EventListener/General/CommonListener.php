@@ -96,6 +96,7 @@ class CommonListener extends ObjectListener implements InterfaceListener {
 
         if ($exportServer->getExport() && EventListenerUtils::checkImagesChanged($exportServer, $dataObject)) {
             $exportServer->setImages_sync(false);
+            $exportServer->setSync(false);
         }
 
         $complete = EventListenerUtils::checkObjectCompleted($exportServer, $dataObject);

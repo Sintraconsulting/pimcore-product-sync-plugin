@@ -107,7 +107,7 @@ class EventListenerUtils {
 
             foreach ($fieldsMap as $fieldMap) {
                 $field = $fieldMap->getObjectField();
-                
+
                 if ($fieldMap->getRequired() && self::checkFieldEmpty($dataObject, $field, $languages)) {
                     $complete = false;
                     break;
@@ -116,6 +116,46 @@ class EventListenerUtils {
         }
 
         return $complete;
+    }
+
+    /**
+     * Check if all fields required for the server instance are not empty
+     * If at least one required field is empty, mark the product as not complete
+     * 
+     * @param $exportServer the server instance
+     * @param Concrete $dataObject the object to update
+     * @return boolean
+     */
+    public static function checkImagesChanged($exportServer, $dataObject) {
+        
+        $imagesJson = $exportServer->getImages_json();
+        $savedImagesData = ($imagesJson != null && !empty($imagesJson)) ? json_decode($imagesJson, true) : array();
+
+        $imagesInfo = GeneralUtils::getObjectImagesInfo($dataObject);
+
+        if (sizeof($savedImagesData) != sizeof($imagesInfo)) {
+            return true;
+        }
+
+        $changed = false;
+        foreach ($imagesInfo as $position => $imageInfo) {
+            $image = $imageInfo->getImage();
+
+            $index = array_search($image->getId(), array_column($savedImagesData, "id"));
+
+            if ($index === false) {
+                $changed = true;
+                break;
+            }
+
+            $savedImage = $savedImagesData[$index];
+            if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
+                $changed = true;
+                break;
+            }
+        }
+
+        return $changed;
     }
 
     /**
@@ -267,30 +307,30 @@ class EventListenerUtils {
 
         return $empty;
     }
-    
-    private static function isFieldEmpty(Concrete $dataObject, $fieldname, $lang = null){
+
+    private static function isFieldEmpty(Concrete $dataObject, $fieldname, $lang = null) {
         $methodName = "get" . ucfirst($fieldname);
-        
+
         $productReflection = new \ReflectionObject($dataObject);
         $fieldValueMethod = $productReflection->getMethod($methodName);
-        
-        if($lang != null){
+
+        if ($lang != null) {
             $fieldValue = $fieldValueMethod->invoke($dataObject, $lang);
-        }else{
+        } else {
             $fieldValue = $fieldValueMethod->invoke($dataObject);
         }
-        
+
         if ($fieldValue === null || $fieldValue === "") {
             $classDefinition = ClassDefinition::getByName($dataObject->getClassName());
-            
-            if($classDefinition->getAllowInherit()){
+
+            if ($classDefinition->getAllowInherit()) {
                 $parentValue = $dataObject->getValueFromParent($fieldname);
                 return ($parentValue === null || $parentValue === "");
             }
-            
+
             return true;
         }
-        
+
         return false;
     }
 

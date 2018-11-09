@@ -227,40 +227,56 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         if (!$serverObjectInfo->getImages_sync()) {
             $imagesData = array();
 
-            $savedImagesData = json_decode($serverObjectInfo->getImages_json(), true);
+            $imagesJson = $serverObjectInfo->getImages_json();
+            $savedImagesData = ($imagesJson != null && !empty($imagesJson)) ? json_decode($imagesJson, true) : array();
+
             $imagesInfo = GeneralUtils::getObjectImagesInfo($dataObject);
 
-            foreach ($imagesInfo as $position => $imageInfo) {
-                $image = $imageInfo->getImage();
+            try {
+                foreach ($imagesInfo as $position => $imageInfo) {
+                    $image = $imageInfo->getImage();
 
-                $index = array_search($image->getId(), array_column($savedImagesData, "id"));
+                    $index = array_search($image->getId(), array_column($savedImagesData, "id"));
+                    Logger::info("INDEX: " . $index);
 
-                if (!$index) {
-                    $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
-                } else {
-                    $savedImage = $savedImagesData[$index];
-                    $entryId = $savedImage["server_id"];
-                    $serverImage = ProductAttributeMediaGalleryAPIManager::getProductEntry($dataObject->getSku(), $entryId, $targetServer);
-                    if (!$serverImage) {
+                    if ($index === false) {
+                        Logger::info("Immagine nuova. Creo Immagine");
                         $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
                     } else {
-                        if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
-                            $this->updateImageOnServer($imagesData, $dataObject, $image, $position, $entryId, $targetServer);
+                        $savedImage = $savedImagesData[$index];
+                        Logger::info("SAVED IMAGE: " . print_r($savedImage, true));
+
+                        $entryId = $savedImage["server_id"];
+                        $serverImage = ProductAttributeMediaGalleryAPIManager::getProductEntry($dataObject->getSku(), $entryId, $targetServer);
+                        if (!$serverImage) {
+                            Logger::info("Immagine $entryId rimossa da Magento. Creo Immagine");
+                            $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
+                        } else {
+                            if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
+                                Logger::info("Immagine $entryId modificata. Aggiorno Immagine Immagine");
+                                $this->updateImageOnServer($imagesData, $dataObject, $image, $position, $entryId, $targetServer);
+                            } else {
+                                $this->cacheImageData($imagesData, $image, $position, $entryId);
+                                Logger::info("Immagine $entryId inalterata. Skippo immagine");
+                            }
                         }
+
+                        array_splice($savedImagesData, $index, 1);
                     }
-
-                    unset($savedImagesData[$index]);
                 }
-                
-                $this->cacheImageData($imagesData, $image, $position, $result);
-            }
-            
-            foreach ($savedImagesData as $savedImage) {
-                $entryId = $savedImage["server_id"];
-                ProductAttributeMediaGalleryAPIManager::deleteProductEntry($dataObject->getSku(), $entryId, $targetServer);
-            }
 
-            $this->syncImagesData($dataObject, $targetServer, $imagesData);
+                foreach ($savedImagesData as $savedImage) {
+                    $entryId = $savedImage["server_id"];
+                    Logger::info("Immagine $entryId rimossa da Pimcore. Rimuovo Immagine");
+                    ProductAttributeMediaGalleryAPIManager::deleteProductEntry($dataObject->getSku(), $entryId, $targetServer);
+                }
+
+                $this->syncImagesData($dataObject, $targetServer, $imagesData);
+                
+            } catch (\Exception $e) {
+                $this->syncImagesData($dataObject, $targetServer, array_merge($imagesData,$savedImagesData), false);
+                throw $e;
+            }
         }
     }
 
@@ -287,12 +303,14 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
     private function createImageOnServer(&$imagesData, Product $dataObject, Image $image, $position, TargetServer $targetServer) {
         $entry = $this->createEntryAPIObject($image, $position);
         $result = ProductAttributeMediaGalleryAPIManager::addEntryToProduct($dataObject->getSku(), $entry, $targetServer);
+        $this->cacheImageData($imagesData, $image, $position, $result);
     }
 
     private function updateImageOnServer(&$imagesData, Product $dataObject, Image $image, $position, $entryId, TargetServer $targetServer) {
         $entry = $this->createEntryAPIObject($image, $position);
         $entry["id"] = $entryId;
         $result = ProductAttributeMediaGalleryAPIManager::updateProductEntry($dataObject->getSku(), $entryId, $entry, $targetServer);
+        $this->cacheImageData($imagesData, $image, $position, $result);
     }
 
     private function cacheImageData(&$imagesData, Image $image, $position, $result) {
@@ -308,10 +326,10 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         }
     }
 
-    private function syncImagesData(Product $dataObject, TargetServer $targetServer, array $imagesData) {
+    private function syncImagesData(Product $dataObject, TargetServer $targetServer, array $imagesData, $success = true) {
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 
-        $serverObjectInfo->setImages_sync(true);
+        $serverObjectInfo->setImages_sync($success);
         $serverObjectInfo->setImages_json(json_encode($imagesData));
 
         $dataObject->update(true);

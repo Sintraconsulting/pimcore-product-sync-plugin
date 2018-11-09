@@ -6,6 +6,7 @@ use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\AbstractObject;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
 use SintraPimcoreBundle\ApiManager\Mage2\Mage2ProductAPIManager;
 use SintraPimcoreBundle\ApiManager\Mage2\ProductAttributesAPIManager;
 use SintraPimcoreBundle\ApiManager\Mage2\ProductAttributeMediaGalleryAPIManager;
@@ -69,10 +70,13 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
     /**
      * Check the existance of the product in the Magento2 server by the sku field.
      * Create or update the product depending on the previous check.
+     * 
+     * After product creation, attach images to the product.
+     * 
      * If the product is a variant, attach it to the configurable object.
      * 
      * @param Product $dataObject the product to synchronize
-     * @param TargetServer $targetServer the server in which the product must be synchronize
+     * @param TargetServer $targetServer the server in which the product must be synchronized
      * @param bool $isVariant flag that specify if the product is a variant or not
      * @return mixed the API result
      */
@@ -94,7 +98,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             $result = Mage2ProductAPIManager::updateEntity($sku, $ecommObject, $targetServer);
         }
 
-        $this->manageProductImages($dataObject, $targetServer);
+        $this->synchronizeProductImages($dataObject, $targetServer);
 
         if ($isVariant) {
             $parentObject = $dataObject->getParent();
@@ -221,7 +225,22 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         }
     }
 
-    private function manageProductImages(Product $dataObject, TargetServer $targetServer) {
+    /**
+     * If product images has changed, synchronize them in the server.
+     * In order to check if a single image is unchanged or if it must be created, updated or deleted 
+     * get the previuolsy stored image informations and compare them with current images.
+     * 
+     * If an error occours on images synchronization, store the correctly synchronized images informations
+     * and the previous ones that couldn't be processed because of the error.
+     * 
+     * So that, before every synchronization flow start, stored images informations
+     * will match the physically existent images on the server.
+     * 
+     * @param Product $dataObject the product to synchronize
+     * @param TargetServer $targetServer the server in which the product must be synchronized
+     * @throws \Exception
+     */
+    private function synchronizeProductImages(Product $dataObject, TargetServer $targetServer) {
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 
         if (!$serverObjectInfo->getImages_sync()) {
@@ -233,53 +252,133 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             $imagesInfo = GeneralUtils::getObjectImagesInfo($dataObject);
 
             try {
-                foreach ($imagesInfo as $position => $imageInfo) {
-                    $image = $imageInfo->getImage();
-
-                    $index = array_search($image->getId(), array_column($savedImagesData, "id"));
-                    Logger::info("INDEX: " . $index);
-
-                    if ($index === false) {
-                        Logger::info("Immagine nuova. Creo Immagine");
-                        $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
-                    } else {
-                        $savedImage = $savedImagesData[$index];
-                        Logger::info("SAVED IMAGE: " . print_r($savedImage, true));
-
-                        $entryId = $savedImage["server_id"];
-                        $serverImage = ProductAttributeMediaGalleryAPIManager::getProductEntry($dataObject->getSku(), $entryId, $targetServer);
-                        if (!$serverImage) {
-                            Logger::info("Immagine $entryId rimossa da Magento. Creo Immagine");
-                            $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
-                        } else {
-                            if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
-                                Logger::info("Immagine $entryId modificata. Aggiorno Immagine Immagine");
-                                $this->updateImageOnServer($imagesData, $dataObject, $image, $position, $entryId, $targetServer);
-                            } else {
-                                $this->cacheImageData($imagesData, $image, $position, $entryId);
-                                Logger::info("Immagine $entryId inalterata. Skippo immagine");
-                            }
-                        }
-
-                        array_splice($savedImagesData, $index, 1);
-                    }
-                }
-
-                foreach ($savedImagesData as $savedImage) {
-                    $entryId = $savedImage["server_id"];
-                    Logger::info("Immagine $entryId rimossa da Pimcore. Rimuovo Immagine");
-                    ProductAttributeMediaGalleryAPIManager::deleteProductEntry($dataObject->getSku(), $entryId, $targetServer);
-                }
-
-                $this->syncImagesData($dataObject, $targetServer, $imagesData);
-                
+                $this->synchronizeImagesOnServer($dataObject, $imagesInfo, $imagesData, $imagesData, $targetServer);
             } catch (\Exception $e) {
-                $this->syncImagesData($dataObject, $targetServer, array_merge($imagesData,$savedImagesData), false);
+                $this->syncImagesData($dataObject, $targetServer, array_merge($imagesData, $savedImagesData), false);
                 throw $e;
             }
         }
     }
 
+    /**
+     * Try to synchronize every product image on Pimcore.
+     * Then, if previously stored images informations don't match with any of the curren images
+     * delete them from the server.
+     * 
+     * If all these operations end succesfully, store new images informations
+     * and mark images as synchronized for the product
+     * 
+     * @param Product $dataObject the product to synchronize
+     * @param ImageInfo[] $imagesInfo product images on Pimcore
+     * @param array $savedImagesData previously stored images informations
+     * @param array $imagesData current images informations
+     * @param TargetServer $targetServer the server in which the product must be synchronized
+     */
+    private function synchronizeImagesOnServer(Product $dataObject, $imagesInfo, array &$savedImagesData, array &$imagesData, TargetServer $targetServer) {
+        foreach ($imagesInfo as $position => $imageInfo) {
+            $this->synchronizeImage($dataObject, $imageInfo, $savedImagesData, $imagesData, $position, $targetServer);
+        }
+
+        foreach ($savedImagesData as $savedImage) {
+            $entryId = $savedImage["server_id"];
+            Logger::info("Immagine $entryId rimossa da Pimcore. Rimuovo Immagine");
+            ProductAttributeMediaGalleryAPIManager::deleteProductEntry($dataObject->getSku(), $entryId, $targetServer);
+        }
+
+        $this->syncImagesData($dataObject, $targetServer, $imagesData);
+    }
+
+    /**
+     * Search for current image id in the previously stored images information array.
+     * 
+     * If the image is not founded, it means that is new and must be created on the server.
+     * Else, search for the image on the server by image id.
+     * 
+     * If the image is not present anymore on the server, it means that it was deleted manually and must be re-created.
+     * Else, check if the image has changed and must be updated, of it's unchanged.
+     * 
+     * if the synchronization ends succesfully, 
+     * remove image reference from the previously stored images informations.
+     * 
+     * @param Product $dataObject the product to synchronize
+     * @param ImageInfo $imageInfo product image on Pimcore
+     * @param array $savedImagesData previously stored images informations
+     * @param array $imagesData current images informations
+     * @param int $position position of the image on Pimcore
+     * @param TargetServer $targetServer the server in which the product must be synchronized
+     */
+    private function synchronizeImage(Product $dataObject, ImageInfo $imageInfo, array &$savedImagesData, array &$imagesData, $position, TargetServer $targetServer) {
+        $image = $imageInfo->getImage();
+
+        $index = array_search($image->getId(), array_column($savedImagesData, "id"));
+
+        if ($index === false) {
+            Logger::info("New Image. Create it on the Server");
+            $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
+        } else {
+            $savedImage = $savedImagesData[$index];
+            $entryId = $savedImage["server_id"];
+            
+            $imageExists = ProductAttributeMediaGalleryAPIManager::getProductEntry($dataObject->getSku(), $entryId, $targetServer);
+            
+            if (!$imageExists) {
+                Logger::info("Image with Id $entryId removed from Server. Re-Create it on the Server");
+                $this->createImageOnServer($imagesData, $dataObject, $image, $position, $targetServer);
+            } else {
+                if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
+                    Logger::info("Image with Id $entryId has changed. Update Image on the Server");
+                    $this->updateImageOnServer($imagesData, $dataObject, $image, $position, $entryId, $targetServer);
+                } else {
+                    Logger::info("Image with Id $entryId has not changed. Skip Image");
+                    $this->cacheImageData($imagesData, $image, $position, $entryId);
+                }
+            }
+
+            array_splice($savedImagesData, $index, 1);
+        }
+    }
+
+    /**
+     * Create an image on the server.
+     * If the operation ends succesfully, store image informations
+     * 
+     * @param array $imagesData current images informations
+     * @param Product $dataObject the product to synchronize
+     * @param Image $image the current image
+     * @param int $position position of the current image on Pimcore
+     * @param TargetServer $targetServer the server in which the product must be synchronized
+     */
+    private function createImageOnServer(array &$imagesData, Product $dataObject, Image $image, $position, TargetServer $targetServer) {
+        $entry = $this->createEntryAPIObject($image, $position);
+        $result = ProductAttributeMediaGalleryAPIManager::addEntryToProduct($dataObject->getSku(), $entry, $targetServer);
+        $this->cacheImageData($imagesData, $image, $position, $result);
+    }
+
+    /**
+     * Update an image on the server.
+     * If the operation ends succesfully, store image informations
+     * 
+     * @param array $imagesData current images informations
+     * @param Product $dataObject the product to synchronize
+     * @param Image $image the current image
+     * @param int $position position of the current image on Pimcore
+     * @param int $entryId The image Id on the server
+     * @param TargetServer $targetServer the server in which the product must be synchronized
+     */
+    private function updateImageOnServer(array &$imagesData, Product $dataObject, Image $image, $position, $entryId, TargetServer $targetServer) {
+        $entry = $this->createEntryAPIObject($image, $position);
+        $entry["id"] = $entryId;
+        $result = ProductAttributeMediaGalleryAPIManager::updateProductEntry($dataObject->getSku(), $entryId, $entry, $targetServer);
+        $this->cacheImageData($imagesData, $image, $position, $result);
+    }
+
+    /**
+     * Create the object to be used in the API call for synchronization
+     * 
+     * @param Image $image the current image
+     * @param int $position position of the current image on Pimcore
+     * @return array $entry the API object
+     */
     private function createEntryAPIObject(Image $image, $position) {
         $title = $image->getMetadata("title");
         $imageBinaryData = base64_encode(file_get_contents($image->getFileSystemPath()));
@@ -300,20 +399,17 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         return $entry;
     }
 
-    private function createImageOnServer(&$imagesData, Product $dataObject, Image $image, $position, TargetServer $targetServer) {
-        $entry = $this->createEntryAPIObject($image, $position);
-        $result = ProductAttributeMediaGalleryAPIManager::addEntryToProduct($dataObject->getSku(), $entry, $targetServer);
-        $this->cacheImageData($imagesData, $image, $position, $result);
-    }
-
-    private function updateImageOnServer(&$imagesData, Product $dataObject, Image $image, $position, $entryId, TargetServer $targetServer) {
-        $entry = $this->createEntryAPIObject($image, $position);
-        $entry["id"] = $entryId;
-        $result = ProductAttributeMediaGalleryAPIManager::updateProductEntry($dataObject->getSku(), $entryId, $entry, $targetServer);
-        $this->cacheImageData($imagesData, $image, $position, $result);
-    }
-
-    private function cacheImageData(&$imagesData, Image $image, $position, $result) {
+    /**
+     * If the synchronization API call ends succesfully, save the image informations.
+     * Otherwise, throw the error message obtained from the server.
+     * 
+     * @param array $imagesData current images informations
+     * @param Image $image the current image
+     * @param int $position position of the current image on Pimcore
+     * @param mixed $result the API call results.
+     * @throws \Exception
+     */
+    private function cacheImageData(array &$imagesData, Image $image, $position, $result) {
         if (!is_array($result) || !array_key_exists("ApiException", $result)) {
             $imagesData[] = array(
                 "id" => $image->getId(),
@@ -326,6 +422,15 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
         }
     }
 
+    /**
+     * Store synchronized images informations.
+     * If the whole synchronization has end succesfully, mark images as synchronized for the product
+     * 
+     * @param Product $dataObject the product to synchronize
+     * @param TargetServer $targetServer the server in which the product must be synchronized
+     * @param array $imagesData current images informations
+     * @param bool $success tells if the whole synchronization has end succesfully
+     */
     private function syncImagesData(Product $dataObject, TargetServer $targetServer, array $imagesData, $success = true) {
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 

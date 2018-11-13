@@ -12,6 +12,7 @@ use Pimcore\Model\DataObject\TargetServer;
 use SpringImport\Swagger\Magento2\Client\Api\ConfigurableProductLinkManagementV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body108;
 use Pimcore\Logger;
+use SpringImport\Swagger\Magento2\Client\ApiException;
 
 /**
  * Magento Rest Configurable Product Link API Manager 
@@ -28,8 +29,8 @@ class ConfigurableProductLinkAPIManager extends BaseMage2APIManager{
         try {
             $result = $configurableProductInstance->configurableProductLinkManagementV1AddChildPost($sku, new Body108(array("childSku" => $childSku)));
             return $result;
-        } catch (\Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }

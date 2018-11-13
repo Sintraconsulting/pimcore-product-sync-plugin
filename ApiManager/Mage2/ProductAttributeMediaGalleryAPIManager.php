@@ -24,8 +24,8 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         try {
             $result = $productAttributeMediaGalleryInstance->catalogProductAttributeMediaGalleryManagementV1GetListGet($sku);
             return $result;
-        } catch (\Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }
@@ -38,8 +38,8 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         try {
             $result = $productAttributeMediaGalleryInstance->catalogProductAttributeMediaGalleryManagementV1GetGet($sku, $entryId);
             return $result;
-        } catch (\Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }
@@ -80,8 +80,8 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         try {
             $result = $productAttributeMediaGalleryInstance->catalogProductAttributeMediaGalleryManagementV1RemoveDelete($sku, $entryId);
             return $result;
-        } catch (\Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }

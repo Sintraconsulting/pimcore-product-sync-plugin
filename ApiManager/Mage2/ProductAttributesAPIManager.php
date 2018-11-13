@@ -6,6 +6,7 @@ use SpringImport\Swagger\Magento2\Client\Api\CatalogProductAttributeRepositoryV1
 use SpringImport\Swagger\Magento2\Client\Model\CatalogDataProductAttributeInterface;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
+use SpringImport\Swagger\Magento2\Client\ApiException;
 
 /**
  * Magento Rest Product Attributes API Manager 
@@ -36,8 +37,8 @@ class ProductAttributesAPIManager extends BaseMage2APIManager implements APIMana
         try {
             $result = $productAttributesInstance->catalogProductAttributeRepositoryV1GetGet($entityKey);
             return $result;
-        } catch (Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }

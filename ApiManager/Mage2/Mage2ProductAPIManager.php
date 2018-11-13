@@ -9,10 +9,9 @@
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use Pimcore\Logger;
-use Pimcore\Tool\RestClient\Exception;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body18;
-use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
+use \SpringImport\Swagger\Magento2\Client\ApiException;
 
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
@@ -35,9 +34,9 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
             
             $result = $productInstance->catalogProductRepositoryV1SavePost($productBody);
             return $result;
-        } catch (SwaggerApiException $e) {
-            Logger::err($e->getMessage());
-            return false;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            throw new \Exception($e->getResponseBody()->message);
         }
     }
     
@@ -49,9 +48,9 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         try {
             $result = $productInstance->catalogProductRepositoryV1DeleteByIdDelete($sku);
             return $result;
-        } catch (SwaggerApiException $e) {
-            Logger::err($e->getMessage());
-            return false;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            throw new \Exception($e->getResponseBody()->message);
         }
     }
     
@@ -67,8 +66,8 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         try {
             $result = $productInstance->catalogProductRepositoryV1GetGet($sku, $editMode, $storeId, $forceReload);
             return $result;
-        } catch (SwaggerApiException $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }
@@ -100,8 +99,8 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         try {
             $result = $productInstance->catalogProductRepositoryV1GetListGet($field, $value, $conditionType);
             return $result;
-        } catch (SwaggerApiException $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }
@@ -117,9 +116,9 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
             
             $result = $productInstance->catalogProductRepositoryV1SavePut($sku, $productBody);
             return $result;
-        } catch (SwaggerApiException $e) {
-            Logger::err($e->getMessage());
-            return false;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            throw new \Exception($e->getResponseBody()->message);
         }
     }
 

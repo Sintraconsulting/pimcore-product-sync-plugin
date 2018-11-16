@@ -2,8 +2,12 @@
 
 namespace SintraPimcoreBundle\Utils;
 
+use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Model\DataObject\Fieldcollection;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 
 /**
  * Target Server Utils
@@ -57,5 +61,21 @@ class GeneralUtils {
         ];
         
         return $server;
+    }
+    
+    /**
+     * Get ImagesInfo for the object
+     * 
+     * @param Concrete $dataObject
+     * @return ImageInfo[]
+     */
+    public static function getObjectImagesInfo($dataObject){
+        
+        if(method_exists($dataObject, "getImages")){
+            $images = $dataObject->getImages() != null ? $dataObject->getImages() : new Fieldcollection();
+            return $images->getItems();
+        }
+        
+        return array();
     }
 }

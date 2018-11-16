@@ -5,6 +5,7 @@ namespace SintraPimcoreBundle\ApiManager\Mage2;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogAttributeSetRepositoryV1Api;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
+use SpringImport\Swagger\Magento2\Client\ApiException;
 
 /**
  * Magento Rest Attribute Set API Manager 
@@ -29,8 +30,8 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         try {
             $result = $attributeSetInstance->catalogAttributeSetRepositoryV1GetListGet(null,null,null,"attribute_set_name","asc");
             return $result;
-        } catch (Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }
@@ -47,8 +48,8 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         try {
             $result = $attributeSetInstance->catalogAttributeSetRepositoryV1GetGet($entityKey);
             return $result;
-        } catch (Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }
@@ -61,8 +62,8 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         try {
             $result = $attributeSetInstance->catalogAttributeSetRepositoryV1GetListGet($field, $value, $conditionType = null);
             return $result;
-        } catch (Exception $e) {
-            Logger::err($e->getMessage());
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
             return false;
         }
     }

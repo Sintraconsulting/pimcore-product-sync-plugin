@@ -25,7 +25,7 @@ class BaseMage2APIManager extends AbstractAPIManager{
     protected static function getApiInstance(TargetServer $server) {
         $serverInfo = self::getServerInfo($server);
 
-        $baseUrl = $server->getServerBaseUrl() . '/rest';
+        $baseUrl = $server->getServerBaseUrl() . '/rest/all';
         $token = 'bearer ' . $serverInfo->getApiKey();
 
         $config = new Configuration();

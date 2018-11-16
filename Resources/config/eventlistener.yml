@@ -6,3 +6,7 @@ services:
             - { name: kernel.event_listener, event: pimcore.dataobject.preUpdate, method: onPreUpdate }
             - { name: kernel.event_listener, event: pimcore.dataobject.postUpdate, method: onPostUpdate }
             - { name: kernel.event_listener, event: pimcore.dataobject.postDelete, method: onPostDelete }
+            
+    SintraPimcoreBundle\EventListener\Assets\SintraPimcoreAssetsListener:
+        tags:
+            - { name: kernel.event_listener, event: pimcore.asset.postAdd, method: onPostAdd }

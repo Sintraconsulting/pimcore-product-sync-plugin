@@ -8,7 +8,7 @@
 
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
-use \SpringImport\Swagger\Magento2\Client\ApiException as SwaggerApiException;
+use \SpringImport\Swagger\Magento2\Client\ApiException;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogCategoryRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body30;
 use Pimcore\Model\DataObject\TargetServer;
@@ -31,9 +31,9 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
             $categoryBody = new Body30($category);
             $result = $categoryInstance->catalogCategoryRepositoryV1SavePost($categoryBody);
             return $result;
-        } catch (SwaggerApiException $e) {
-            echo $e->getMessage();
-            return null;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            throw new \Exception($e->getResponseBody()->message);
         }
     }
 
@@ -45,9 +45,9 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         try {
             $result = $categoryInstance->catalogCategoryRepositoryV1DeleteByIdentifierDelete($categoryId);
             return $result;
-        } catch (SwaggerApiException $e) {
-            echo $e->getMessage();
-            return null;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            throw new \Exception($e->getResponseBody()->message);
         }
     }
 
@@ -63,9 +63,9 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         try {
             $result = $categoryInstance->catalogCategoryRepositoryV1GetGet($categoryId, $storeId);
             return $result;
-        } catch (SwaggerApiException $e) {
-            echo $e->getMessage();
-            return null;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            return false;
         }
     }
 
@@ -80,9 +80,9 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
             
             $result = $categoryInstance->catalogCategoryRepositoryV1SavePut($categoryId, $categoryBody);
             return $result;
-        } catch (SwaggerApiException $e) {
-            echo $e->getMessage();
-            return null;
+        } catch (ApiException $e) {
+            Logger::err($e->getResponseBody()->message);
+            throw new \Exception($e->getResponseBody()->message);
         }
     }
 

@@ -20,9 +20,7 @@ abstract class AbstractAssetsListener {
     public static function onPostAdd (AssetEvent $e) {
        
         if ($e instanceof AssetEvent) {
-            $asset = $e->getAsset();
-            Logger::info("ELEMENT: ".print_r($e->getElement(),true));
-            
+            $asset = $e->getAsset();            
             
             $assetsListener = new AssetsListener();
             $assetsListener->postAddDispatcher($asset);

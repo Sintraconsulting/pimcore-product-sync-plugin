@@ -18,7 +18,6 @@ class AssetsListener extends AbstractAssetsListener{
     public function postAddDispatcher($asset) {
         
         $type = strtolower($asset->getType());
-        \Pimcore\Logger::info("ASSET TYPE: ".$type);
 
         switch ($type) {
             case "image":

@@ -2,7 +2,14 @@
 namespace SintraPimcoreBundle\Resources\Ecommerce;
 
 class BaseEcommerceConfig {
-    protected static $pimcoreBaseUrl = "http://your/pimcore/url";
+    /**
+     * The URL of your pimcore installation
+     */
+    protected static $pimcoreBaseUrl = "http://your.pimcore.url";
+    
+    /**
+     * The custom log database table name that will be created after Bundle install
+     */
     protected static $customLogTablename = "custom_log"; 
 
     public static function getBaseUrl(){

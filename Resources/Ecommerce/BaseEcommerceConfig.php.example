@@ -2,17 +2,8 @@
 namespace SintraPimcoreBundle\Resources\Ecommerce;
 
 class BaseEcommerceConfig {
-    protected static $url;
-    protected static $apiKey;
     protected static $pimcoreBaseUrl = "http://your/pimcore/url";
     protected static $customLogTablename = "custom_log"; 
-
-    public static function getConfig() {
-        return array(
-                "path" => static::$url,
-                "apiKey" => static::$apiKey
-        );
-    }
 
     public static function getBaseUrl(){
         return static::$pimcoreBaseUrl;
@@ -22,21 +13,14 @@ class BaseEcommerceConfig {
         return static::$customLogTablename;
     }
     
-    public static function getEnabledIntegrations(){
-        return array(
-            "magento2" => true,
-            "shopify" => true,
-            "..."
-        );
-    }
-    
     public static function getCustomizationInfo(){
         return array(
             /*
-             * Will be searced in SintraPimcoreBundle/Custom folder
+             * Bundle created to implement custom overriding
+             * Will be searced in src folder
              * If null or empty, skip customizations
              */
-            "namespace" => "RepositoryNamespace"
+            "namespace" => "CustomBundle"
         );
     }
 }

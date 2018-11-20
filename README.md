@@ -6,7 +6,7 @@ The plugin is implemented as a [Pimcore Bundle](https://pimcore.com/docs/5.x/Dev
 
 ## How to Install SintraPimcoreBundle
 
-Once you have [Installed Pimcore](/Pimcore-Installation-Best-Practices), add the following dependencies to yours Pimcore _composer.json_ file 
+Once you have [Installed Pimcore](Pimcore-Installation-Best-Practices), add the following dependencies to yours Pimcore _composer.json_ file 
 ``` json
 "require": {
      "...": "...",

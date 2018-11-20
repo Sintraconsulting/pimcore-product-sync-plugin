@@ -4,8 +4,7 @@ namespace SintraPimcoreBundle\EventListener;
 
 use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Logger;
-use Pimcore\Model\DataObject\Category;
-use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Concrete;
 use SintraPimcoreBundle\EventListener\General\ObjectListener;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
@@ -14,22 +13,22 @@ use ReflectionClass;
 abstract class AbstractObjectListener {
     
     /**
-     * @param Product $dataObject
+     * @param Concrete $dataObject
      */
     public abstract function preAddDispatcher($dataObject);
     
     /**
-     * @param Product|Category $dataObject
+     * @param Concrete $dataObject
      */
     public abstract function preUpdateDispatcher($dataObject);
     
     /**
-     * @param Product|Category $dataObject
+     * @param Concrete $dataObject
      */
     public abstract function postUpdateDispatcher($dataObject, $saveVersionOnly);
     
     /**
-     * @param Product|Category $dataObject
+     * @param Concrete $dataObject
      */
     public abstract function postDeleteDispatcher($dataObject);
     

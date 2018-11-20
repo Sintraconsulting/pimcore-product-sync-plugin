@@ -6,7 +6,7 @@ The plugin is implemented as a [Pimcore Bundle](https://pimcore.com/docs/5.x/Dev
 
 ## How to Install SintraPimcoreBundle
 
-Once you have [Installed Pimcore](Pimcore-Installation-Best-Practices), add the following dependencies to yours Pimcore _composer.json_ file 
+Once you have [Installed Pimcore](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/Pimcore-Installation-Best-Practices), add the following dependencies to yours Pimcore _composer.json_ file 
 ``` json
 "require": {
      "...": "...",
@@ -26,7 +26,7 @@ Settings -> Data Objects -> Bulk Import
 1. Duplicate the _Resources/Ecommerce/BaseEcommerceConfig.php.example_ file and remove the _.example_ extension.
 Edit the created _BaseEcommerceConfig.php_ file and set your own information.
 In order to override some **SintraPimcoreBundle** functionalities, properly set the custom bundle namespace.
-Check how to [Create a New Bundle](Create-a-New-Bundle-\(Plugin\)) and [How to Customize SintraPimcoreBundle](How-to-Customize-SintraPimcoreBundle).
+Check how to [Create a New Bundle](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/Create-a-New-Bundle-(Plugin)) and [How to Customize SintraPimcoreBundle](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/How-to-Customize-SintraPimcoreBundle).
 
 1. Enable and Install the **SintraPimcoreBundle** by the Pimcore Extensions Manager.
 You can achieve this point directly on Pimcore interface selecting:
@@ -34,4 +34,4 @@ Tools -> Extensions
 
 <br>Now that you have installed the **SintraPimcoreBundle**, you are free to customize the "Product" class as you like. Keep in mind that the "**sku**" field **is required** by some bundle's functionalities in order to identify a product using a unique key.
 
-Once you have structured your class, you can [Configure a TargetServer for Objects Synchronization](Configure-a-TargetServer-for-Objects-Synchronization).
+Once you have structured your class, you can [Configure a TargetServer for Objects Synchronization](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/Configure-a-TargetServer-for-Objects-Synchronization).

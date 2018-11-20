@@ -2,7 +2,6 @@
 
 namespace SintraPimcoreBundle\EventListener;
 
-use Pimcore\Logger;
 use Pimcore\Event\Model\DataObjectEvent;
 use SintraPimcoreBundle\EventListener\AbstractObjectListener;
 

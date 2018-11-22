@@ -8,7 +8,7 @@ use SintraPimcoreBundle\Utils\GeneralUtils;
 use Pimcore\Logger;
 
 abstract class BaseShopifyService extends BaseEcommerceService {
-    
+
     /**
      * Specific mapping for Shopify Product export
      * It builds the API array for communcation with shopify product endpoint
@@ -30,17 +30,15 @@ abstract class BaseShopifyService extends BaseEcommerceService {
             }
             $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
             $apiField = $fieldsDepth[0];
-            
+
             if($fieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue && $apiField == 'weight'){
                 return $this->mapServerField($shopifyApi, $fieldValue->getValue(), $apiField) + $this->mapServerField([], $fieldValue->getUnit()->getAbbreviation(), 'weight_unit');
             } elseif($apiField == 'price'){
-                
-                if($fieldValue !== null && $fieldValue->getValue() !== null){
-                    return $this->mapServerField($shopifyApi, $fieldValue, $apiField);
-                }else{
-                    return $shopifyApi;
+
+                if($fieldValue === null || $fieldValue->getValue() === null) {
+                    $fieldValue = 9999.99;
                 }
-                
+                return $this->mapServerField($shopifyApi, $fieldValue, $apiField);
             } elseif ($apiField === 'tags') {
                 if (isset($shopifyApi['tags'])) {
                     $otherTags = explode(', ', $shopifyApi['tags']);
@@ -57,10 +55,10 @@ abstract class BaseShopifyService extends BaseEcommerceService {
             $i = 0;
             foreach ($dataSource as $dataObject) {
                 $serverInfo = GeneralUtils::getServerObjectInfo($dataObject, $server);
-                
+
                 /**
                  * If a variant needs to be synced, do the recursion.
-                 * If not, only take tags from the variant to avoid 
+                 * If not, only take tags from the variant to avoid
                  * the deletion of tags from the product
                  */
                 if (!$serverInfo->getSync() || $fieldsDepth[0] == "tags") {
@@ -105,5 +103,5 @@ abstract class BaseShopifyService extends BaseEcommerceService {
          */
         return $this->mapServerMultipleField($shopifyApi[$parentDepth], $fieldMap, $fieldsDepth, $language, $dataSource, $server);
     }
-    
+
 }

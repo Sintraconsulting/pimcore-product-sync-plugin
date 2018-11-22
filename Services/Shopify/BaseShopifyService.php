@@ -35,7 +35,7 @@ abstract class BaseShopifyService extends BaseEcommerceService {
                 return $this->mapServerField($shopifyApi, $fieldValue->getValue(), $apiField) + $this->mapServerField([], $fieldValue->getUnit()->getAbbreviation(), 'weight_unit');
             } elseif($apiField == 'price'){
 
-                if($fieldValue === null || $fieldValue->getValue() === null) {
+                if($fieldValue === null || $fieldValue->getValue() === null || (int)$fieldValue === 0 || (int)$fieldValue->getValue() === 0) {
                     $fieldValue = 9999.99;
                 }
                 return $this->mapServerField($shopifyApi, $fieldValue, $apiField);

@@ -115,6 +115,7 @@ class ShopifyProductImageModel {
                 $imgArray += ['position' => $imageInfoIndex];
             }
         }
+        # Added the hashing function for extension
         $imageHash = $this->getImageHash($imageInfo);
         $imgArray += ['hash' => $imageHash];
         $imgArray += ['name' => $imageInfo->getFilename()];

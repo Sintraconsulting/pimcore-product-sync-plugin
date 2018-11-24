@@ -115,11 +115,16 @@ class ShopifyProductImageModel {
                 $imgArray += ['position' => $imageInfoIndex];
             }
         }
-
-        $imgArray += ['hash' => $imageInfo->getHash()];
+        # Added the hashing function for extension
+        $imageHash = $this->getImageHash($imageInfo);
+        $imgArray += ['hash' => $imageHash];
         $imgArray += ['name' => $imageInfo->getFilename()];
         $imgArray += ['pimcore_index' => $imageInfo->getIndex()];
         return $imgArray;
+    }
+
+    protected function getImageHash (ImageInfo $imageInfo) {
+        return $imageInfo->getHash();
     }
 
     protected function shouldUploadImage (ImageInfo $imageInfo, array $imagesJson) : bool {

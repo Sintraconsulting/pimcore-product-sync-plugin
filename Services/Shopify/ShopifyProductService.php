@@ -35,15 +35,12 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         $shopifyId = $serverObjectInfo->getObject_id();
 
         $search = array();
-        $startTime = $this->millitime();
+
         if($shopifyId != null && !empty($shopifyId)){
             $search = ShopifyProductAPIManager::searchShopifyProducts(['ids' => $shopifyId],$targetServer);
             Logger::info("SEARCH RESULT: $shopifyId".json_encode($search));
         }
-        $endTime = $this->millitime();
-        Logger::log('DURATION SEARCH');
-        Logger::log($endTime - $startTime);
-        $startTime = $this->millitime();
+
         if (count($search) === 0) {
             //product is new, need to save price
             $this->toEcomm($shopifyApi, $dataObjects, $targetServer, $dataObject->getClassName(), true);
@@ -67,9 +64,6 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $result = ShopifyProductAPIManager::updateEntity($shopifyId, $shopifyApi, $targetServer);
         }
         Logger::debug("SHOPIFY UPDATED PRODUCT: " . json_encode($result));
-        $endTime = $this->millitime();
-        Logger::log('DURATION UPDATE1');
-        Logger::log($endTime - $startTime);
 
         $this->setProductServerInfos($result, $targetServer);
         $shopifyObj->updateShopifyResponse($result);
@@ -80,9 +74,6 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
 
         $this->setSyncProduct($result, $targetServer);
 
-        $endTime = $this->millitime();
-        Logger::log('DURATION!!!');
-        Logger::log($endTime - $startTime);
     }
 
     /**

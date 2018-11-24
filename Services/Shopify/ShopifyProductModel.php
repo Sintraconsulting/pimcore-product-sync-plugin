@@ -3,13 +3,11 @@
 namespace SintraPimcoreBundle\Services\Shopify;
 
 
-use Grpc\Server;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
-use Pimcore\Tool\RestClient\Exception;
 use SintraPimcoreBundle\ApiManager\Shopify\ShopifyProductAPIManager;
 
 class ShopifyProductModel {
@@ -110,11 +108,9 @@ class ShopifyProductModel {
                 'id' => $serverInfo->getObject_id(),
                 'images' => $this->getProductsImagesArray()
         ];
-        Logger::log('BEFORE UPDATE IMAGES!');
-        Logger::log(json_encode($updateImagesApiReq));
+
         $result = $this->apiManager::updateEntity($serverInfo->getObject_id(), $updateImagesApiReq, $this->targetServer);
-        Logger::log('UPDATE IMAGES RESPONSE!');
-        Logger::log(json_encode($result));
+
         if (isset($result['images']) && count($result['images'])) {
             /** @var Product $currentVar */
             $currentVar = null;
@@ -308,11 +304,7 @@ class ShopifyProductModel {
                     } else {
                         $result = $this->apiManager->deleteProductMetafield($metaCache['id'], $objectInfo->getObject_id(), $this->targetServer);
                     }
-                    Logger::log('RESPONSE DELETE');
-                    Logger::log(print_r($result, true));
-                    Logger::log(print_r($key, true));
-                    Logger::log($key);
-                    Logger::log(print_r($metaCaches[$key], true));
+
                     # IF delete is successful, remove it from cache as well
                     if (is_array($result) && count($result) === 0) {
                         unset($metaCaches[$key]);
@@ -328,12 +320,12 @@ class ShopifyProductModel {
         /** @var ServerObjectInfo $exportServer */
         foreach ($exportServers as $exportServer) {
             if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
-                Logger::warn('METAFIELDS JSON');
+
                 $exportServer->setMetafields_json(json_encode([
                         'product' => ($prodCache),
                         'variant' => ($varCache)
                 ]));
-                Logger::warn($exportServer->getMetafields_json());
+
                 break;
             }
         }
@@ -345,14 +337,14 @@ class ShopifyProductModel {
         /** @var ServerObjectInfo $exportServer */
         foreach ($exportServers as $exportServer) {
             if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
-                Logger::warn('IMAGES JSON');
+
                 $exportServer->setImages_json(json_encode($imagesCache));
                 if (count($variant->getImages()->getItems()) <= count($imagesCache)) {
                     $exportServer->setImages_sync(true);
                 } else {
                     $exportServer->setImages_sync(false);
                 }
-                Logger::warn($exportServer->getImages_json());
+
                 break;
             }
         }
@@ -533,7 +525,7 @@ class ShopifyProductModel {
 
     protected function getVariantFromApiReq ($sku) {
         foreach ($this->shopifyApiReq['variants'] as $variant) {
-            Logger::warn(json_encode($variant));
+
             if ($variant['sku'] == $sku) {
                 return $variant;
             }

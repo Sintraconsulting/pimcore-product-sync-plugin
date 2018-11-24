@@ -127,9 +127,9 @@ class ShopifyProductModel {
                     $currentVar = $this->getVariantByShopifyVariantId($image['variant_ids'][0]);
                     $currentVarImgs = [];
                 }
-                
+
                 $position = $image['position'];
-                
+
                 $currentVarImgs[] = [
                         'id' => $image['id'],
                         'position' => $position,
@@ -172,7 +172,7 @@ class ShopifyProductModel {
                 array_pop($varTags);
             }
             $tags = array_merge($varTags, $tags);
-            unset($shopifyApiReq[$key][$variant]['tags']);
+            unset($shopifyApiReq['variants'][$key]['tags']);
         }
         $shopifyApiReq['tags'] = implode(", ", $tags);
         return $shopifyApiReq;

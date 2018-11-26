@@ -127,7 +127,7 @@ class EventListenerUtils {
      * @return boolean
      */
     public static function checkImagesChanged($exportServer, $dataObject) {
-        
+
         $imagesJson = $exportServer->getImages_json();
         $savedImagesData = ($imagesJson != null && !empty($imagesJson)) ? json_decode($imagesJson, true) : array();
 
@@ -139,19 +139,21 @@ class EventListenerUtils {
 
         $changed = false;
         foreach ($imagesInfo as $position => $imageInfo) {
-            $image = $imageInfo->getImage();
+            if (method_exists($imageInfo, "getImage")) {
+                $image = $imageInfo->getImage();
 
-            $index = array_search($image->getId(), array_column($savedImagesData, "id"));
+                $index = array_search($image->getId(), array_column($savedImagesData, "id"));
 
-            if ($index === false) {
-                $changed = true;
-                break;
-            }
+                if ($index === false) {
+                    $changed = true;
+                    break;
+                }
 
-            $savedImage = $savedImagesData[$index];
-            if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
-                $changed = true;
-                break;
+                $savedImage = $savedImagesData[$index];
+                if ($savedImage["position"] != $position || $savedImage["hash"] != $image->getFileSize()) {
+                    $changed = true;
+                    break;
+                }
             }
         }
 

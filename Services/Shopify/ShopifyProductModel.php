@@ -181,6 +181,9 @@ class ShopifyProductModel {
             $productCache = $this->apiManager->getProductMetafields($serverInfo->getObject_id(), $this->targetServer);
         } else {
             $productCache = json_decode($serverInfo->getMetafields_json(), true)['product'];
+            if (!isset($productCache)) {
+                $productCache = [];
+            }
             $productMetafields = $this->shopifyApiReq['metafields'];
             foreach ($productMetafields as $metafield) {
                 # Check if the metafield is changed

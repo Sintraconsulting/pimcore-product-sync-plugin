@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use \SpringImport\Swagger\Magento2\Client\ApiException;
@@ -14,12 +8,21 @@ use SpringImport\Swagger\Magento2\Client\Model\Body30;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 /**
- * Magento Rest Category API Manager 
+ * Category API Manager for Magento2
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
+    /**
+     * Create a new category.
+     * Instantiate the API Client and perform the call for creation.
+     * Throw an exception if the API call fails.
+     * 
+     * @param mixed $entity the category to create. Will be used in the API call body.
+     * @param TargetServer $server the server in which the category should be created.
+     * @return mixed The API call response.
+     */
     public static function createEntity($entity, TargetServer $server) {
         
         $apiClient = self::getApiInstance($server);
@@ -37,6 +40,15 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         }
     }
 
+    /**
+     * Delete an existent category.
+     * Instantiate the API Client and perform the call for deletion.
+     * Throw an exception if the API call fails.
+     * 
+     * @param mixed $categoryId the id of the category to delete.
+     * @param TargetServer $server the server in which the category should be deleted.
+     * @return mixed The API call response.
+     */
     public static function deleteEntity($categoryId, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
         
@@ -51,10 +63,26 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         }
     }
 
+    /**
+     * Get an existent category by id.
+     * 
+     * @param mixed $categoryId the id of the entity.
+     * @param TargetServer $server the server in which the category is.
+     * @return mixed The API call response.
+     */
     public static function getEntityByKey($categoryId, TargetServer $server) {
         return $this->getEntity($server, $categoryId);
     }
     
+    /**
+     * Get an existent category by id.
+     * Instantiate the API Client and perform the call for getting the category.
+     * Return false if the API call fails.
+     * 
+     * @param TargetServer $server the server in which the category is.
+     * @param mixed $categoryId the id of the category to get.
+     * @return mixed The API call response.
+     */
     public function getEntity(TargetServer $server, $categoryId, $storeId = null) {
         $apiClient = self::getApiInstance($server);
         
@@ -69,6 +97,16 @@ class CategoryAPIManager extends BaseMage2APIManager implements APIManagerInterf
         }
     }
 
+    /**
+     * Update an existent category
+     * Instantiate the API Client and perform the call fore update
+     * Throw an exception if the API call fails.
+     * 
+     * @param mixed $categoryId the id of the category to update.
+     * @param mixed $entity the category to update. Will be used in the API call body
+     * @param TargetServer $server the server in which the category should be updated
+     * @return mixed The API call response.
+     */
     public static function updateEntity($categoryId, $entity, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
         

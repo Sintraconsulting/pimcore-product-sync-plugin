@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use SpringImport\Swagger\Magento2\Client\ApiException;
@@ -14,8 +8,22 @@ use SpringImport\Swagger\Magento2\Client\Api\CatalogProductAttributeMediaGallery
 use SpringImport\Swagger\Magento2\Client\Model\Body29;
 use Pimcore\Logger;
 
+/**
+ * Product Attribute Media Gallery API Manager for Magento2
+ * 
+ * @author Sintra Consulting
+ */
 class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
     
+    /**
+     * Get all media entries of a product
+     * Instantiate the API Client and perform the call.
+     * Return false if the API call fails.
+     * 
+     * @param type $sku the product SKU
+     * @param TargetServer $server the server in which the product is
+     * @return mixed the API call response
+     */
     public static function getAllProductEntries($sku, TargetServer $server){
         $apiClient = self::getApiInstance($server);
         
@@ -30,6 +38,16 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         }
     }
     
+    /**
+     * Get a media entries of a product
+     * Instantiate the API Client and perform the call.
+     * Return false if the API call fails.
+     * 
+     * @param String $sku the product SKU
+     * @param int $entryId the media entry id
+     * @param TargetServer $server the server in which the product is
+     * @return mixed the API call response
+     */
     public static function getProductEntry($sku, $entryId, TargetServer $server){
         $apiClient = self::getApiInstance($server);
         
@@ -44,6 +62,16 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         }
     }
     
+    /**
+     * Add a media entries of a product
+     * Instantiate the API Client and perform the call.
+     * Throw an exception if the API call fails.
+     * 
+     * @param String $sku the product SKU
+     * @param mixed $entry the media entry
+     * @param TargetServer $server the server in which the product is
+     * @return mixed the API call response
+     */
     public static function addEntryToProduct($sku, $entry, TargetServer $server){
         $apiClient = self::getApiInstance($server);
         
@@ -58,6 +86,17 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         }
     }
     
+    /**
+     * Update a media entries of a product
+     * Instantiate the API Client and perform the call.
+     * Throw an exception if the API call fails.
+     * 
+     * @param String $sku the product SKU
+     * @param int $entryId the media entry id
+     * @param mixed $entry the media entry
+     * @param TargetServer $server the server in which the product is
+     * @return mixed the API call response
+     */
     public static function updateProductEntry($sku, $entryId, $entry, TargetServer $server){
         $apiClient = self::getApiInstance($server);
         
@@ -72,6 +111,16 @@ class ProductAttributeMediaGalleryAPIManager extends BaseMage2APIManager{
         }
     }
     
+    /**
+     * Delete a media entries of a product
+     * Instantiate the API Client and perform the call.
+     * Return false if the API call fails.
+     * 
+     * @param String $sku the product SKU
+     * @param int $entryId the media entry id
+     * @param TargetServer $server the server in which the product is
+     * @return mixed the API call response
+     */
     public static function deleteProductEntry($sku, $entryId, TargetServer $server){
         $apiClient = self::getApiInstance($server);
         

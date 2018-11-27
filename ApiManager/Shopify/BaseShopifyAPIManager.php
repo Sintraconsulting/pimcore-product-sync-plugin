@@ -7,15 +7,22 @@ use Pimcore\Model\DataObject\Objectbrick\Data\ShopifyServerInfo;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\AbstractAPIManager;
 
-use Pimcore\Logger;
-
 /**
- * Shopify API Manager
+ * Shopify API Manager Base Class
+ * Will be extended by each class that performs API calls to a Shopify server
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class BaseShopifyAPIManager extends AbstractAPIManager{
     
+    /**
+     * Get the API Client Instance for a Shopify Server.
+     * Retrieve Server URL, API Key and API Password for authentication 
+     * from the TargetServe object
+     * 
+     * @param TargetServer $server 
+     * @return ApiClient
+     */
     protected static function getApiInstance(TargetServer $server) {
         $serverInfo = self::getServerInfo($server);
         
@@ -28,10 +35,12 @@ class BaseShopifyAPIManager extends AbstractAPIManager{
     }
     
     /**
-     * get server info from object brick
+     * Get Server Info from the specific ObjectBrick
+     * Throw an exception if the ObjectBrick is not valid fo Shopify
      * 
      * @param TargetServer $server the server
      * @return ShopifyServerInfo the server info
+     * @throws \Exception
      */
     private static function getServerInfo(TargetServer $server){
         $serverInfos = $server->getServerInfo()->getItems();

@@ -7,6 +7,11 @@ use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Services\InterfaceService;
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
 
+/**
+ * Synchronizaton utils
+ * 
+ * @author Sintra Consulting
+ */
 class SynchronizationUtils {
 
     /**

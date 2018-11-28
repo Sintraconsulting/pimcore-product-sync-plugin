@@ -17,7 +17,7 @@ use Pimcore\Model\DataObject\Data\QuantityValue;
 /**
  * Event Listener Utils
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class EventListenerUtils {
 

@@ -11,6 +11,11 @@ use Pimcore\Db;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 use SintraPimcoreBundle\Utils\SynchronizationUtils;
 
+/**
+ * Manage synchronization of objects
+ * 
+ * @author Sintra Consulting
+ */
 class BaseSyncController {
 
     /**

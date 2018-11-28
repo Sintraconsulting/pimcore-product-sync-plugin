@@ -5,7 +5,7 @@ namespace SintraPimcoreBundle\Utils;
 /**
  * Utils for Assets Event Listeners
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class AssetsEventListenerUtils {
     

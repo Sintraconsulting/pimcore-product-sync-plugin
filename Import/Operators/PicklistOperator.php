@@ -3,13 +3,12 @@
 namespace SintraPimcoreBundle\Import\Operators;
 
 use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
-use Pimcore\Logger;
 use Pimcore\Model\DataObject\ClassDefinition;
 
 /**
- * Operator for picklists 
+ * Operator for single value picklists 
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class PicklistOperator extends AbstractOperator{
     
@@ -23,7 +22,8 @@ class PicklistOperator extends AbstractOperator{
     }
     
     /**
-     * Dynamically invoke field setter for picklist fields 
+     * Search the picklist entry by the display name 
+     * and retrieve the corresponding picklist value
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         

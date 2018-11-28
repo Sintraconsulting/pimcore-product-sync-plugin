@@ -3,6 +3,12 @@ namespace SintraPimcoreBundle\Services;
 
 use Pimcore\Model\DataObject\TargetServer;
 
+/**
+ * Interface that provide methods for object synchronization
+ * Must be implemented by all services that need to performs object synchronization.
+ * 
+ * @author Sintra Consulting
+ */
 interface InterfaceService {
     /**
      * @param $productId

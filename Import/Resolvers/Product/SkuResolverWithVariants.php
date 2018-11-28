@@ -11,10 +11,16 @@ use Pimcore\Model\DataObject\AbstractObject;
  *
  * name_column_id: optional additional column Id used for product key generation
  * 
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class SkuResolverWithVariants extends AbstractResolver{
 
+    /**
+     * Check if the product exists as object or variant.
+     * If yes, return the product.
+     * If not, the type of the new object is read from a defined column in the CSV.
+     * For variants, parent product SKU is read from the "parent" column in the CSV. 
+     */
     public function resolve(\stdClass $config, int $parentId, array $rowData){
         $params = json_decode($config->resolverSettings->params,true);
         $nameColumnId = $params["name_column_id"];
@@ -22,12 +28,12 @@ class SkuResolverWithVariants extends AbstractResolver{
         $columnId = $this->getIdColumn($config);
                 
         $sku = trim($rowData[$columnId]);
-        $products = new Product\Listing();
-        $products->setCondition("sku = ".$products->quote($sku));
-        $products->setObjectTypes([AbstractObject::OBJECT_TYPE_VARIANT, AbstractObject::OBJECT_TYPE_OBJECT]);
-        $products->setLimit(1);
+        $listing = new Product\Listing();
+        $listing->setCondition("sku = ".$listing->quote($sku));
+        $listing->setObjectTypes([AbstractObject::OBJECT_TYPE_VARIANT, AbstractObject::OBJECT_TYPE_OBJECT]);
+        $listing->setLimit(1);
         
-        $products = $products->load();
+        $products = $listing->load();
         
         if($products){
             $product = $products[0];
@@ -62,9 +68,9 @@ class SkuResolverWithVariants extends AbstractResolver{
              */
             if($nameColumnId != null && !empty($nameColumnId)){
                 $key = trim($rowData[$nameColumnId]);
-                $product->setKey($sku." - ".$key);
+                $product->setKey(str_replace("/","\\",$sku." - ".$key));
             }else{
-                $product->setKey($sku);
+                $product->setKey(str_replace("/","\\",$sku));
             }
         }
         
@@ -72,13 +78,13 @@ class SkuResolverWithVariants extends AbstractResolver{
         
     }
     
-    private function getColumnId(\stdClass $config, $columnname){
-        $configArray = json_decode(json_encode($config), true);
-        $selectedGridColumns = $configArray["selectedGridColumns"];
+    
+    private function getProductParentId(\stdClass $config, array $rowData){
+        $parentColumnId = $this->getColumnIdFromlabel($config, "parent");
+        $parent = $rowData[$parentColumnId];
         
-        $columnId = array_search($columnname, array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
-        
-        return $columnId;
+        $productParent = Product::getBySku($parent)->current();
+        return $productParent->getId();
     }
     
     private function getColumnIdFromlabel(\stdClass $config, $columnname){
@@ -88,14 +94,6 @@ class SkuResolverWithVariants extends AbstractResolver{
         $columnId = array_search($columnname, array_column(array_column($selectedGridColumns, 'attributes'), 'label'));
         
         return $columnId;
-    }
-    
-    private function getProductParentId(\stdClass $config, array $rowData){
-        $parentColumnId = $this->getColumnIdFromlabel($config, "parent");
-        $parent = $rowData[$parentColumnId];
-        
-        $productParent = Product::getBySku($parent)->current();
-        return $productParent->getId();
     }
 
 }

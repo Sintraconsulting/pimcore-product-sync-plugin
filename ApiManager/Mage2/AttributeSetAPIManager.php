@@ -8,9 +8,9 @@ use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use SpringImport\Swagger\Magento2\Client\ApiException;
 
 /**
- * Magento Rest Attribute Set API Manager 
+ * Attribute Set API Manager for Magento2
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
@@ -22,6 +22,14 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'AttributeSetAPIManager'");
     }
     
+    /**
+     * Get all existent attribute sets
+     * Instantiate the API Client and perform the call for getting the attribute sets.
+     * Return false if the API call fails.
+     * 
+     * @param TargetServer $server the server in which the attribute sets are.
+     * @return mixed The API call response.
+     */
     public static function getAllAttributeSet(TargetServer $server){
         $apiClient = self::getApiInstance($server);
         
@@ -40,6 +48,16 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         return $this->searchAttributeSet($server, "attribute_set_name","Default","eq");
     }
 
+    /**
+     * Get an existent attribute set.
+     * Instantiate the API Client and perform the call for getting the attribute set.
+     * Return false if the API call fails.
+     * 
+     * 
+     * @param mixed $entityKey the key of the attribute set to get.
+     * @param TargetServer $server the server in which the attribute set is.
+     * @return mixed The API call response.
+     */
     public static function getEntityByKey($entityKey, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
         
@@ -54,6 +72,11 @@ class AttributeSetAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
+    /**
+     * Search for existent Attribute sets.
+     * Instantiate the API Client and perform the call for search.
+     * Return false if the API call fails.
+     */
     public static function searchAttributeSet(TargetServer $server, $field, $value, $conditionType = null){
         $apiClient = self::getApiInstance($server);
         

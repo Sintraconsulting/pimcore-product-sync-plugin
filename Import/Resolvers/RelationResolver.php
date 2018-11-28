@@ -5,11 +5,18 @@ namespace SintraPimcoreBundle\Import\Resolvers;
 use Pimcore\DataObject\Import\Resolver\AbstractResolver;
 
 /**
- * Resolver for Href and Objects Relations
+ * Generic object resolver
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class RelationResolver extends AbstractResolver{
+    /**
+     * Given a class and a field in additional data
+     * check the existence of an object of the defined class for which
+     * the passed field equals to the CSV column value.
+     * 
+     * If not exists, it will be created
+     */
     public function resolve(\stdClass $config, int $parentId, array $rowData){
         $params = json_decode($config->resolverSettings->params,true);
         
@@ -25,9 +32,9 @@ class RelationResolver extends AbstractResolver{
         $listing->setCondition("$field = ".$listing->quote($objectId));
         $listing->setLimit(1);
         
-        $listing = $listing->load();
+        $objects = $listing->load();
         
-        if($listing){
+        if($objects){
             $object = $listing[0];
         }else{
             $objectClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\$class");

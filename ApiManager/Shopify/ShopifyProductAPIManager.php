@@ -14,12 +14,21 @@ use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use Pimcore\Model\DataObject\TargetServer;
 
 /**
- * Shopify Product API Manager
+ * Product API Manager for Shopify
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManagerInterface{
 
+    /**
+     * Get an existent product by key.
+     * Instantiate the API Client and perform the call for getting the product.
+     * Return false if the API call fails.
+     * 
+     * @param mixed $entityKey the key of the product to get.
+     * @param TargetServer $server the server in which the product is.
+     * @return mixed The API call response.
+     */
     public static function getEntityByKey($entityKey, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
 
@@ -32,6 +41,15 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
+    /**
+     * Search for products.
+     * Instantiate the API Client and perform the call for getting the products.
+     * Return false if the API call fails.
+     * 
+     * @param mixed $filters a filtering condition.
+     * @param TargetServer $server the server in which the products are.
+     * @return mixed The API call response.
+     */
     public static function searchShopifyProducts ($filters, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
 
@@ -44,14 +62,20 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
     
+    /**
+     * Create a new product.
+     * Instantiate the API Client and perform the call for creation.
+     * Return false if the API call fails.
+     * 
+     * @param mixed $entity the product to create. Will be used in the API call body.
+     * @param TargetServer $server the server in which the product should be created.
+     * @return mixed The API call response.
+     */
     public static function createEntity($entity, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
 
         try {
             $result = $apiClient->Product->post($entity);
-            Logger::log('response API: ');
-            Logger::log(print_r($result, true));
-            Logger::log(($result));
             return $result;
         } catch (Exception $e) {
             Logger::err('CREATE SHOPIFY PRODUCT ERROR:', $e->getMessage());
@@ -59,6 +83,16 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Update an existent product.
+     * Instantiate the API Client and perform the call for update.
+     * Return false if the API call fails.
+     * 
+     * @param mixed $entityKey the key of the product to get.
+     * @param mixed $entity the product to create. Will be used in the API call body.
+     * @param TargetServer $server the server in which the product should be updated.
+     * @return mixed The API call response.
+     */
     public static function updateEntity($entityKey, $entity, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
 
@@ -89,7 +123,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
     public function updateInventoryInfo ($payload, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
-            Logger::warn('URL GENERATED');
             $result = $apiClient->InventoryLevel->post($payload, $apiClient->InventoryLevel->generateUrl([], 'set'), false);
             return $result;
         } catch (\Exception $e) {
@@ -102,8 +135,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Metafield->get();
-            Logger::log('PRODUCT METAFIELDS');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('GET SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
@@ -115,8 +146,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Variant($varId)->Metafield->get();
-            Logger::log('PRODUCT VARIANT METAFIELDS');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('GET SHOPIFY VARIANT METAFIELDS FAILED:' . $e->getMessage());
@@ -128,8 +157,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Metafield->post($payload);
-            Logger::log('PRODUCT METAFIELDS CREATE');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('CREATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
@@ -143,8 +170,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             unset($payload['namespace']);
             unset($payload['key']);
             $result = $apiClient->Product($productId)->Metafield($payload['id'])->put($payload);
-            Logger::log('PRODUCT METAFIELDS UPDATE');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('UPDATE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
@@ -156,8 +181,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Metafield($metafieldId)->delete();
-            Logger::log('PRODUCT METAFIELDS DELETED');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('DELETE SHOPIFY Product METAFIELDS FAILED:' . $e->getMessage());
@@ -169,8 +192,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Variant($varId)->Metafield->post($payload);
-            Logger::log('PRODUCT VARIANT METAFIELDS CREATE');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('CREATE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
@@ -184,8 +205,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             unset($payload['namespace']);
             unset($payload['key']);
             $result = $apiClient->Product($productId)->Variant($varId)->Metafield($payload['id'])->put($payload);
-            Logger::log('PRODUCT VARIANT METAFIELDS UPDATED');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('CREATE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());
@@ -197,8 +216,6 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         $apiClient = $this->getApiInstance($server);
         try {
             $result = $apiClient->Product($productId)->Variant($varId)->Metafield($metafieldId)->delete();
-            Logger::log('PRODUCT VARIANT METAFIELDS DELETED');
-            Logger::log(json_encode($result));
             return $result;
         } catch (\Exception $e) {
             Logger::err('DELETE SHOPIFY Product VARIANT METAFIELDS FAILED:' . $e->getMessage());

@@ -5,9 +5,9 @@ namespace SintraPimcoreBundle\Import\Operators;
 use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
 use Transliterator;
 /**
- * Class providing method to transliterate
+ * Operator that performs transliteration of a string
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class TransliterateOperator extends AbstractOperator{
     
@@ -21,7 +21,9 @@ class TransliterateOperator extends AbstractOperator{
     }
     
     /**
-     * Dynamically invoke field setter for fields to transliterate
+     * Get the column value and transliterate it.
+     * Properly set the obtained string to the specific field 
+     * passed as additional data for the operator.
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         

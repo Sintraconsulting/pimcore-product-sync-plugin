@@ -3,15 +3,14 @@
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use SpringImport\Swagger\Magento2\Client\Api\CatalogProductAttributeRepositoryV1Api;
-use SpringImport\Swagger\Magento2\Client\Model\CatalogDataProductAttributeInterface;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use SpringImport\Swagger\Magento2\Client\ApiException;
 
 /**
- * Magento Rest Product Attributes API Manager 
+ * Product Attributes API Manager for Magento2
  *
- * @author Utente
+ * @author Sintra Consulting
  */
 class ProductAttributesAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
@@ -24,10 +23,13 @@ class ProductAttributesAPIManager extends BaseMage2APIManager implements APIMana
     }
 
     /**
+     * Get a product attribute by key.
+     * Instantiate the API Client and perform the call.
+     * Return false if the API call fails.
      * 
-     * @param type $entityKey
-     * @param TargetServer $server
-     * @return CatalogDataProductAttributeInterface|boolean
+     * @param String $entityKey the attribute key
+     * @param TargetServer $server the server in which the attribute is
+     * @return mixed the API call result
      */
     public static function getEntityByKey($entityKey, TargetServer $server) {
         $apiClient = self::getApiInstance($server);

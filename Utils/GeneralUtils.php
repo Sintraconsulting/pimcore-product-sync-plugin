@@ -10,9 +10,9 @@ use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 
 /**
- * Target Server Utils
+ * General Utils
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class GeneralUtils {
     

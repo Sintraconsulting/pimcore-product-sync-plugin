@@ -13,10 +13,12 @@ use SintraPimcoreBundle\Services\InterfaceService;
 use SintraPimcoreBundle\Utils\GeneralUtils;
 use SintraPimcoreBundle\Utils\TargetServerUtils;
 
+/**
+ * Implement methods for products synchronization on Shopify servers
+ * 
+ * @author Sintra Consulting
+ */
 class ShopifyProductService extends BaseShopifyService implements InterfaceService {
-    protected $configFile = __DIR__ . '/../config/product.json';
-
-
     /**
      *
      * @param $productId

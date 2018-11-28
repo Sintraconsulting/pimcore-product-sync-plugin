@@ -8,7 +8,7 @@ use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\MultiSelectO
  * Dynamic Options Provider that display valid languages for a TargetServer.
  * Languages are taken from Pimcore configuration
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class SystemLanguagesOptionProvider implements MultiSelectOptionsProviderInterface{
 

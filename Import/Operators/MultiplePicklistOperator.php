@@ -3,9 +3,9 @@
 namespace SintraPimcoreBundle\Import\Operators;
 
 /**
- * Operator for multiple picklists 
+ * Operator for multiple values picklists 
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class MultiplePicklistOperator extends PicklistOperator{
     
@@ -19,7 +19,8 @@ class MultiplePicklistOperator extends PicklistOperator{
     }
     
     /**
-     * Dynamically invoke field setter for picklist fields 
+     * For each value, search the picklist entry by the display name 
+     * and retrieve the corresponding picklist value
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         

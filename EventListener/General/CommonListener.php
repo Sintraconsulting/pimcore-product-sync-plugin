@@ -8,6 +8,17 @@ use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use SintraPimcoreBundle\Utils\EventListenerUtils;
 
+/**
+ * Implement methods for manage objects after events are fired.
+ * This class is mainly use to keep updated synchronization information of objects
+ * for the defined servers.
+ * 
+ * The 'preAddAction' attach all server instances in new objects.
+ * The 'preUpdateAction' attach the missing ones in already existent objects
+ * and check for fields changing to keep synchronization information updated.
+ * 
+ * @author Sintra Consulting
+ */
 class CommonListener extends ObjectListener implements InterfaceListener {
 
     /**
@@ -30,7 +41,12 @@ class CommonListener extends ObjectListener implements InterfaceListener {
     }
 
     /**
-     * Implementation of preUpdate event.
+     * Firstly check if all server instances are present in the object.
+     * If the field collection for a specific server is missing for the object
+     * it will be added so that all field collection are present.
+     * 
+     * Then, invoke methods for checking if object fields changed
+     * and properly update synchronization information for the object.
      * 
      * @param Concrete $dataObject the object to update
      */
@@ -89,6 +105,16 @@ class CommonListener extends ObjectListener implements InterfaceListener {
         
     }
 
+    /**
+     * Invoke methods for checking if:
+     * - Some fields that has to be syncronized in a server are changed
+     * - Images attached to the object are changed
+     * - All required fields for the server are set.
+     * 
+     * @param ServerObjectInfo $exportServer the server information object
+     * @param Concrete $dataObject the new version of the object
+     * @param Concrete $oldDataObject the previous version of the object
+     */
     private function updateServerObjectInfo(ServerObjectInfo &$exportServer, Concrete $dataObject, Concrete $oldDataObject) {
         if ($exportServer->getExport() && ($oldDataObject == null || EventListenerUtils::checkServerUpdate($exportServer, $dataObject, $oldDataObject))) {
             $exportServer->setSync(false);

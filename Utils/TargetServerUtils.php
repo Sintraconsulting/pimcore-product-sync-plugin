@@ -8,7 +8,7 @@ use Pimcore\Model\DataObject\TargetServer;
 /**
  * Target Server Utils
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class TargetServerUtils {
     

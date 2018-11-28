@@ -10,9 +10,11 @@ use SintraPimcoreBundle\Utils\TargetServerUtils;
 use Pimcore\Model\DataObject\AbstractObject;
 
 /**
- * Magento 2 Shop level logic
- * Needs to implement BaseEcommerceService abstract functions
- * Class Magento2Service
+ * Provide methods and utils for objects synchronization for Magento2 servers
+ * common for all object classes.
+ * Must be extended for specific needs.
+ * 
+ * @author Sintra Consulting
  */
 abstract class BaseMagento2Service extends BaseEcommerceService {
 

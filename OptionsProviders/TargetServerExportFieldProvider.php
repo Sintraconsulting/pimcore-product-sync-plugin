@@ -10,9 +10,9 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Objectbricks;
 use Pimcore\Model\DataObject\ClassDefinition\Layout\Fieldset;
 
 /**
- * List Product fields
+ * List Classes fields
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class TargetServerExportFieldProvider implements MultiSelectOptionsProviderInterface{
 

@@ -7,9 +7,10 @@ use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
 use Pimcore\Model\DataObject\Listing;
 
 /**
- * Extending classes have to define their own functionality for custom attributes.
- * This is generic Shop level logic
- * Class EcommerceService
+ * Provide methods and utils for objects synchronization common to all kind of servers
+ * Must be extended for specific needs.
+ * 
+ * @author Sintra Consulting
  */
 abstract class BaseEcommerceService extends SingletonService{
 

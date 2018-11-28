@@ -15,13 +15,22 @@ use SpringImport\Swagger\Magento2\Client\Configuration;
 use SpringImport\Swagger\Magento2\Client\ApiClient;
 
 use Pimcore\Model\DataObject\Objectbrick\Data\Mage2ServerInfo;
+
 /**
- * Base Magento2 API Manager
+ * Magento2 API Manager Base Class
+ * Will be extended by each class that performs API calls to a Magento2 server
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class BaseMage2APIManager extends AbstractAPIManager{
 
+    /**
+     * Get the API Client Instance for a Magento2 Server.
+     * Retrieve Server URL and API Key for authentication from the TargetServe object
+     * 
+     * @param TargetServer $server 
+     * @return ApiClient
+     */
     protected static function getApiInstance(TargetServer $server) {
         $serverInfo = self::getServerInfo($server);
 
@@ -36,10 +45,12 @@ class BaseMage2APIManager extends AbstractAPIManager{
     }
     
     /**
-     * get server info from object brick
+     * Get Server Info from the specific ObjectBrick
+     * Throw an exception if the ObjectBrick is not valid fo Magento2
      * 
      * @param TargetServer $server the server
      * @return Mage2ServerInfo the server info
+     * @throws \Exception
      */
     private static function getServerInfo(TargetServer $server){
         $serverInfos = $server->getServerInfo()->getItems();

@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use Pimcore\Logger;
@@ -17,12 +11,21 @@ use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 
 /**
- * Magento2 Rest Product API Manager 
+ * Product API Manager for Magento2
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerInterface{
     
+    /**
+     * Create a new product.
+     * Instantiate the API Client and perform the call for creation.
+     * Throw an exception if the API call fails.
+     * 
+     * @param mixed $entity the product to create. Will be used in the API call body.
+     * @param TargetServer $server the server in which the product should be created.
+     * @return mixed The API call response.
+     */
     public static function createEntity($entity, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
 
@@ -40,6 +43,15 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
+    /**
+     * Delete an existent product.
+     * Instantiate the API Client and perform the call for deletion.
+     * Throw an exception if the API call fails.
+     * 
+     * @param mixed $sku the SKU of the product to delete.
+     * @param TargetServer $server the server in which the product should be deleted.
+     * @return mixed The API call response.
+     */
     public static function deleteEntity($sku, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
 
@@ -54,10 +66,26 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
+    /**
+     * Get an existent product by $sku.
+     * 
+     * @param mixed $sku the $sku of the entity.
+     * @param TargetServer $server the server in which the product is.
+     * @return mixed The API call response.
+     */
     public static function getEntityByKey($sku, TargetServer $server) {
         return $this->getEntity($server,$sku,null,null,null);
     }
 
+    /**
+     * Get an existent product by $sku.
+     * Instantiate the API Client and perform the call for getting the product.
+     * Return false if the API call fails.
+     * 
+     * @param TargetServer $server the server in which the product is.
+     * @param mixed $sku the SKU of the product to get.
+     * @return mixed The API call response.
+     */
     public static function getEntity(TargetServer $server, $sku, $editMode = null, $storeId = null, $forceReload = null) {
         $apiClient = self::getApiInstance($server);
 
@@ -73,7 +101,11 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
     }
     
     /**
+     * Search for existent products.
+     * Instantiate the API Client and perform the call for search.
+     * 
      * Search Product with search condition
+     * @param TargetServer $server the server in which the products are.
      * @param string $field field used for research
      * @param string $value the field value
      * @param $conditionType condition on the field value. Available conditions:
@@ -105,6 +137,16 @@ class Mage2ProductAPIManager extends BaseMage2APIManager implements APIManagerIn
         }
     }
     
+    /**
+     * Update an existent product
+     * Instantiate the API Client and perform the call fore update
+     * Throw an exception if the API call fails.
+     * 
+     * @param mixed $sku the sku of the product to update.
+     * @param mixed $entity the product to update. Will be used in the API call body
+     * @param TargetServer $server the server in which the product should be updated
+     * @return mixed The API call response.
+     */
     public static function updateEntity($sku, $entity, TargetServer $server) {
         $apiClient = self::getApiInstance($server);
 

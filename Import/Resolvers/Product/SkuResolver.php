@@ -10,7 +10,7 @@ use Pimcore\Model\DataObject\Product;
  * 
  * name_column_id: optional additional column Id used for product key generation
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class SkuResolver extends AbstractResolver{
 
@@ -21,11 +21,11 @@ class SkuResolver extends AbstractResolver{
         $columnId = $this->getIdColumn($config);
         
         $sku = trim($rowData[$columnId]);
-        $products = new Product\Listing();
-        $products->setCondition("sku = ".$products->quote($sku));
-        $products->setLimit(1);
+        $listing = new Product\Listing();
+        $listing->setCondition("sku = ".$listing->quote($sku));
+        $listing->setLimit(1);
         
-        $products = $products->load();
+        $products = $listing->load();
         
         if($products){
             $product = $products[0];
@@ -50,15 +50,6 @@ class SkuResolver extends AbstractResolver{
         
         return $product;
         
-    }
-    
-    private function getColumnId(\stdClass $config, $columnname){
-        $configArray = json_decode(json_encode($config), true);
-        $selectedGridColumns = $configArray["selectedGridColumns"];
-        
-        $keyColumnId = array_search($columnname, array_column(array_column($selectedGridColumns, 'attributes'), 'attribute'));
-        
-        return $keyColumnId;
     }
 
 }

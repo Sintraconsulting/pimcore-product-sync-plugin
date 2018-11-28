@@ -8,6 +8,11 @@ use SintraPimcoreBundle\Services\InterfaceService;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Utils\GeneralUtils;
 
+/**
+ * Implement methods for categories synchronization on Magento2 servers
+ * 
+ * @author Sintra Consulting
+ */
 class Mage2CategoryService extends BaseMagento2Service implements InterfaceService {
     private $configFile = __DIR__ . '/../config/category.json';
 

@@ -5,8 +5,14 @@ namespace SintraPimcoreBundle\Services\Shopify;
 use SintraPimcoreBundle\Services\BaseEcommerceService;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Utils\GeneralUtils;
-use Pimcore\Logger;
 
+/**
+ * Provide methods and utils for objects synchronization for Shopify servers
+ * common for all object classes.
+ * Must be extended for specific needs.
+ * 
+ * @author Sintra Consulting
+ */
 abstract class BaseShopifyService extends BaseEcommerceService {
 
     /**

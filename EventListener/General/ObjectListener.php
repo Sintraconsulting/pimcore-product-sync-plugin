@@ -6,9 +6,11 @@ use Pimcore\Model\DataObject\Concrete;
 use SintraPimcoreBundle\EventListener\AbstractObjectListener;
 
 /**
- * Implementation of ObjectListener
+ * Extends the AbstractObjectListener and implements the dispatcher methods.
+ * Each of these methods check for object class and dispatch the action to
+ * the specific listener.
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class ObjectListener extends AbstractObjectListener{
 
@@ -20,10 +22,10 @@ class ObjectListener extends AbstractObjectListener{
 
     /**
      * Dispatch the preAdd event to the specific class listener
-     * If the object class is not managed for the preUpdate event, do nothing
+     * If the object class is not managed for the preAdd event, do nothing
      * For folder data objects the classname is null
      *
-     * @param Concrete $dataObject the object to update
+     * @param Concrete $dataObject the object to add
      */
     public function preAddDispatcher($dataObject) {
         if ($dataObject instanceof Concrete) {

@@ -14,7 +14,7 @@ use SintraPimcoreBundle\Import\Operators\TransliterateOperator;
  * folder: the folder by which the path starts
  * field: the field in which the founded object must be related
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class ObjectTreeOperator extends TransliterateOperator {
 
@@ -64,9 +64,8 @@ class ObjectTreeOperator extends TransliterateOperator {
     }
 
     /**
-     * @param String $class Class of the Object
-     * @param $path Path of the Object
-     * @return Category
+     * Get an object of a specific class.
+     * If not exists, return null.
      */
     private function getObject($class, $path) {
         $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\" . $class . "\\Listing");

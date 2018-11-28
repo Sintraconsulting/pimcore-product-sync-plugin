@@ -2,106 +2,81 @@
 
 namespace SintraPimcoreBundle\Import\Operators;
 
-use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
-use Pimcore\Model\DataObject\Folder;
-
 /**
- * Relate Object fields to product
+ * Operator that performs relation of multiple objects.
+ * Different objects should be divided in the CSV column by the "|" (pipe) character.
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
-class MultipleObjectsRelationOperator extends AbstractOperator{
-    
+class MultipleObjectsRelationOperator extends ObjectRelationOperator {
+
     /**
      * class: the related object class name
+     * folder: folder containg related class objects (user for create new one)
      * sourcefield: field name in imported object class
-     * relatedfield: field name in related object class
      * 
      * create_if_missing: create a new object if missing (true|false)
-     * folder: folder containg related class objects (user for create new one)
+     * relatedfield: field name in related object class
+     * 
+     * descriptionfield_name: field name for created object description 
      * descriptionfield_index: field index for created object description
      */
     private $additionalData;
-    
-    public function __construct(\stdClass $config, $context = null)
-    {
+
+    public function __construct(\stdClass $config, $context = null) {
         parent::__construct($config, $context);
 
-        $this->additionalData = json_decode($config->additionalData,true);
+        $this->additionalData = json_decode($config->additionalData, true);
     }
-    
+
     /**
-     * Dynamically invoke field setter for quantityValue fields 
+     * Get the list of objects to relate from the CSV column.
+     * Attach each of them to the target object.
      */
-    public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
+    public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {
 
-        $object = null;
-        $values = explode("|",$rowData[$colIndex]);
-        
-        $class = $this->additionalData["class"];
+        $values = explode("|", $rowData[$colIndex]);
+
+
         $sourcefield = $this->additionalData["sourcefield"];
-        $relatedfield = $this->additionalData["relatedfield"];
-        $createIfMissing = $this->additionalData["create_if_missing"];
-        
+
         $objects = [];
-        
-        foreach ($values as $value){
-            if(!empty(trim($value))){
-                $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$class."\\Listing");
-                $listing = $listingClass->newInstance();
 
-                $listing->setCondition($relatedfield." = ".$listing->quote($value));
-                $listing->setLimit(1);
-
-                $listing = $listing->load();
-
-                if(!$listing && $createIfMissing){
-                    $object = $this->createNewObject($rowData, $value, $class, $relatedfield, $colIndex);
-                }else{
-                    $object = $listing[0];               
-                }
-                
-                $objects[] = $object;
+        foreach ($values as $value) {
+            if (!empty(trim($value))) {
+                $this->attachObject($objects, $value);
             }
         }
-        
+
         $reflectionTarget = new \ReflectionObject($target);
-        $setSourceFieldMethod = $reflectionTarget->getMethod('set'. ucfirst($sourcefield));
-        
+        $setSourceFieldMethod = $reflectionTarget->getMethod('set' . ucfirst($sourcefield));
+
         $setSourceFieldMethod->invoke($target, $objects);
-        
     }
-    
-    private function createNewObject($rowData, $value, $class, $relatedfield, $colIndex){
-        $folder = $this->additionalData["folder"];
-        $descriptionfieldIndex = $this->additionalData["descriptionfield_index"];
-        
-        $objectFolder = Folder::getByPath("/".$folder);
 
-        $objectClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$class);
-        $object = $objectClass->newInstance();
+    /**
+     * Use information passed in additional data to search the existence of each
+     * of the related objects.
+     * If an object exists, it will be attached to the target object.
+     * If not, it could be created and then attached.
+     */
+    private function attachObject(array &$objects, $value) {
+        $class = $this->additionalData["class"];
+        $relatedfield = $this->additionalData["relatedfield"];
+        $createIfMissing = $this->additionalData["create_if_missing"];
 
-        $object->setParentId($objectFolder->getId());
-        $object->setKey(str_replace("/", "-", $value));
-        $object->setPublished(1);
+        $listing = $this->getObjectsListing($class, $relatedfield, $value);
 
-        $reflectionObject = new \ReflectionObject($object);
-        $setFieldMethod = $reflectionObject->getMethod('set'. ucfirst($relatedfield));
-        $setFieldMethod->invoke($object, $value);
-
-        $descriptionValue = $colIndex == $descriptionfieldIndex ? $value : trim($rowData[$descriptionfieldIndex]);
-
-        $setDescriptionMethod = $reflectionObject->getMethod('setDescription');
-
-        $config = \Pimcore\Config::getSystemConfig();
-        $languages = explode(",",$config->general->validLanguages);
-        foreach ($languages as $lang) {
-            $setDescriptionMethod->invoke($object, $descriptionValue, $lang);
+        $object = null;
+        if ($listing) {
+            $object = $listing[0];
+        } else if ($createIfMissing) {
+            $object = $this->createNewObject($value, $class, $relatedfield);
         }
 
-        $object->save();
-        
-        return $object;
+        if ($object !== null) {
+            $objects[] = $object;
+        }
     }
 
 }

@@ -6,10 +6,9 @@ use Pimcore\Model\DataObject\ClassDefinition\DynamicOptionsProvider\SelectOption
 use SintraPimcoreBundle\Utils\GeneralUtils;
 
 /**
- * Dynamic Options Provider that display valid languages for a TargetServer.
- * Languages are taken from Pimcore configuration
+ * Dynamic Options Provider that display valid classes for a TargetServer.
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class SystemClassesOptionProvider implements SelectOptionsProviderInterface{
 

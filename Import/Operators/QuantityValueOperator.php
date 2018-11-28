@@ -9,9 +9,9 @@ use Pimcore\Model\DataObject\Data\QuantityValue;
 use Pimcore\Model\DataObject\ClassDefinition;
 
 /**
- * Check if unit exists
+ * Operator for QuantityValue fields
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class QuantityValueOperator extends AbstractOperator{
     
@@ -25,7 +25,11 @@ class QuantityValueOperator extends AbstractOperator{
     }
     
     /**
-     * Dynamically invoke field setter for quantityValue fields 
+     * Check if the value passed in the CSV correctly provide a valid
+     * unit of measure (or currency) for the field.
+     * If not, attach the default one.
+     * Then, properly set the obtained value to the specific field 
+     * passed as additional data for the operator.     * 
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         
@@ -38,6 +42,11 @@ class QuantityValueOperator extends AbstractOperator{
 
     }
     
+    /**
+     * QuantityValue in Pimcore is composed as 'value_unit'
+     * If the passed value doesn't have a valid unit
+     * the default one for the field is taken.
+     */
     public function validateUnit(ClassDefinition $class, $field, $value){
         $fieldDefinition = $class->getFieldDefinition($field);
                 

@@ -1,22 +1,22 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace SintraPimcoreBundle\ApiManager;
 
 use Pimcore\Model\DataObject\TargetServer;
 
 /**
- * Abstract API Manager 
+ * Abstract API Manager Class 
+ * Must be extended for each kind of E-Commerce integration
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 abstract class AbstractAPIManager {
     
+    /**
+     * Abstract method to get API Client Instance
+     * 
+     * @param TargetServer $server
+     */
     protected static abstract function getApiInstance(TargetServer $server);
 
 }

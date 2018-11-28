@@ -4,9 +4,9 @@ namespace SintraPimcoreBundle\Import\Operators;
 
 use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
 /**
- * Escape HTML tags 
+ * Operator that performs escape of HTML tags
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 abstract class HTMLOperator extends AbstractOperator{
     
@@ -20,7 +20,9 @@ abstract class HTMLOperator extends AbstractOperator{
     }
     
     /**
-     * Dynamically invoke field setter for html fields 
+     * Get the column value and excape the HTML tags.
+     * Properly set the obtained string to the specific field 
+     * passed as additional data for the operator
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
         

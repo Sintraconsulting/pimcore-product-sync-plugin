@@ -1,11 +1,5 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
 use Pimcore\Model\DataObject\TargetServer;
@@ -15,12 +9,22 @@ use Pimcore\Logger;
 use SpringImport\Swagger\Magento2\Client\ApiException;
 
 /**
- * Magento Rest Configurable Product Link API Manager 
+ * Configurable Product Link API Manager for Magento2
  *
- * @author Marco Guiducci
+ * @author Sintra Consulting
  */
 class ConfigurableProductLinkAPIManager extends BaseMage2APIManager{
     
+    /**
+     * Attach a child to a product in order to create a configurable product
+     * Instantiate the API Client and perform the call.
+     * Return false if the API call fails.
+     * 
+     * @param String $sku the parent SKU
+     * @param String $childSku the child SKU
+     * @param TargetServer $server the server in which the products are
+     * @return mixed the API call response
+     */
     public static function addChildToProduct($sku, $childSku, TargetServer $server){
         $apiClient = self::getApiInstance($server);
         

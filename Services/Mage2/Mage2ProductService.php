@@ -15,6 +15,11 @@ use Pimcore\Logger;
 use SintraPimcoreBundle\Services\InterfaceService;
 use SintraPimcoreBundle\Utils\GeneralUtils;
 
+/**
+ * Implement methods for products synchronization on Magento2 servers
+ * 
+ * @author Sintra Consulting
+ */
 class Mage2ProductService extends BaseMagento2Service implements InterfaceService {
 
     /**

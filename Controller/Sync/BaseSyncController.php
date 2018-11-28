@@ -26,7 +26,9 @@ class BaseSyncController {
     }
 
     /**
-     * Dispatch syncronization invoking the server related syncronization service
+     * Dispatch syncronization invoking the server related syncronization service.
+     * Firstly get a batch of objects that need to be synchronized
+     * and perform the synchronization for each of them.
      * 
      * @param TargetServer $server the server in which the objects must me synchronized
      * @param String $class the class of the objects
@@ -58,9 +60,11 @@ class BaseSyncController {
      * take in consideration all published objects of the requested class
      * that must be exported and that are completed but not synchronized in the requested server.
      *
-     * @param TargetServer $server
-     * @param $class
-     * @param int $limit
+     * @param TargetServer $server the server in which the objects must me synchronized
+     * @param String $class the class of the objects
+     * @param int $limit number of objects to synchronize
+     * @param array $customFilters timing informations for execution. it override limit if present
+     * @return array the ids of the objects to synchronize
      */
     public function getServerToSyncObjects(TargetServer $server, $class, $limit, $customFilters = []) {
         /**
@@ -94,10 +98,21 @@ class BaseSyncController {
     }
 
     /**
-     * @param InterfaceService  $dataObjectService
-     * @param array $dataObjects
-     * @param TargetServer $server
-     * @return string
+     * Synchronize objects in the server.
+     * At each iteration, if time limitation is active, check if there is enough
+     * time to perform the synchronization of another object.
+     * If not, it breaks the execution.
+     * 
+     * Execution errors are catched and logged, so that the execution will not be break
+     * if there is a problem with a single object.
+     * At the end of the synchronization flow, errors are reported.
+     * 
+     * @param InterfaceService $dataObjectService the service that will perform the synchronization.
+     * @param array $dataObjects the ids of the objects to synchronize.
+     * @param TargetServer $server the server in which the objects must me synchronized.
+     * @param String $class the class of the objects.
+     * @param array $customFilters timing informations for execution.
+     * @return String the synchronization result.
      */
     protected function exportDataObjects(InterfaceService $dataObjectService, $dataObjects, TargetServer $server, $class, $customFilters = []) {
         $response = array(
@@ -134,20 +149,10 @@ class BaseSyncController {
                 $syncronizedElements++;
             } catch (\Exception $e) {
                 $response["errors"][] = "OBJECT ID " . $productId . ": " . $e->getMessage();
-
-                $db = Db::get();
-                $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
-                    "gravity" => "LOW",
-                    "class" => "BaseSyncController",
-                    "action" => "exportDataObjects",
-                    "flow" => "Sync to " . $server->getServer_name(),
-                    "description" => "ERROR in exporting object with Id '$productId': " . $e->getMessage(),
-                    "timestamp" => time()
-                ));
-
-                Logger::err($e->getMessage());
+                
+                $this->logSynchronizationError($server->getServer_name(), $productId, $e->getMessage());
                 Logger::err($e->getTraceAsString());
-
+                
                 $elementsWithError++;
             }
 
@@ -167,18 +172,18 @@ class BaseSyncController {
         return $this->logSyncedProducts($response, $server->getServer_name(), $class, $endTime - $startTime, null);
     }
 
-    protected function logSyncedProducts($response, $ecomm, $class, $duration, $finished = null) {
+    protected function logSyncedProducts($response, $servername, $class, $duration, $finished = null) {
         if (!$finished) {
             $finished = date("Y-m-d H:i:s");
         }
         $response["finished"] = $finished;
 
         $syncLogFile = fopen(PIMCORE_LOG_DIRECTORY . "/syncObjects.log", "a") or die("Unable to open file!");
-        $syncLog = "[" . Date("Y-m-d H:i:s") . "] - " . strtoupper($class) . " $ecomm SYNCRONIZATION RESULT: " . print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response, 'duration' => $duration . ' ms'], true);
+        $syncLog = "[" . Date("Y-m-d H:i:s") . "] - " . strtoupper($class) . " $servername SYNCRONIZATION RESULT: " . print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response, 'duration' => $duration . ' ms'], true);
         fwrite($syncLogFile, $syncLog . PHP_EOL);
         fclose($syncLogFile);
 
-        return ("[$finished] - " . strtoupper($class) . " $ecomm SYNCRONIZATION RESULT: " . print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response, 'duration' => $duration . ' ms'], true) . PHP_EOL);
+        return ("[$finished] - " . strtoupper($class) . " $servername SYNCRONIZATION RESULT: " . print_r(['success' => $response['elements with errors'] == 0, 'responsedata' => $response, 'duration' => $duration . ' ms'], true) . PHP_EOL);
     }
 
     protected function millitime() {
@@ -188,6 +193,21 @@ class BaseSyncController {
         // Note: Using a string here to prevent loss of precision
         // in case of "overflow" (PHP converts it to a double)
         return sprintf('%d%03d', $comps[1], $comps[0] * 1000);
+    }
+    
+    protected function logSynchronizationError($servername, $productId, $message) {
+        $db = Db::get();
+                $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
+                    "gravity" => "LOW",
+                    "class" => "BaseSyncController",
+                    "action" => "exportDataObjects",
+                    "flow" => "Sync to " . $servername,
+                    "description" => "ERROR in exporting object with Id '$productId': " . $message,
+                    "timestamp" => time()
+                ));
+
+                Logger::err($message);
+                
     }
 
 }

@@ -47,7 +47,7 @@ class TargetServerUtils {
      * @return FieldMapping[] fields map
      */
     public static function getClassFieldMap(TargetServer $targetServer, $classname){
-        $fieldsMapCollection = $targetServer->getFieldsMap()->getItems();
+        $fieldsMapCollection = $targetServer->getFieldsMap() != null ? $targetServer->getFieldsMap()->getItems() : array();
         
         $fieldsMap = array();
         

@@ -64,7 +64,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->preAddDispatcher($obj);
 
-            $this->checkForCustomListener($obj, "onPreAdd");
+            self::checkForCustomListener($obj, "onPreAdd");
         }
     }
 
@@ -83,7 +83,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->preUpdateDispatcher($obj);
 
-            $this->checkForCustomListener($obj, "onPreUpdate");
+            self::checkForCustomListener($obj, "onPreUpdate");
         }
     }
 
@@ -103,7 +103,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->postUpdateDispatcher($obj, $saveVersionOnly);
 
-            $this->checkForCustomListener($obj, "onPostUpdate");
+            self::checkForCustomListener($obj, "onPostUpdate");
         }
     }
 
@@ -122,7 +122,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->postDeleteDispatcher($obj);
 
-            $this->checkForCustomListener($obj, "onPostDelete");
+            self::checkForCustomListener($obj, "onPostDelete");
         }
     }
 
@@ -133,7 +133,7 @@ abstract class AbstractObjectListener {
      * @param Concrete $obj
      * @param String $eventName
      */
-    private function checkForCustomListener($obj, $eventName) {
+    private static function checkForCustomListener($obj, $eventName) {
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
         $namespace = $customizationInfo["namespace"];
 

@@ -41,7 +41,7 @@ abstract class AbstractAssetsListener {
             $assetsListener = new AssetsListener();
             $assetsListener->postAddDispatcher($asset);
 
-            $this->checkForCustomListener($asset, "onPostAdd");
+            self::checkForCustomListener($asset, "onPostAdd");
         }
     }
 
@@ -52,7 +52,7 @@ abstract class AbstractAssetsListener {
      * @param Asset $asset
      * @param String $eventName
      */
-    private function checkForCustomListener($asset, $eventName) {
+    private static function checkForCustomListener($asset, $eventName) {
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
         $namespace = $customizationInfo["namespace"];
 

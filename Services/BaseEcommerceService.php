@@ -39,7 +39,7 @@ abstract class BaseEcommerceService extends SingletonService{
      * @param $classname
      * @return Listing
      */
-    protected function getObjectsToExport($objectId, $classname){
+    protected function getObjectsToExport($objectId, $classname, TargetServer $server){
         $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\".$classname."\\Listing");
         /** @var Listing $listing */
         $listing = $listingClass->newInstance();

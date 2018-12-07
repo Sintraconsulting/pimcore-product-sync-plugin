@@ -544,18 +544,20 @@ class ShopifyProductModel {
         /** @var Product $variant */
         foreach ($variants as $variant) {
             $serverInfo = $this->getServerInfoByVariant($variant);
-            $lastHook = $serverInfo->getLastSyncHook();
-            if (isset($lastHook) && !empty($lastHook) && $this->hook && $lastHook !== $variant->{'get'.ucfirst($this->hook)}()) {
-                continue;
-            }
-            $this->variants += [
-                    $variant->getId() => $variant
-            ];
-
-            if ($serverInfo !== null) {
-                $this->serverInfos += [
-                        $variant->getId() => $serverInfo
+            if($serverInfo !== null){
+                $lastHook =  $serverInfo->getLastSyncHook();
+                if (isset($lastHook) && !empty($lastHook) && $this->hook && $lastHook !== $variant->{'get'.ucfirst($this->hook)}()) {
+                    continue;
+                }
+                $this->variants += [
+                        $variant->getId() => $variant
                 ];
+
+                if ($serverInfo !== null) {
+                    $this->serverInfos += [
+                            $variant->getId() => $serverInfo
+                    ];
+                }
             }
         }
     }

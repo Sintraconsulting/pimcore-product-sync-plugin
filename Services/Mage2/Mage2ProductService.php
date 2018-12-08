@@ -65,7 +65,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      */
     public function export($productId, TargetServer $targetServer) {
 
-        $dataObjects = $this->getObjectsToExport($productId, "Product");
+        $dataObjects = $this->getObjectsToExport($productId, "Product", $targetServer);
         $dataObject = $dataObjects->current();
 
         if ($dataObject instanceof Product) {

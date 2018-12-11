@@ -4,6 +4,7 @@ namespace SintraPimcoreBundle\Services\Mage2;
 
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\AbstractObject;
+use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
@@ -29,12 +30,21 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      * @param $classname
      * @return Product\Listing
      */
-    protected function getObjectsToExport($objectId, $classname) {
+    protected function getObjectsToExport($objectId, $classname, TargetServer $server){
+        $classDef = ClassDefinition::getByName($classname);
+        $classId = $classDef->getId();
+        $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
+        $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
+        
         $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\" . $classname . "\\Listing");
         $listing = $listingClass->newInstance();
 
+        $condition = "(oo_id = " . $listing->quote($objectId) . " OR o_parentId = " . $listing->quote($objectId).")";
+        $condition .= " AND oo_id IN (SELECT sourceid FROM dependencies INNER JOIN $fieldCollectionTable ON sourceid = o_id"
+                . " WHERE targetid = '".$server->getId()."' AND name = '".$server->getKey()."' AND export = 1)";
+        
         $listing->setObjectTypes([AbstractObject::OBJECT_TYPE_OBJECT, AbstractObject::OBJECT_TYPE_VARIANT]);
-        $listing->setCondition("oo_id = " . $listing->quote($objectId) . " OR o_parentId = " . $listing->quote($objectId));
+        $listing->setCondition($condition);
         $listing->setOrderKey(array('o_type', 'oo_id'));
         $listing->setOrder(array('asc', 'asc'));
 
@@ -55,7 +65,7 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
      */
     public function export($productId, TargetServer $targetServer) {
 
-        $dataObjects = $this->getObjectsToExport($productId, "Product");
+        $dataObjects = $this->getObjectsToExport($productId, "Product", $targetServer);
         $dataObject = $dataObjects->current();
 
         if ($dataObject instanceof Product) {

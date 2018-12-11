@@ -35,7 +35,7 @@ class RelationResolver extends AbstractResolver{
         $objects = $listing->load();
         
         if($objects){
-            $object = $listing[0];
+            $object = $objects[0];
         }else{
             $objectClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\$class");
             

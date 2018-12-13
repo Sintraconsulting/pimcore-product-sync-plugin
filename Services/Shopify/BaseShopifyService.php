@@ -2,15 +2,18 @@
 
 namespace SintraPimcoreBundle\Services\Shopify;
 
+use Pimcore\Model\DataObject\Concrete;
+use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
 use SintraPimcoreBundle\Services\BaseEcommerceService;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Utils\GeneralUtils;
+use Pimcore\Model\DataObject\Product;
 
 /**
  * Provide methods and utils for objects synchronization for Shopify servers
  * common for all object classes.
  * Must be extended for specific needs.
- * 
+ *
  * @author Sintra Consulting
  */
 abstract class BaseShopifyService extends BaseEcommerceService {
@@ -19,8 +22,8 @@ abstract class BaseShopifyService extends BaseEcommerceService {
      * Specific mapping for Shopify Product export
      * It builds the API array for communcation with shopify product endpoint
      * @param $shopifyApi
-     * @param $fieldMap
-     * @param $fieldsDepth
+     * @param FieldMapping $fieldMap
+     * @param array $fieldsDepth
      * @param $language
      * @param $dataSource
      * @param TargetServer $server
@@ -28,19 +31,23 @@ abstract class BaseShopifyService extends BaseEcommerceService {
      * @throws \Exception
      */
     protected function mapServerMultipleField ($shopifyApi, $fieldMap, $fieldsDepth, $language, $dataSource = null, TargetServer $server = null) {
-        // End of recursion
+        # End of recursion
         if(count($fieldsDepth) == 1) {
             /** @var Product\Listing $dataSource */
+            # If we have a Listing as $dataSource, get the first object
             if ( method_exists($dataSource, 'current') ) {
                 $dataSource = $dataSource->getObjects()[0];
+                /** @var Concrete $dataSource */
             }
             $fieldValue = $this->getObjectField($fieldMap, $language, $dataSource);
+            /** @var string $apiField - name of the last field after . split from mapping*/
             $apiField = $fieldsDepth[0];
 
             if($fieldValue instanceof \Pimcore\Model\DataObject\Data\QuantityValue && $apiField == 'weight'){
+                # Generate also the weight_unit for the specific quantity value
                 return $this->mapServerField($shopifyApi, $fieldValue->getValue(), $apiField) + $this->mapServerField([], $fieldValue->getUnit()->getAbbreviation(), 'weight_unit');
             } elseif($apiField == 'price'){
-
+                # IF field value is null or 0, set default as 9999 to avoid free purchases
                 if($fieldValue === null || $fieldValue->getValue() === null || (int)$fieldValue === 0 || (int)$fieldValue->getValue() === 0) {
                     $fieldValue = 9999.99;
                 }
@@ -49,14 +56,17 @@ abstract class BaseShopifyService extends BaseEcommerceService {
                 if (isset($shopifyApi['tags'])) {
                     $otherTags = explode(', ', $shopifyApi['tags']);
                     $otherTags[] = is_array($fieldValue) ? implode(', ',$fieldValue) : $fieldValue;
+                    # Transform array to string to comply with shopify's type requirements
                     $fieldValue = implode(", ", $otherTags);
                 }
             }
             return $this->mapServerField($shopifyApi, $fieldValue, $apiField);
         }
+        # Removes first element as assign it as parent element
+        # Required for depth recursion
         $parentDepth = array_shift($fieldsDepth);
 
-        //Recursion inside variants
+        # Recursion inside variants
         if ($parentDepth == 'variants' && $dataSource) {
             $i = 0;
             foreach ($dataSource as $dataObject) {
@@ -73,6 +83,7 @@ abstract class BaseShopifyService extends BaseEcommerceService {
                 }
                 $i++;
             }
+            /** @var array $shopifyApi */
             return $shopifyApi;
         }
 
@@ -98,6 +109,7 @@ abstract class BaseShopifyService extends BaseEcommerceService {
                 ];
                 $shopifyApi[$parentDepth][] = $customValue;
             }
+            /** @var array $shopifyApi */
             return $shopifyApi;
         }
 

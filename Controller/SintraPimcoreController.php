@@ -20,7 +20,7 @@ use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
  * Provide the method to synchronize objects on external servers
  *
  * @author Sintra Consulting
- * 
+ *
  * @Route("/sintra_pimcore")
  */
 class SintraPimcoreController extends Controller implements AdminControllerInterface {
@@ -41,31 +41,31 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
 
     /**
      * Synchronize objects in one or more servers
-     * 
+     *
      * @param Request $request the action request. It could have these arguments:
-     *      - class (mandatory):  a valid Classname, to be choosen from the 
+     *      - class (mandatory):  a valid Classname, to be choosen from the
      *                            Pimcore created classes.
-     * 
-     *      - server:             if passed, the server in which object must be synchronized. 
+     *
+     *      - server:             if passed, the server in which object must be synchronized.
      *                            If not passed, all enabled servers will be considered.
-     * 
+     *
      *      - limit (default 10): the number of object to synchronize per iteration.
-     * 
+     *
      *      - execTime:           if passed, specify the maximum execution time (in seconds).
      *                            in combination with 'maxSyncTime' and 'typicalSyncTime'
      *                            override the limit parameter
-     * 
+     *
      *      - maxSyncTime:        if passed, specify the empiric maximum synchronization time for a single object (in seconds).
      *                            in combination with 'execTime' and 'typicalSyncTime'
      *                            override the limit parameter
-     * 
+     *
      *      - typicalSyncTime:    if passed, specify the empiric typicall synchronization time for a single object  (in seconds).
      *                            in combination with 'execTime' and 'maxSyncTime'
      *                            override the limit parameter
-     *       
+     *
      * @return Response The synchronization result
      * @throws \Exception
-     * 
+     *
      * @Route("/sync_objects")
      */
     public function syncObjectsAction(Request $request) {
@@ -96,7 +96,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
         /**
          * Add a semaphore control in order to avoid concurrent synchronizations
          * Perform the object synchronization and return the results.
-         * 
+         *
          * If an unexpected error occours, it will be reported in the custom log table
          * in the database
          */
@@ -131,30 +131,38 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
 
     /**
      * Perfor objects synchronization for a specific class.
-     * If no specific server is requested, 
+     * If no specific server is requested,
      * all enabled servers will be taken into consideration.
-     * 
+     *
      * Set a default limit in number of objects to synchronize
      * if this value is missing or is invalid from the request.
-     * 
+     *
      * @param Request $request the action request
+     *        GET params:
+     *          - server(string) : If set, the sync will be applied for the specified server name.
+     *                             Otherwise, will sync all enabled servers
+     *          - limit(int) : Number of products to be synced per server. Default 10.
      * @param array $response The synchronization result
      * @param String $class the class of the objects to synchronize
      * @param array $customFilters cointains synchronization timing frpm the request.
+     * @throws \Exception
      */
     private function doObjectsSynchronization(Request $request, array &$response, $class, $customFilters = []) {
         $syncCTR = SynchronizationUtils::getBaseSynchronizationController();
 
         $servers = new TargetServer\Listing();
 
+        # If a specific server is targeted
         if ($request->get("server") != null && !empty($request->get("server"))) {
             $servers->setCondition("o_key = ?", $request->get("server"));
         } else {
+            # Otherwise get all enabled servers
             $servers = $syncCTR->getEnabledServers();
         }
 
         $limit = $request->get("limit");
         if ($limit == null || empty($limit) || !ctype_digit($limit) || !is_int($limit)) {
+            # If limit is not set as a parameter, default number of products synced to 10
             $limit = 10;
         }
 
@@ -173,7 +181,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
             "description" => $message,
             "timestamp" => time()
         ));
-        
+
         Logger::err($message);
     }
 

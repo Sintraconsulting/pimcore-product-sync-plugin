@@ -9,7 +9,7 @@ use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
 
 /**
  * Synchronizaton utils
- * 
+ *
  * @author Sintra Consulting
  */
 class SynchronizationUtils {
@@ -17,10 +17,11 @@ class SynchronizationUtils {
     /**
      * Get the synchronization service needed to synchronize an objects
      * based on server type and object class
-     * 
+     *
      * @param TargetServer $targetServer the server in which the object must be syncronized
      * @param String $class the object class
      * @return InterfaceService the synchronization service
+     * @throws \ReflectionException
      */
     public static function getSynchronizationService(TargetServer $targetServer, $class) {
         $serverType = $targetServer->getServer_type();
@@ -47,8 +48,9 @@ class SynchronizationUtils {
      * Get the base synchronization controller needed to synchronize objects.
      * Check of existance of an overriding controller in a custom repository
      * and return the original controller if not exists.
-     * 
+     *
      * @return BaseSyncController the base synchronization controller
+     * @throws \ReflectionException
      */
     public static function getBaseSynchronizationController() {
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
@@ -75,9 +77,10 @@ class SynchronizationUtils {
      * based on server type.
      * Check of existance of an overriding controller in a custom repository
      * and return the original controller if not exists.
-     * 
+     *
      * @param TargetServer $targetServer the server in which the object must be syncronized
      * @return BaseSyncController the synchronization controller
+     * @throws \ReflectionException
      */
     public static function getServerSynchronizationController(TargetServer $targetServer) {
         $serverType = $targetServer->getServer_type();
@@ -98,6 +101,7 @@ class SynchronizationUtils {
             $syncController = $syncControllerClass->newInstance();
         }
 
+        /** @var BaseSyncController $syncController */
         return $syncController;
     }
 

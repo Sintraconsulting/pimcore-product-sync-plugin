@@ -83,6 +83,7 @@ class ShopifyProductModel {
      *
      * @param int $maxPerIteration
      * @return array
+     * @throws \Exception
      */
     protected function getProductsImagesArray ($maxPerIteration = 10) {
         $imgsArray = [];
@@ -99,12 +100,16 @@ class ShopifyProductModel {
             $prodImgs = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $currMaxPerIteration, $i);
             $prodImgsArray = $prodImgs->getImagesArray();
             $currentUploadCount += $prodImgs->getUploadCount();
+            # Merge newly created images array with the previous created one
             $imgsArray = array_merge($imgsArray, $prodImgsArray);
         }
         $this->imageUploadCount += $currentUploadCount;
         return $imgsArray;
     }
 
+    /**
+     * @param string $hook
+     */
     public function setSyncHook ($hook) {
         $this->hook = $hook;
         $this->buildCustomModelInfo($this->rawVariants);
@@ -122,6 +127,7 @@ class ShopifyProductModel {
                 'images' => $this->getProductsImagesArray()
         ];
 
+        # Upload images through an product update
         $result = $this->apiManager::updateEntity($serverInfo->getObject_id(), $updateImagesApiReq, $this->targetServer);
 
         if (isset($result['images']) && count($result['images'])) {
@@ -440,6 +446,11 @@ class ShopifyProductModel {
         return false;
     }
 
+    /**
+     * SET the inventory AVAILABILITY to a specific number
+     *
+     * @throws \Exception
+     */
     public function updateVariantsInventories () : void {
         /** @var Product $variant */
         foreach($this->variants as $variant) {
@@ -448,12 +459,14 @@ class ShopifyProductModel {
             $preparedVar = $this->getVariantFromApiReq($variant->getSku());
             $inventoryJson = json_decode($serverInfo->getInventory_json(), true);
 
+            # If quantity to set is not 0
             if ($preparedVar['quantity'] != 0) {
                 $payload = [
                         'inventory_item_id' => $inventoryJson['inventory_item_id'],
                         'location_id' => $inventoryJson['location_id'],
                         'available' => $preparedVar['quantity']
                 ];
+                # Set inventory availability per variant
                 $response = $this->apiManager->updateInventoryInfo($payload, $this->targetServer);
                 $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
                 $variant->update(true);
@@ -461,6 +474,11 @@ class ShopifyProductModel {
         }
     }
 
+    /**
+     * Retrieves the inventory_item_id for all variants
+     *
+     * @throws \Exception
+     */
     public function updateInventoryApiResponse () : void {
         $inventoryIds = $this->prepareInventoryItemIds();
         $inventoryJsonList = $this->apiManager->getInventoryInfo([
@@ -519,6 +537,13 @@ class ShopifyProductModel {
         return null;
     }
 
+    /**
+     * Sets inventory Id from json response only for current target server
+     *
+     * @param Product $variant
+     * @param array $json
+     * @return Fieldcollection
+     */
     protected function getUpdatedServerInfosProduct (Product $variant, array $json) : Fieldcollection {
         $exportServers = $variant->getExportServers();
         /** @var ServerObjectInfo $exportServer */

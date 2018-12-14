@@ -190,6 +190,13 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         }
     }
 
+    /**
+     * Set product as sync after all sync steps have been successfully completed
+     *
+     * @param $results
+     * @param $targetServer
+     * @throws \Exception
+     */
     protected function setSyncProduct ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
@@ -198,6 +205,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
                     $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
+                    # Mandatory check to see if all images have been synced
                     if ($this->checkAllVariantImagesSynced($product, $serverObjectInfo)) {
                         $serverObjectInfo->setSync(true);
                     } else {
@@ -209,6 +217,14 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         }
     }
 
+    /**
+     * Check if all variant's images have been synced
+     * This check is required because we might have limitations on the image sync process for performance gains
+     *
+     * @param Product $variant
+     * @param ServerObjectInfo $serverObjectInfo
+     * @return bool
+     */
     protected function checkAllVariantImagesSynced (Product $variant, ServerObjectInfo $serverObjectInfo) {
         $images = $variant->getImages();
         return ($images == null || count($images->getItems()) === 0 || (int)$serverObjectInfo->getImages_sync() === 1);

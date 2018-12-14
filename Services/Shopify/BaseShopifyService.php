@@ -21,6 +21,8 @@ abstract class BaseShopifyService extends BaseEcommerceService {
     /**
      * Specific mapping for Shopify Product export
      * It builds the API array for communcation with shopify product endpoint
+     * Assumes that the $shopifyApi has already prebuilt the variants subarray
+     *
      * @param $shopifyApi
      * @param FieldMapping $fieldMap
      * @param array $fieldsDepth

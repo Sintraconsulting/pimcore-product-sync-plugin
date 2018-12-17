@@ -13,7 +13,7 @@ use SintraPimcoreBundle\Utils\SynchronizationUtils;
 
 /**
  * Manage synchronization of objects
- * 
+ *
  * @author Sintra Consulting
  */
 class BaseSyncController {
@@ -34,11 +34,12 @@ class BaseSyncController {
      * Dispatch syncronization invoking the server related syncronization service.
      * Firstly get a batch of objects that need to be synchronized
      * and perform the synchronization for each of them.
-     * 
+     *
      * @param TargetServer $server the server in which the objects must me synchronized
      * @param String $class the class of the objects
      * @param int $limit number of objects to synchronize
      * @param array $customFilters timing informations for execution. it override limit if present
+     * @throws \ReflectionException
      * @return mixed
      */
     public function syncServerObjects(TargetServer $server, $class, $limit = 10, $customFilters = []) {
@@ -46,10 +47,13 @@ class BaseSyncController {
         $dataObjectService = SynchronizationUtils::getSynchronizationService($server, $class);
 
         $syncController = SynchronizationUtils::getServerSynchronizationController($server);
+        # No custom module enabled in BaseEcommerceConfig's namespace.
         if ($syncController === null) {
+            # Default this controller
             $syncController = $this;
         }
 
+        /** @var array $dataObjects */
         $dataObjects = $syncController->getServerToSyncObjects($server, $class, $limit, $customFilters);
 
         if ($dataObjects != null && !empty($dataObjects)) {
@@ -107,11 +111,11 @@ class BaseSyncController {
      * At each iteration, if time limitation is active, check if there is enough
      * time to perform the synchronization of another object.
      * If not, it breaks the execution.
-     * 
+     *
      * Execution errors are catched and logged, so that the execution will not be break
      * if there is a problem with a single object.
      * At the end of the synchronization flow, errors are reported.
-     * 
+     *
      * @param InterfaceService $dataObjectService the service that will perform the synchronization.
      * @param array $dataObjects the ids of the objects to synchronize.
      * @param TargetServer $server the server in which the objects must me synchronized.
@@ -145,19 +149,23 @@ class BaseSyncController {
             $currTime = $this->millitime();
             $actualDuration = $currTime - $initialTime;
 
+            # If the next product's export estimated time exceeds the maximum time
+            # stop exporting products
             if ($hasTimeLimitation && ($actualDuration >= $customFilters['execTime'] * 1000 - $customFilters['maxSyncTime'] * 1000)) {
                 break;
             }
 
             try {
+                # Export the targeted product
+                # In case of not sync, an error will be thrown and cached underneath
                 $dataObjectService->export($productId, $server);
                 $syncronizedElements++;
             } catch (\Exception $e) {
                 $response["errors"][] = "OBJECT ID " . $productId . ": " . $e->getMessage();
-                
+
                 $this->logSynchronizationError($server->getServer_name(), $productId, $e->getMessage());
                 Logger::err($e->getTraceAsString());
-                
+
                 $elementsWithError++;
             }
 
@@ -199,7 +207,7 @@ class BaseSyncController {
         // in case of "overflow" (PHP converts it to a double)
         return sprintf('%d%03d', $comps[1], $comps[0] * 1000);
     }
-    
+
     protected function logSynchronizationError($servername, $productId, $message) {
         $db = Db::get();
                 $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
@@ -212,7 +220,7 @@ class BaseSyncController {
                 ));
 
                 Logger::err($message);
-                
+
     }
 
 }

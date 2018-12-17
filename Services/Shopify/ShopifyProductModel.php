@@ -76,6 +76,15 @@ class ShopifyProductModel {
         $this->metafields = $this->getAllMetafields();
     }
 
+    /**
+     * Builds an array containing maximum number of images for all products merged
+     * This is a result of how Shopify Api works in order to improve Image uploading process
+     * Stops at the $maxPerIteration
+     *
+     * @param int $maxPerIteration
+     * @return array
+     * @throws \Exception
+     */
     protected function getProductsImagesArray ($maxPerIteration = 10) {
         $imgsArray = [];
         $currentUploadCount = 0;
@@ -85,22 +94,31 @@ class ShopifyProductModel {
          * @var Product $variant
          */
         foreach ($this->variants as $id => $variant) {
+            # Calculate remaining number of images that need (re)upload
             $currMaxPerIteration = $currMaxPerIteration - $currentUploadCount;
             $i = count($imgsArray);
             $prodImgs = new ShopifyProductImageModel($variant, $this->serverInfos[$id], $currMaxPerIteration, $i);
             $prodImgsArray = $prodImgs->getImagesArray();
             $currentUploadCount += $prodImgs->getUploadCount();
+            # Merge newly created images array with the previous created one
             $imgsArray = array_merge($imgsArray, $prodImgsArray);
         }
         $this->imageUploadCount += $currentUploadCount;
         return $imgsArray;
     }
 
+    /**
+     * @param string $hook
+     */
     public function setSyncHook ($hook) {
         $this->hook = $hook;
         $this->buildCustomModelInfo($this->rawVariants);
     }
 
+    /**
+     * Attempts to upload images to the shopify
+     * After a successful attempt, the result is cached inside ServerObjectInfo relation
+     */
     public function updateImagesAndCache () {
         /** @var ServerObjectInfo $serverInfo */
         $serverInfo = $this->serverInfos[reset($this->variants)->getId()];
@@ -109,6 +127,7 @@ class ShopifyProductModel {
                 'images' => $this->getProductsImagesArray()
         ];
 
+        # Upload images through an product update
         $result = $this->apiManager::updateEntity($serverInfo->getObject_id(), $updateImagesApiReq, $this->targetServer);
 
         if (isset($result['images']) && count($result['images'])) {
@@ -116,10 +135,16 @@ class ShopifyProductModel {
             $currentVar = null;
             $currentVarImgs = [];
             foreach ($result['images'] as $i => $image) {
+                # Everytime we see an image with a filled variant_ids,
+                # then the following images are associated to a single pimcore product
                 if (isset($image['variant_ids']) && count($image['variant_ids']) > 0) {
+                    # Special case for the first variant
+                    # If we are changing the variant pointer on this image,
+                    # cache the previous images to its respective variant
                     if (isset($currentVar) && count($currentVarImgs) > 0) {
                         $this->updateImagesCache($currentVar->getId(), $currentVarImgs);
                     }
+                    # Move pointer to the specified variant
                     $currentVar = $this->getVariantByShopifyVariantId($image['variant_ids'][0]);
                     $currentVarImgs = [];
                 }
@@ -135,7 +160,9 @@ class ShopifyProductModel {
                         'pimcore_index' => $updateImagesApiReq['images'][$i]['pimcore_index'],
                         'variant_ids' => $image['variant_ids']
                 ];
+                # If we are at the end
                 if (count($result['images']) == $i+1) {
+                    # And there is pointer towards a variant
                     if (isset($currentVar)) {
                         $this->updateImagesCache($currentVar->getId(), $currentVarImgs);
                     }
@@ -144,6 +171,11 @@ class ShopifyProductModel {
         }
     }
 
+    /**
+     * Rebuild $this model's information based on the response received after creation
+     *
+     * @param array $shopifyModel
+     */
     public function updateShopifyResponse (array $shopifyModel) {
         if (is_array($shopifyModel)) {
             $this->shopifyModel = $shopifyModel;
@@ -174,12 +206,19 @@ class ShopifyProductModel {
         return $shopifyApiReq;
     }
 
+    /**
+     * This method attempts to create/update metafields that were created/changed
+     * The result is cached inside ServerObjectInfo of the specific Product-TargetServer relation
+     *
+     * @param bool $isCreate
+     */
     public function updateAndCacheMetafields ($isCreate = false) {
         /** @var ServerObjectInfo $serverInfo */
         $serverInfo = $this->serverInfos[reset($this->variants)->getId()];
         if ($isCreate) {
             $productCache = $this->apiManager->getProductMetafields($serverInfo->getObject_id(), $this->targetServer);
         } else {
+            # Check if there is already some cached metafield from prior attempts
             $productCache = json_decode($serverInfo->getMetafields_json(), true)['product'];
             if (!isset($productCache)) {
                 $productCache = [];
@@ -354,6 +393,11 @@ class ShopifyProductModel {
         return $exportServers;
     }
 
+    /**
+     * Remove all trace of metafields, for Product and for ProductVariant
+     * @param $apiReq
+     * @return mixed
+     */
     protected function stripMetafields ($apiReq) {
         unset($apiReq['metafields']);
         if (is_array($apiReq) && count($apiReq)) {
@@ -402,6 +446,11 @@ class ShopifyProductModel {
         return false;
     }
 
+    /**
+     * SET the inventory AVAILABILITY to a specific number
+     *
+     * @throws \Exception
+     */
     public function updateVariantsInventories () : void {
         /** @var Product $variant */
         foreach($this->variants as $variant) {
@@ -410,12 +459,14 @@ class ShopifyProductModel {
             $preparedVar = $this->getVariantFromApiReq($variant->getSku());
             $inventoryJson = json_decode($serverInfo->getInventory_json(), true);
 
+            # If quantity to set is not 0
             if ($preparedVar['quantity'] != 0) {
                 $payload = [
                         'inventory_item_id' => $inventoryJson['inventory_item_id'],
                         'location_id' => $inventoryJson['location_id'],
                         'available' => $preparedVar['quantity']
                 ];
+                # Set inventory availability per variant
                 $response = $this->apiManager->updateInventoryInfo($payload, $this->targetServer);
                 $variant->setExportServers($this->getUpdatedServerInfosProduct($variant, [$response]));
                 $variant->update(true);
@@ -423,6 +474,11 @@ class ShopifyProductModel {
         }
     }
 
+    /**
+     * Retrieves the inventory_item_id for all variants
+     *
+     * @throws \Exception
+     */
     public function updateInventoryApiResponse () : void {
         $inventoryIds = $this->prepareInventoryItemIds();
         $inventoryJsonList = $this->apiManager->getInventoryInfo([
@@ -481,6 +537,13 @@ class ShopifyProductModel {
         return null;
     }
 
+    /**
+     * Sets inventory Id from json response only for current target server
+     *
+     * @param Product $variant
+     * @param array $json
+     * @return Fieldcollection
+     */
     protected function getUpdatedServerInfosProduct (Product $variant, array $json) : Fieldcollection {
         $exportServers = $variant->getExportServers();
         /** @var ServerObjectInfo $exportServer */
@@ -546,14 +609,17 @@ class ShopifyProductModel {
             $serverInfo = $this->getServerInfoByVariant($variant);
             if($serverInfo !== null){
                 $lastHook =  $serverInfo->getLastSyncHook();
+                # If it's attached to a different root product than before, ignore
                 if (isset($lastHook) && !empty($lastHook) && $this->hook && $lastHook !== $variant->{'get'.ucfirst($this->hook)}()) {
                     continue;
                 }
+                # Create an associative array to access variants easier
                 $this->variants += [
                         $variant->getId() => $variant
                 ];
 
                 if ($serverInfo !== null) {
+                    # Create associative array to access variants' serverInfo with less resources
                     $this->serverInfos += [
                             $variant->getId() => $serverInfo
                     ];

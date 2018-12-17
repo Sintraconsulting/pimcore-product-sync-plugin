@@ -15,30 +15,40 @@ use SintraPimcoreBundle\Utils\TargetServerUtils;
 
 /**
  * Implement methods for products synchronization on Shopify servers
- * 
+ *
  * @author Sintra Consulting
  */
 class ShopifyProductService extends BaseShopifyService implements InterfaceService {
     /**
+     * Export specific product based on $productId
+     * If there is an error while exporting, the product will remain flagged as not synced
+     * but the successful updates until that point remain saved
      *
      * @param $productId
      * @param TargetServer $targetServer
+     * @throws \Exception
      */
     public function export ($productId, TargetServer $targetServer) {
-        $dataObjects = $this->getObjectsToExport($productId, "Product");
+        /** @var Product\Listing $dataObjects */
+        $dataObjects = $this->getObjectsToExport($productId, "Product", $targetServer);
 
         /** @var Product $dataObject */
+        # Get Product object because we receive a Listing from getObjectsToExport
         $dataObject = $dataObjects->current();
 
         $shopifyApi = [];
 
+        # Retrieve Product's Server information based on $targetServer
         $serverObjectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);
 
+        # Shopify's Product id
         $shopifyId = $serverObjectInfo->getObject_id();
 
         $search = array();
 
+        # If there is already an shopify Product associated with this pimcore product
         if($shopifyId != null && !empty($shopifyId)){
+            # Get information of the shopify Product
             $search = ShopifyProductAPIManager::searchShopifyProducts(['ids' => $shopifyId],$targetServer);
             Logger::info("SEARCH RESULT: $shopifyId".json_encode($search));
         }
@@ -83,15 +93,18 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
      * For localized fields, the first valid language will be used.
      *
      * @param $shopifyApi
-     * @param Product\Listing $dataObjects
+     * @param $dataObjects
      * @param TargetServer $targetServer
+     * @param $classname
      * @param bool $update
+     * @return array
+     * @throws \Exception
      */
     public function toEcomm (&$shopifyApi, $dataObjects, TargetServer $targetServer, $classname, bool $update = false) {
 
         $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, $classname);
         $languages = $targetServer->getLanguages();
-
+        # Pre-build the API to include the variants
         $shopifyApi = $this->prepareVariants($shopifyApi, $dataObjects, $targetServer);
 
         /** @var FieldMapping $fieldMap */
@@ -100,6 +113,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             //get the value of each object field
             $apiField = $fieldMap->getServerField();
 
+            # Create an array with depth based on char . for nesting
             $fieldsDepth = explode('.', $apiField);
             $shopifyApi = $this->mapServerMultipleField($shopifyApi, $fieldMap, $fieldsDepth, $languages[0], $dataObjects, $targetServer);
 
@@ -110,14 +124,20 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
     }
 
     /**
+     * Prepares variants with ID if they already exist.
+     * If any product is not published in pimcore, it sets the entire shopify Product as unpublished
+     *
      * @param $shopifyApi
      * @param Product\Listing $products
+     * @param TargetServer $server
+     * @return mixed
      */
     public function prepareVariants($shopifyApi, $products, TargetServer $server) {
         $shopifyApi['variants'] = [];
         $published = true;
         /** @var Product $product */
         foreach ($products as $product) {
+            # If there is at least one variant that is not published, entire Product is set as unpublished
             if ($published && !$product->getPublished()) {
                 $published = false;
             }
@@ -126,6 +146,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
             $varId = $serverObjectInfo->getVariant_id();
             if ($varId) {
                 $shopifyApi['variants'][] = [
+                        # Set id to avoid recreation
                         'id' => $varId,
                         'inventory_management' => 'shopify'
                 ];
@@ -143,9 +164,16 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         return $shopifyApi;
     }
 
+    /**
+     * Sets the shopify Product id and ProductVariant id inside ServerObjectInfo of every pimcore product
+     *
+     * @param $results
+     * @param $targetServer
+     */
     protected function setProductServerInfos ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
+                # Load also unpublished products
                 $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
@@ -162,6 +190,13 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         }
     }
 
+    /**
+     * Set product as sync after all sync steps have been successfully completed
+     *
+     * @param $results
+     * @param $targetServer
+     * @throws \Exception
+     */
     protected function setSyncProduct ($results, $targetServer) {
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
@@ -170,6 +205,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
                     $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
+                    # Mandatory check to see if all images have been synced
                     if ($this->checkAllVariantImagesSynced($product, $serverObjectInfo)) {
                         $serverObjectInfo->setSync(true);
                     } else {
@@ -181,6 +217,14 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         }
     }
 
+    /**
+     * Check if all variant's images have been synced
+     * This check is required because we might have limitations on the image sync process for performance gains
+     *
+     * @param Product $variant
+     * @param ServerObjectInfo $serverObjectInfo
+     * @return bool
+     */
     protected function checkAllVariantImagesSynced (Product $variant, ServerObjectInfo $serverObjectInfo) {
         $images = $variant->getImages();
         return ($images == null || count($images->getItems()) === 0 || (int)$serverObjectInfo->getImages_sync() === 1);

@@ -24,7 +24,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
      * Get an existent product by key.
      * Instantiate the API Client and perform the call for getting the product.
      * Return false if the API call fails.
-     * 
+     *
      * @param mixed $entityKey the key of the product to get.
      * @param TargetServer $server the server in which the product is.
      * @return mixed The API call response.
@@ -40,12 +40,12 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             return false;
         }
     }
-    
+
     /**
      * Search for products.
      * Instantiate the API Client and perform the call for getting the products.
      * Return false if the API call fails.
-     * 
+     *
      * @param mixed $filters a filtering condition.
      * @param TargetServer $server the server in which the products are.
      * @return mixed The API call response.
@@ -61,12 +61,12 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             return false;
         }
     }
-    
+
     /**
      * Create a new product.
      * Instantiate the API Client and perform the call for creation.
      * Return false if the API call fails.
-     * 
+     *
      * @param mixed $entity the product to create. Will be used in the API call body.
      * @param TargetServer $server the server in which the product should be created.
      * @return mixed The API call response.
@@ -87,7 +87,7 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
      * Update an existent product.
      * Instantiate the API Client and perform the call for update.
      * Return false if the API call fails.
-     * 
+     *
      * @param mixed $entityKey the key of the product to get.
      * @param mixed $entity the product to create. Will be used in the API call body.
      * @param TargetServer $server the server in which the product should be updated.
@@ -104,11 +104,26 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
             return false;
         }
     }
-    
+
+    /**
+     * Not used for this implementation.
+     * @param mixed $entityKey
+     * @param TargetServer $server
+     * @throws \Exception
+     */
     public static function deleteEntity($entityKey, TargetServer $server) {
         throw new \Exception("ERROR - Method 'deleteEntity' not implemented in 'ShopifyProductAPIManager'");
     }
 
+    /**
+     * Get inventory information based on the filters
+     * Instantiate the API Client and perform the call for get.
+     * Return false if the API call fails.
+     *
+     * @param array $filters - associative array with supported filters as key.
+     * @param TargetServer $server - the server from which the information should be fetched.
+     * @return bool|array
+     */
     public function getInventoryInfo ($filters, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
@@ -120,6 +135,15 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Set inventory information based on the payload
+     * Instantiate the API Client and perform the call for update.
+     * Return false if the API call fails.
+     *
+     * @param array $payload - associative array containing information to be changed for the specific inventory
+     * @param TargetServer $server - the server from which the information should be fetched.
+     * @return bool|array - json object converted to associative array
+     */
     public function updateInventoryInfo ($payload, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
@@ -131,6 +155,15 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Get general product metafields
+     * Instantiate the API Client and perform the call for fetching.
+     * Return false if the API call fails.
+     *
+     * @param string $productId - id of the shopify Product
+     * @param TargetServer $server - the server from which the information should be fetched.
+     * @return bool|array - json array converted to associative array
+     */
     public function getProductMetafields ($productId, TargetServer $server) : array {
         $apiClient = $this->getApiInstance($server);
         try {
@@ -142,17 +175,16 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
-    public function getProductVariantMetafields ($productId, $varId, TargetServer $server) {
-        $apiClient = $this->getApiInstance($server);
-        try {
-            $result = $apiClient->Product($productId)->Variant($varId)->Metafield->get();
-            return $result;
-        } catch (\Exception $e) {
-            Logger::err('GET SHOPIFY VARIANT METAFIELDS FAILED:' . $e->getMessage());
-            return false;
-        }
-    }
-
+    /**
+     * Create Product Metafield
+     * Instantiate the API Client and perform the call for creation.
+     * Return false if the API call fails.
+     *
+     * @param int $payload - array with shopify's Product Metafield
+     * @param string $productId - id of shopify's Product
+     * @param TargetServer $server - the server where the information should be put.
+     * @return bool|array - json object converted to associative array
+     */
     public function createProductMetafield ($payload, $productId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
@@ -164,9 +196,20 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Update Product Metafield
+     * Instantiate the API Client and perform the call for update.
+     * Return false if the API call fails.
+     *
+     * @param int $payload - array with shopify's Product Metafield information to be changed
+     * @param string $productId - id of shopify's Product Metafield
+     * @param TargetServer $server - the server where the information should be put.
+     * @return bool|array - json object converted to associative array
+     */
     public function updateProductMetafield ($payload, $productId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
+            # Remove unnecessary fields from the payload
             unset($payload['namespace']);
             unset($payload['key']);
             $result = $apiClient->Product($productId)->Metafield($payload['id'])->put($payload);
@@ -177,6 +220,16 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Delete Product Metafield
+     * Instantiate the API Client and perform the call for deletion.
+     * Return false if the API call fails.
+     *
+     * @param int $metafieldId - id of shopify's Metafield
+     * @param string $productId - id of shopify's Product
+     * @param TargetServer $server - the server where the information should be put.
+     * @return bool|array - json object converted to associative array
+     */
     public function deleteProductMetafield ($metafieldId, $productId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
@@ -188,6 +241,38 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Get ProductVariant metafields
+     * Instantiate the API Client and perform the call for fetching.
+     * Return false if the API call fails.
+     *
+     * @param string $productId - id of shopify's Product
+     * @param string $varId - id of shopify's ProductVariant
+     * @param TargetServer $server - the server from which the information should be fetched.
+     * @return bool|array - json array converted to associative array
+     */
+    public function getProductVariantMetafields ($productId, $varId, TargetServer $server) {
+        $apiClient = $this->getApiInstance($server);
+        try {
+            $result = $apiClient->Product($productId)->Variant($varId)->Metafield->get();
+            return $result;
+        } catch (\Exception $e) {
+            Logger::err('GET SHOPIFY VARIANT METAFIELDS FAILED:' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Create ProductVariant Metafield
+     * Instantiate the API Client and perform the call for creation.
+     * Return false if the API call fails.
+     *
+     * @param int $payload - array with shopify's ProductVariation Metafield
+     * @param $productId - id of shopify's Product
+     * @param $varId - id of shopify's ProductVariant
+     * @param TargetServer $server - the server where the information should be put.
+     * @return bool|array - json object converted to associative array
+     */
     public function createProductVariantMetafield ($payload, $productId, $varId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
@@ -199,9 +284,21 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Update ProductVariant Metafield
+     * Instantiate the API Client and perform the call for update.
+     * Return false if the API call fails.
+     *
+     * @param int $payload - array with information to update the metafield
+     * @param string $productId - id of shopify's Product
+     * @param string $varId - id of shopify's ProductVariant Metafield
+     * @param TargetServer $server - the server where the information should be put.
+     * @return bool|array - json object converted to associative array
+     */
     public function updateProductVariantMetafield ($payload, $productId, $varId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {
+            # Remove unnecessary fields from the payload
             unset($payload['namespace']);
             unset($payload['key']);
             $result = $apiClient->Product($productId)->Variant($varId)->Metafield($payload['id'])->put($payload);
@@ -212,6 +309,17 @@ class ShopifyProductAPIManager extends BaseShopifyAPIManager implements APIManag
         }
     }
 
+    /**
+     * Delete ProductVariant Metafield
+     * Instantiate the API Client and perform the call for deletion.
+     * Return false if the API call fails.
+     *
+     * @param int $metafieldId - id of shopify's Metafield
+     * @param string $productId - id of shopify's Product
+     * @param string $varId - id of shopify's ProductVariant
+     * @param TargetServer $server - the server where the information should be put.
+     * @return bool|array - json object converted to associative array
+     */
     public function deleteProductVariantMetafield ($metafieldId, $productId, $varId, TargetServer $server) {
         $apiClient = $this->getApiInstance($server);
         try {

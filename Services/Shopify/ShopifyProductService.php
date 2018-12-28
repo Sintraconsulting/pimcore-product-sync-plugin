@@ -2,7 +2,8 @@
 
 namespace SintraPimcoreBundle\Services\Shopify;
 
-
+use Pimcore\Model\DataObject\AbstractObject;
+use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\Fieldcollection\Data\FieldMapping;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use Pimcore\Model\DataObject\TargetServer;
@@ -19,6 +20,35 @@ use SintraPimcoreBundle\Utils\TargetServerUtils;
  * @author Sintra Consulting
  */
 class ShopifyProductService extends BaseShopifyService implements InterfaceService {
+    
+    /**
+     * Return Product to export with its variants
+     * 
+     * @param $objectId
+     * @param $classname
+     * @return Product\Listing
+     */
+    protected function getObjectsToExport($objectId, $classname, TargetServer $server){
+        $classDef = ClassDefinition::getByName($classname);
+        $classId = $classDef->getId();
+        $fieldCollName = $classDef->getFieldDefinition('exportServers')->getAllowedTypes()[0];
+        $fieldCollectionTable = 'object_collection_' . $fieldCollName . '_' .$classId;
+        
+        $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\" . $classname . "\\Listing");
+        $listing = $listingClass->newInstance();
+
+        $condition = "(oo_id = " . $listing->quote($objectId) . " OR o_parentId = " . $listing->quote($objectId).")";
+        $condition .= " AND oo_id IN (SELECT sourceid FROM dependencies INNER JOIN $fieldCollectionTable ON sourceid = o_id"
+                . " WHERE targetid = '".$server->getId()."' AND name = '".$server->getKey()."' AND export = 1)";
+        
+        $listing->setObjectTypes([AbstractObject::OBJECT_TYPE_OBJECT, AbstractObject::OBJECT_TYPE_VARIANT]);
+        $listing->setCondition($condition);
+        $listing->setOrderKey(array('o_type', 'oo_id'));
+        $listing->setOrder(array('asc', 'asc'));
+
+        return $listing;
+    }
+    
     /**
      * Export specific product based on $productId
      * If there is an error while exporting, the product will remain flagged as not synced
@@ -174,7 +204,10 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
                 # Load also unpublished products
-                $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
+                $product = Product::getBySku($variant['sku'])
+                        ->setObjectTypes([AbstractObject::OBJECT_TYPE_OBJECT, AbstractObject::OBJECT_TYPE_VARIANT])
+                        ->setUnpublished(true)
+                        ->current();
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
                     $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);
@@ -226,7 +259,7 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
      * @return bool
      */
     protected function checkAllVariantImagesSynced (Product $variant, ServerObjectInfo $serverObjectInfo) {
-        $images = $variant->getImages();
+        $images = method_exists($variant, "getImages") ? $variant->getImages() : null;
         return ($images == null || count($images->getItems()) === 0 || (int)$serverObjectInfo->getImages_sync() === 1);
     }
 

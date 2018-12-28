@@ -81,24 +81,23 @@ class ShopifyProductImageModel {
     protected function getVariantImagesFormatted($maxUpload): array {
         $imagesArray = [];
 
-        $images = $this->variant->getImages();
+        $images = method_exists($this->variant, "getImages") ? $this->variant->getImages() : array();
         $imagesJson = $this->imagesJson ?? [];
 
-        if (isset($images)) {
-            # Goes through all the variant's images
-            foreach ($images as $key => $image) {
-                $shouldUploadImg = $this->shouldUploadImage($image, $imagesJson);
+        # Goes through all the variant's images
+        foreach ($images as $key => $image) {
+            $shouldUploadImg = $this->shouldUploadImage($image, $imagesJson);
 
-                # If the limit is not reached or it doesn't require reupload,
-                # continue to increase image json
-                if (($shouldUploadImg && $this->uploadCount < $maxUpload) || (!$shouldUploadImg)) {
-                    $imagesArray[] = $this->buildImageArray($image, $imagesJson, $shouldUploadImg, $key === 0 ? $this->variant->getId() : null);
-                    if ($shouldUploadImg) {
-                        $this->uploadCount += 1;
-                    }
+            # If the limit is not reached or it doesn't require reupload,
+            # continue to increase image json
+            if (($shouldUploadImg && $this->uploadCount < $maxUpload) || (!$shouldUploadImg)) {
+                $imagesArray[] = $this->buildImageArray($image, $imagesJson, $shouldUploadImg, $key === 0 ? $this->variant->getId() : null);
+                if ($shouldUploadImg) {
+                    $this->uploadCount += 1;
                 }
             }
         }
+        
         return $imagesArray;
     }
 

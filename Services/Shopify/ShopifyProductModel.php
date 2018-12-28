@@ -57,11 +57,7 @@ class ShopifyProductModel {
      * @var array
      */
     protected $serverInfos = [];
-    /**
-     * Variant unifier
-     * @var string
-     */
-    protected $hook;
+    
     /** @var int*/
     protected $imageUploadCount;
 
@@ -105,14 +101,6 @@ class ShopifyProductModel {
         }
         $this->imageUploadCount += $currentUploadCount;
         return $imgsArray;
-    }
-
-    /**
-     * @param string $hook
-     */
-    public function setSyncHook ($hook) {
-        $this->hook = $hook;
-        $this->buildCustomModelInfo($this->rawVariants);
     }
 
     /**
@@ -223,7 +211,7 @@ class ShopifyProductModel {
             if (!isset($productCache)) {
                 $productCache = [];
             }
-            $productMetafields = $this->shopifyApiReq['metafields'];
+            $productMetafields = array_key_exists("metafields", $this->shopifyApiReq) ? $this->shopifyApiReq['metafields'] : array();
             foreach ($productMetafields as $metafield) {
                 # Check if the metafield is changed
                 $changedMetafield = $this->getMetafieldChanged($metafield, $this->metafields['product']);
@@ -295,8 +283,17 @@ class ShopifyProductModel {
             # Step done only if it's the first time we create the product
             # Case made for performance improvements
             $varCache = $this->apiManager->getProductVariantMetafields($serverInfo->getObject_id(), $serverInfo->getVariant_id(), $this->targetServer);
+            
+            if($varCache === false){
+                $varCache = [];
+            }
         } else {
             $varCache = json_decode($serverInfo->getMetafields_json(), true)['variant'];
+            
+            if($varCache == null){
+                $varCache = [];
+            }
+            
             $metafields = $this->getVariantFromApiReq($productVar->getSku())['metafields'];
             if(is_array($metafields) && count($metafields)) {
                 foreach ($metafields as $metafield) {
@@ -410,7 +407,7 @@ class ShopifyProductModel {
 
     /** Function prepared for */
     protected function removeMetafieldsFromApiReq ($apiReq) {
-        $apiReqProdMetafields = $apiReq['metafields'];
+        $apiReqProdMetafields = array_key_exists("metafields", $apiReq) ? $apiReq['metafields'] : array();
         # Parse general product metafields
         foreach ($apiReqProdMetafields as $key => $metafield) {
             if($this->isMetafieldInTarget($metafield['key'], $this->metafields['product']) === true) {
@@ -418,8 +415,10 @@ class ShopifyProductModel {
                 unset($apiReq['metafields'][$key]);
             }
         }
+        
+        $apiReqVariants = array_key_exists("variants", $apiReq) ? $apiReq['variants'] : array();
         # Parse variant specific metafields
-        foreach ($apiReq['variants'] as $pKey => $variant) {
+        foreach ($apiReqVariants as $pKey => $variant) {
             $varMetafields = &$variant['metafields'];
             $varId = $variant['id'];
             if ($varId && $varMetafields && count($varMetafields)) {
@@ -608,11 +607,7 @@ class ShopifyProductModel {
         foreach ($variants as $variant) {
             $serverInfo = $this->getServerInfoByVariant($variant);
             if($serverInfo !== null){
-                $lastHook =  $serverInfo->getLastSyncHook();
-                # If it's attached to a different root product than before, ignore
-                if (isset($lastHook) && !empty($lastHook) && $this->hook && $lastHook !== $variant->{'get'.ucfirst($this->hook)}()) {
-                    continue;
-                }
+                
                 # Create an associative array to access variants easier
                 $this->variants += [
                         $variant->getId() => $variant

@@ -234,7 +234,10 @@ class ShopifyProductService extends BaseShopifyService implements InterfaceServi
         if (is_array($results)) {
             foreach ($results['variants'] as $variant) {
                 /** @var Product $product */
-                $product = Product::getBySku($variant['sku'])->setUnpublished(true)->current();
+                $product = Product::getBySku($variant['sku'])
+                        ->setObjectTypes([AbstractObject::OBJECT_TYPE_OBJECT, AbstractObject::OBJECT_TYPE_VARIANT])
+                        ->setUnpublished(true)
+                        ->current();
                 if($product){
                     /** @var ServerObjectInfo $serverObjectInfo */
                     $serverObjectInfo = GeneralUtils::getServerObjectInfo($product, $targetServer);

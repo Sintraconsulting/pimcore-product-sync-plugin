@@ -7,6 +7,7 @@ use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ExternalImageInfo;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 
 /**
@@ -67,7 +68,7 @@ class GeneralUtils {
      * Get ImagesInfo for the object
      * 
      * @param Concrete $dataObject
-     * @return ImageInfo[]
+     * @return ImageInfo[]|ExternalImageInfo[]
      */
     public static function getObjectImagesInfo($dataObject){
         

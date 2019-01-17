@@ -117,12 +117,17 @@ class ShopifyProductModel {
 
         # Upload images through an product update
         $result = $this->apiManager::updateEntity($serverInfo->getObject_id(), $updateImagesApiReq, $this->targetServer);
-
-        if (isset($result['images']) && count($result['images'])) {
+        
+        $images = isset($result['images']) ? $result['images'] : array();
+        if(count($images) === 0){
+            foreach ($this->variants as $variant) {
+                $this->updateImagesCache($variant->getId(), array());
+            }
+        }else {
             /** @var Product $currentVar */
             $currentVar = null;
             $currentVarImgs = [];
-            foreach ($result['images'] as $i => $image) {
+            foreach ($images as $i => $image) {
                 # Everytime we see an image with a filled variant_ids,
                 # then the following images are associated to a single pimcore product
                 if (isset($image['variant_ids']) && count($image['variant_ids']) > 0) {
@@ -149,7 +154,7 @@ class ShopifyProductModel {
                         'variant_ids' => $image['variant_ids']
                 ];
                 # If we are at the end
-                if (count($result['images']) == $i+1) {
+                if (count($images) == $i+1) {
                     # And there is pointer towards a variant
                     if (isset($currentVar)) {
                         $this->updateImagesCache($currentVar->getId(), $currentVarImgs);

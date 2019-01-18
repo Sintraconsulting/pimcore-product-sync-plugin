@@ -57,10 +57,6 @@ abstract class BaseMagento2Service extends BaseEcommerceService {
      * @param bool $isNew
      */
     public function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, $classname, bool $isNew = false) {
-        /**
-         * In a general approach, API calls will be referred to the main website
-         */
-        $ecommObject["extension_attributes"]["website_ids"][] = 1;
 
         $fieldsMap = TargetServerUtils::getClassFieldMap($targetServer, $classname);
         $languages = $targetServer->getLanguages();

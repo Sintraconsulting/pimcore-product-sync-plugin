@@ -5,6 +5,7 @@ namespace SintraPimcoreBundle\Services\Mage2;
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\AbstractObject;
 use Pimcore\Model\DataObject\ClassDefinition;
+use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
@@ -122,6 +123,15 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
 
         return $result;
     }
+    
+    public function toEcomm(&$ecommObject, $dataObject, TargetServer $targetServer, $classname, bool $isNew = false) {
+        parent::toEcomm($ecommObject, $dataObject, $targetServer, $classname, $isNew);
+        
+        /**
+         * In a general approach, API calls will be referred to the main website
+         */
+        $ecommObject["extension_attributes"]["website_ids"][] = 1;
+    }
 
     /**
      * In case of configurable product, create or update the product variants
@@ -172,6 +182,11 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
          * End of recursion with custom_attributes
          */
         if ($parentDepth == 'custom_attributes') {
+            
+            if($apiField === "category_ids"){
+                $fieldValue = $this->extractCategoryIds($fieldValue, $server);
+            }
+            
             $this->extractCustomAttribute($ecommObject, $apiField, $fieldValue);
             return $ecommObject;
         }
@@ -197,6 +212,21 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
          */
         $ecommObject[$parentDepth] = $this->mapServerMultipleField($ecommObject[$parentDepth], $fieldMap, $fieldsDepth, $language, $dataSource, $server);
         return $ecommObject;
+    }
+    
+    /**
+     * 
+     * @param Concrete[] $categories
+     * @param TargetServer $targetServer
+     */
+    private function extractCategoryIds($categories, TargetServer $targetServer){
+        $categoryIds = [];
+        foreach ($categories as $category) {
+            $serverObjectInfo = GeneralUtils::getServerObjectInfo($category, $targetServer);
+            $categoryIds[] = $serverObjectInfo->getObject_id();
+        }
+        
+        return $categoryIds;
     }
 
     /**

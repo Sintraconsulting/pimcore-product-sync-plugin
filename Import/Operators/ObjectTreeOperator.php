@@ -2,8 +2,8 @@
 
 namespace SintraPimcoreBundle\Import\Operators;
 
-use Pimcore\Model\DataObject\Category;
-use SintraPimcoreBundle\Import\Operators\TransliterateOperator;
+use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
+use SintraPimcoreBundle\Utils\GeneralUtils;
 
 /**
  * Take a string representing a path of nested objects
@@ -16,7 +16,7 @@ use SintraPimcoreBundle\Import\Operators\TransliterateOperator;
  *
  * @author Sintra Consulting
  */
-class ObjectTreeOperator extends TransliterateOperator {
+class ObjectTreeOperator extends AbstractOperator{
 
     private $additionalData;
 
@@ -39,7 +39,7 @@ class ObjectTreeOperator extends TransliterateOperator {
         $level = sizeof($objectTree);
 
         foreach ($objectTree as $i => $branch) {
-            $objectTree[$i] = $this->transliterate($branch);
+            $objectTree[$i] = GeneralUtils::transliterate($branch);
         }
 
         while ($level > 0) {

@@ -9,6 +9,7 @@ use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ExternalImageInfo;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
+use Transliterator;
 
 /**
  * General Utils
@@ -78,5 +79,14 @@ class GeneralUtils {
         }
         
         return array();
+    }
+    
+    public static function transliterate($text){
+        $transliterator = Transliterator::createFromRules(
+            ':: Any-Latin; :: Latin-ASCII; :: NFD; :: [:Nonspacing Mark:] Remove; :: NFC;', 
+            Transliterator::FORWARD
+        );
+
+        return $transliterator->transliterate($text);
     }
 }

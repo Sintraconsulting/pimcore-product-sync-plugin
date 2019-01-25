@@ -6,6 +6,7 @@ use SpringImport\Swagger\Magento2\Client\Api\CatalogAttributeSetRepositoryV1Api;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\ApiManager\APIManagerInterface;
 use SpringImport\Swagger\Magento2\Client\ApiException;
+use Pimcore\Logger;
 
 /**
  * Attribute Set API Manager for Magento2

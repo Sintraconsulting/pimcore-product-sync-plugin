@@ -64,7 +64,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->preAddDispatcher($obj);
 
-            self::checkForCustomListener($obj, "onPreAdd");
+            self::checkForCustomListener($obj, "onPreAdd","preAddDispatcher");
         }
     }
 
@@ -83,7 +83,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->preUpdateDispatcher($obj);
 
-            self::checkForCustomListener($obj, "onPreUpdate");
+            self::checkForCustomListener($obj, "onPreUpdate","preUpdateDispatcher");
         }
     }
 
@@ -103,7 +103,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->postUpdateDispatcher($obj, $saveVersionOnly);
 
-            self::checkForCustomListener($obj, "onPostUpdate");
+            self::checkForCustomListener($obj, "onPostUpdate", "postUpdateDispatcher", $saveVersionOnly);
         }
     }
 
@@ -122,7 +122,7 @@ abstract class AbstractObjectListener {
             $objectListener = new ObjectListener();
             $objectListener->postDeleteDispatcher($obj);
 
-            self::checkForCustomListener($obj, "onPostDelete");
+            self::checkForCustomListener($obj, "onPostDelete","postDeleteDispatcher");
         }
     }
 
@@ -133,7 +133,7 @@ abstract class AbstractObjectListener {
      * @param Concrete $obj
      * @param String $eventName
      */
-    private static function checkForCustomListener($obj, $eventName) {
+    private static function checkForCustomListener($obj, $eventName, $dispatcherMethod, $saveVersionOnly = null) {
         $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
         $namespace = $customizationInfo["namespace"];
 
@@ -144,7 +144,12 @@ abstract class AbstractObjectListener {
             if (class_exists($customObjectListenerClassName)) {
                 $customObjectListenerClass = new \ReflectionClass($customObjectListenerClassName);
                 $customObjectListener = $customObjectListenerClass->newInstance();
-                $customObjectListener->preAddDispatcher($obj);
+                
+                if($saveVersionOnly !== null){
+                    $customObjectListener->$dispatcherMethod($obj,$saveVersionOnly);
+                }else{
+                    $customObjectListener->$dispatcherMethod($obj);
+                }
             } else {
                 Logger::warn("AbstractObjectListener - WARNING. Class not found: " . $customObjectListenerClass);
             }

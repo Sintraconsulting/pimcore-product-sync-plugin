@@ -14,7 +14,6 @@ use SintraPimcoreBundle\Utils\GeneralUtils;
  * @author Sintra Consulting
  */
 class Mage2CategoryService extends BaseMagento2Service implements InterfaceService {
-    private $configFile = __DIR__ . '/../config/category.json';
 
     /**
      * @param $productId
@@ -22,40 +21,44 @@ class Mage2CategoryService extends BaseMagento2Service implements InterfaceServi
      * @return mixed|void
      */
     public function export ($productId, TargetServer $targetServer) {
-        $magento2Category = json_decode(file_get_contents($this->configFile), true)[$targetServer->getKey()];
         
-        $dataObjects = $this->getObjectsToExport($productId, "Category");
-        
-        /** @var Product $dataObject */
+        $dataObjects = $this->getObjectsToExport($productId, "Category", $targetServer);
         $dataObject = $dataObjects->current();
+        
+        if($dataObject instanceof Category){
+            $result = $this->createOrUpdateCategory($dataObject, $targetServer);
+            Logger::debug("UPDATED CATEGORY: ".$result->__toString());
+
+            $this->setSyncObject($dataObject, $result, $targetServer);
+        }
+    }
+    
+    private function createOrUpdateCategory(Category $dataObject, TargetServer $targetServer) {
+        $ecommObject = array();
         
         $objectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);                
         $magentoId = $objectInfo->getObject_id();
         
         if($magentoId == null || empty($magentoId)){
-            $this->toEcomm($magento2Category, $dataObjects, $targetServer, $dataObject->getClassName(), true);
-            Logger::debug("MAGENTO CR CATEGORY: ".json_encode($magento2Category));
+            $this->toEcomm($ecommObject, $dataObject, $targetServer, $dataObject->getClassName(), true);
+            Logger::debug("MAGENTO CREATE CATEGORY: ".json_encode($ecommObject));
             
-            $result = CategoryAPIManager::createEntity($magento2Category, $targetServer);
+            $result = CategoryAPIManager::createEntity($ecommObject, $targetServer);
 
         }else{
             //product is new, need to save price
-            $this->toEcomm($magento2Category, $dataObjects, $targetServer, $dataObject->getClassName(), true);
-            Logger::debug("MAGENTO CR CATEGORY: ".json_encode($magento2Category));
+            $this->toEcomm($ecommObject, $dataObject, $targetServer, $dataObject->getClassName());
+            Logger::debug("MAGENTO UPDATE CATEGORY: ".json_encode($ecommObject));
             
-            $result = CategoryAPIManager::updateEntity($magentoId, $magento2Category, $targetServer);
+            $result = CategoryAPIManager::updateEntity($magentoId, $ecommObject, $targetServer);
         }
         
-        Logger::debug("UPDATED CATEGORY: ".$result->__toString());
-
-        $this->setSyncObject($dataObject, $result, $targetServer);
+        return $result;
     }
 
-    public function toEcomm (&$ecommObject, $dataObjects, TargetServer $targetServer, $classname, bool $update = false) {
+    public function toEcomm (&$ecommObject, $dataObject, TargetServer $targetServer, $classname, bool $isNew = false) {
         
-        $dataObject = $dataObjects->getObjects()[0];
-        
-        parent::toEcomm($ecommObject, $dataObjects, $targetServer, $classname, $update);
+        parent::toEcomm($ecommObject, $dataObject, $targetServer, $classname, $isNew);
         
         $objectInfo = GeneralUtils::getServerObjectInfo($dataObject, $targetServer);  
         $magentoId = $objectInfo->getObject_id();

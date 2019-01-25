@@ -3,7 +3,8 @@
 namespace SintraPimcoreBundle\Import\Operators;
 
 use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
-use Transliterator;
+use SintraPimcoreBundle\Utils\GeneralUtils;
+
 /**
  * Operator that performs transliteration of a string
  *
@@ -32,18 +33,8 @@ class TransliterateOperator extends AbstractOperator{
         
         $reflection = new \ReflectionObject($target);
         $setFieldMethod = $reflection->getMethod('set'. ucfirst($field));
-        $setFieldMethod->invoke($target, $this->transliterate($text));
+        $setFieldMethod->invoke($target, GeneralUtils::transliterate($text));
 
-    }
-    
-    public function transliterate($text) {
-        $transliterator = Transliterator::createFromRules(
-            ':: Any-Latin; :: Latin-ASCII; :: NFD; :: [:Nonspacing Mark:] Remove; :: NFC;', 
-            Transliterator::FORWARD
-        );
-
-        return $transliterator->transliterate($text);
-        
     }
 
 }

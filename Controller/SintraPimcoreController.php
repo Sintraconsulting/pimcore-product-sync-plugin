@@ -102,7 +102,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
          * If an unexpected error occours, it will be reported in the custom log table
          * in the database
          */
-        $semaphore = __DIR__ . "/synchronization_$server.lock";
+        $semaphore = __DIR__ . "/synchronization_".$server."_".strtolower($class).".lock";
         
         if (file_exists($semaphore) && filemtime($semaphore) < strtotime("-2 hour")) {
             unlink($semaphore);

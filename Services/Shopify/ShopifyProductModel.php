@@ -383,7 +383,7 @@ class ShopifyProductModel {
             if ($exportServer->getServer()->getId() === $this->targetServer->getId()) {
 
                 $exportServer->setImages_json(json_encode($imagesCache));
-                if (count($variant->getImages()->getItems()) <= count($imagesCache)) {
+                if (!method_exists($variant, "getImages") || $variant->getImages() == null || count($variant->getImages()->getItems()) <= count($imagesCache)) {
                     $exportServer->setImages_sync(true);
                 } else {
                     $exportServer->setImages_sync(false);

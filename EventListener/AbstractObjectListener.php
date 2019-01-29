@@ -24,6 +24,14 @@ abstract class AbstractObjectListener {
      * @param Concrete $dataObject
      */
     public abstract function preAddDispatcher($dataObject);
+    
+    /**
+     * Properly dispatch the request to the right listener 
+     * after the 'postAdd' event is fired
+     * 
+     * @param Concrete $dataObject
+     */
+    public abstract function postAddDispatcher($dataObject);
 
     /**
      * Properly dispatch the request to the right listener 
@@ -65,6 +73,25 @@ abstract class AbstractObjectListener {
             $objectListener->preAddDispatcher($obj);
 
             self::checkForCustomListener($obj, "onPreAdd","preAddDispatcher");
+        }
+    }
+    
+    /**
+     * Invoke the dispatcher for the 'postAdd' event of the generic ObjectListener.
+     * Then, check for the existence of a custom listener that extends 
+     * the base functionalities
+     * 
+     * @param DataObjectEvent $e the event
+     */
+    public static function onPostAdd(DataObjectEvent $e) {
+
+        if ($e instanceof DataObjectEvent) {
+            $obj = $e->getObject();
+
+            $objectListener = new ObjectListener();
+            $objectListener->postAddDispatcher($obj);
+
+            self::checkForCustomListener($obj, "onPostAdd","preAddDispatcher");
         }
     }
 

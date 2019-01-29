@@ -21,6 +21,13 @@ interface InterfaceListener {
     public function preAddAction($dataObject);
     
     /**
+     * manage an object after the 'postAdd' event is fired
+     * 
+     * @param Concrete $dataObject
+     */
+    public function postAddAction($dataObject);
+    
+    /**
      * manage an object after the 'preUpdate' event is fired
      * 
      * @param Concrete $dataObject

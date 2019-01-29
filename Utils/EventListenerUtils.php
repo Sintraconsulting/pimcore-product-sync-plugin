@@ -12,6 +12,7 @@ use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\DataObject\Fieldcollection;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use Pimcore\Model\DataObject\Data\QuantityValue;
 
 /**
@@ -159,6 +160,26 @@ class EventListenerUtils {
 
         return $changed;
     }
+    
+    /**
+     * When a new variant is added or needs to be synchronize
+     * also the parent object is marked as to synchronize
+     * 
+     * @param Concrete $parent the parent object
+     */
+    public static function updateParentSynchronizationInfo(Concrete $parent) {
+        $exportServers = $parent->getExportServers() != null ? $parent->getExportServers() : new Fieldcollection();
+
+        foreach ($exportServers as $exportServer) {
+            if($exportServer instanceof ServerObjectInfo){
+                $exportServer->setSync(false);
+            }
+        }
+
+        $parent->setExportServers($exportServers);
+        $parent->update(true);
+    }
+    
 
     /**
      * Compare new and previous value of a product field.

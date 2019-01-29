@@ -4,6 +4,7 @@ namespace SintraPimcoreBundle\EventListener\General;
 
 use Pimcore\Model\DataObject\Concrete;
 use SintraPimcoreBundle\EventListener\InterfaceListener;
+use Pimcore\Model\DataObject\AbstractObject;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use SintraPimcoreBundle\Utils\EventListenerUtils;
@@ -37,6 +38,21 @@ class CommonListener extends ObjectListener implements InterfaceListener {
             EventListenerUtils::insertMissingFieldCollections($exportServers);
 
             $dataObject->setExportServers($exportServers);
+        }
+    }
+
+    /**
+     * If the added object is a variant, mark the parent object
+     * as to be synchronized
+     *
+     * @param Concrete $dataObject the object to update
+     */
+    public function postAddAction($dataObject) {
+
+        $parent = $dataObject->getParent();
+        
+        if ($dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT && method_exists($parent, 'getExportServers')) {
+            EventListenerUtils::updateParentSynchronizationInfo($parent);
         }
     }
 
@@ -103,6 +119,11 @@ class CommonListener extends ObjectListener implements InterfaceListener {
      */
     public function postDeleteAction($dataObject, $isUnpublished = false) {
         
+        $parent = $dataObject->getParent();
+
+        if ($dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT && method_exists($parent, 'getExportServers')) {
+            EventListenerUtils::updateParentSynchronizationInfo($parent);
+        }
     }
 
     /**
@@ -116,14 +137,25 @@ class CommonListener extends ObjectListener implements InterfaceListener {
      * @param Concrete $oldDataObject the previous version of the object
      */
     private function updateServerObjectInfo(ServerObjectInfo &$exportServer, Concrete $dataObject, Concrete $oldDataObject) {
+        $updated = false;
+        
         if ($exportServer->getExport() && ($oldDataObject == null || EventListenerUtils::checkServerUpdate($exportServer, $dataObject, $oldDataObject))) {
             $exportServer->setSync(false);
+            $updated = true;
         }
 
         if ($exportServer->getExport() && method_exists($dataObject, "getImages") && EventListenerUtils::checkImagesChanged($exportServer, $dataObject)) {
             $exportServer->setImages_sync(false);
             $exportServer->setSync(false);
+            $updated = true;
         }
+
+        $parent = $dataObject->getParent();
+
+        if ($updated && $dataObject->getType() === AbstractObject::OBJECT_TYPE_VARIANT && method_exists($parent, 'getExportServers')) {
+            EventListenerUtils::updateParentSynchronizationInfo($parent);
+        }
+        
 
         $complete = EventListenerUtils::checkObjectCompleted($exportServer, $dataObject);
         $exportServer->setComplete($complete);

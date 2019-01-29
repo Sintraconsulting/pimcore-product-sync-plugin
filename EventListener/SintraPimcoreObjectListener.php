@@ -23,6 +23,14 @@ class SintraPimcoreObjectListener {
     }
     
     /**
+     * Listener for DataObject 'postAdd' event
+     * @param DataObjectEvent $e the event
+     */
+    public function onPostAdd (DataObjectEvent $e) {
+       AbstractObjectListener::onPostAdd($e);
+    }
+    
+    /**
      * Listener for DataObject 'preUpdate' event
      * @param DataObjectEvent $e the event
      */

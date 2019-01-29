@@ -46,6 +46,33 @@ class ObjectListener extends AbstractObjectListener{
                 break;
         }
     }
+    
+    /**
+     * Dispatch the postAdd event to the specific class listener
+     * If the object class is not managed for the postAdd event, do nothing
+     * For folder data objects the classname is null
+     *
+     * @param Concrete $dataObject the object to add
+     */
+    public function postAddDispatcher($dataObject) {
+        if ($dataObject instanceof Concrete) {
+            $className = strtolower($dataObject->getClassName());
+        } else {
+            $className = strtolower($dataObject->o_className);
+        }
+
+        switch ($className) {
+
+            case null:
+            case "targetserver":
+                break;
+
+            default:
+                $productListener = new CommonListener();
+                $productListener->postAddAction($dataObject);
+                break;
+        }
+    }
 
     /**
      * Dispatch the preUpdate event to the specific class listener
@@ -110,6 +137,22 @@ class ObjectListener extends AbstractObjectListener{
      * @param Concrete $dataObject the deleted object
      */
     public function postDeleteDispatcher($dataObject) {
+        if ($dataObject instanceof Concrete) {
+            $className = strtolower($dataObject->getClassName());
+        } else {
+            $className = strtolower($dataObject->o_className);
+        }
 
+        switch ($className) {
+
+            case null:
+            case "targetserver":
+                break;
+
+            default:
+                $productListener = new CommonListener();
+                $productListener->postDeleteAction($dataObject);
+                break;
+        }
     }
 }

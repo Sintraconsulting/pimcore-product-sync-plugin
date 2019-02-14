@@ -1,4 +1,10 @@
-# pimcore-product-sync-plugin
+
+
+This project is an PIMCore bundle that enable product synchronization on your community edition. 
+The plugin support multiple destination (Shopify,Magento2) and is fully extensible and customizable without write code. 
+
+
+# PIMcore Product Syncronization Plugin
 Pimcore plugin created to perform automatic objects synchronization from Pimcore to E-Commerce platforms such as "Magento 2" and "Shopify".
 This plugin is originally designed to be used for the Pimcore "Product" class, but it's almost immediate to extend it potentially for any Pimcore class.
 The plugin is implemented as a [Pimcore Bundle](https://pimcore.com/docs/5.x/Development_Documentation/Extending_Pimcore/Bundle_Developers_Guide/index.html). The following guide will help you to easily install the plugin in your Pimcore environment. For further details and tips check the [Project Wiki](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki)

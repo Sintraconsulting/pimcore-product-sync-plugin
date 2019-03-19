@@ -44,7 +44,7 @@ class MultipleObjectsRelationOperator extends ObjectRelationOperator {
 
         foreach ($values as $value) {
             if (!empty(trim($value))) {
-                $this->attachObject($objects, $value);
+                $this->attachObject($objects, $rowData, $value);
             }
         }
 
@@ -60,7 +60,7 @@ class MultipleObjectsRelationOperator extends ObjectRelationOperator {
      * If an object exists, it will be attached to the target object.
      * If not, it could be created and then attached.
      */
-    private function attachObject(array &$objects, $value) {
+    private function attachObject(array &$objects, array &$rowData, $value) {
         $class = $this->additionalData["class"];
         $relatedfield = $this->additionalData["relatedfield"];
         $createIfMissing = $this->additionalData["create_if_missing"];
@@ -71,7 +71,7 @@ class MultipleObjectsRelationOperator extends ObjectRelationOperator {
         if ($listing) {
             $object = $listing[0];
         } else if ($createIfMissing) {
-            $object = $this->createNewObject($value, $class, $relatedfield);
+            $object = $this->createNewObject($rowData, $value, $class, $relatedfield);
         }
 
         if ($object !== null) {

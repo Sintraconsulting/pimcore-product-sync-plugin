@@ -23,8 +23,10 @@ class MultiplePicklistOperator extends PicklistOperator{
      * and retrieve the corresponding picklist value
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {  
+        $separator = $this->additionalData["separator"] |= null 
+                && in_array($this->additionalData["separator"], array(",",";","|","/")) ? $this->additionalData["separator"] : ",";
         
-        $values = explode(",", $rowData[$colIndex]);
+        $values = explode($separator, $rowData[$colIndex]);
         $field = $this->additionalData["field"];
         
         $fieldValues = array();

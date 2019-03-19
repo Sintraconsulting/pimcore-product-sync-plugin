@@ -52,7 +52,7 @@ class ObjectRelationOperator extends AbstractOperator {
             if ($listing) {
                 $object = $listing[0];
             } else if ($createIfMissing) {
-                $object = $this->createNewObject($value, $class, $relatedfield);
+                $object = $this->createNewObject($rowData, $value, $class, $relatedfield);
             }
         }
         $reflectionTarget = new \ReflectionObject($target);

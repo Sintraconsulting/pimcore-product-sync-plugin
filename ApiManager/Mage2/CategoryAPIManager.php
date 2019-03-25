@@ -2,7 +2,7 @@
 
 namespace SintraPimcoreBundle\ApiManager\Mage2;
 
-use \SpringImport\Swagger\Magento2\Client\ApiException;
+use SpringImport\Swagger\Magento2\Client\ApiException;
 use SpringImport\Swagger\Magento2\Client\Api\CatalogCategoryRepositoryV1Api;
 use SpringImport\Swagger\Magento2\Client\Model\Body30;
 use Pimcore\Model\DataObject\TargetServer;

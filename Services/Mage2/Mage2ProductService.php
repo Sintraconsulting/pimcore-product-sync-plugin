@@ -114,7 +114,9 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             $result = Mage2ProductAPIManager::updateEntity($sku, $ecommObject, $targetServer);
         }
 
-        $this->synchronizeProductImages($dataObject, $targetServer);
+        if(method_exists($dataObject, "getImages")){
+            $this->synchronizeProductImages($dataObject, $targetServer);
+        }
 
         if ($isVariant) {
             $parentObject = $dataObject->getParent();
@@ -328,6 +330,14 @@ class Mage2ProductService extends BaseMagento2Service implements InterfaceServic
             $entryId = $savedImage["server_id"];
             Logger::info("Immagine $entryId rimossa da Pimcore. Rimuovo Immagine");
             ProductAttributeMediaGalleryAPIManager::deleteProductEntry($dataObject->getSku(), $entryId, $targetServer);
+        }
+        
+        $allProductImages = ProductAttributeMediaGalleryAPIManager::getAllProductEntries($dataObject->getSku(), $targetServer);
+        foreach ($allProductImages as $productImage) {
+            if(array_search($productImage["id"], array_column($imagesData,"server_id")) === FALSE){
+                Logger::info("Immagine ".$productImage["id"]." rimossa da Pimcore. Rimuovo Immagine");
+                ProductAttributeMediaGalleryAPIManager::deleteProductEntry($dataObject->getSku(), $productImage["id"], $targetServer);
+            }
         }
 
         $this->syncImagesData($dataObject, $targetServer, $imagesData);

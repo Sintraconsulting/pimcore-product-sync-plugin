@@ -61,7 +61,7 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
             ExportUtils::exportProduct($response, $product);
         }
 
-        return new Response(json_encode($response));
+        return new Response(json_encode($response, JSON_UNESCAPED_UNICODE));
     }
 
 }

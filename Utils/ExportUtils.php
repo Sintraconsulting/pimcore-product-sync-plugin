@@ -5,11 +5,13 @@ namespace SintraPimcoreBundle\Utils;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Multiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Select;
 use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
+use Pimcore\Model\DataObject\Localizedfield;
 use Pimcore\Model\DataObject\Product;
 
 
@@ -91,7 +93,7 @@ class ExportUtils {
                 break;
 
             case "localizedfields":
-
+                $objectExport[$fieldName] = self::exportLocalizedField($fieldValue, $fieldDefinition);
                 break;
 
             case "fieldcollections":
@@ -188,5 +190,28 @@ class ExportUtils {
         }
         
         return $relatedObject;
+    }
+    
+    private static function exportLocalizedField(Localizedfield $fieldValue, Data $fieldDefinition){
+        if(!($fieldDefinition instanceof Localizedfields)){
+            throw new \Exception("ERROR - exportLocalizedField - Invalid type '".$fieldDefinition->getFieldtype()."'. Expected 'localizedfields'");
+        }
+        
+        $fields = $fieldDefinition->getChildren();
+        
+        $localizedValues = array();
+        
+        $config = \Pimcore\Config::getSystemConfig();
+        $validLanguages = explode(",",$config->general->validLanguages);
+        
+        foreach ($fields as $field) {
+            $fieldName = $field->getName();
+            
+            foreach ($validLanguages as $lang) {
+                $localizedValues[$fieldName][$lang] = $fieldValue->getLocalizedValue($fieldName, $lang);
+            }
+        }
+        
+        return $localizedValues;
     }
 }

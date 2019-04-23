@@ -85,6 +85,7 @@ class ExportUtils {
                 break;
 
             case "manyToManyObjectRelation":
+            case "advancedManyToManyObjectRelation":
                 $objectExport[$fieldName] = self::exportMultipleRelationsField($productId, $fieldValue);
                 
                 break;
@@ -164,22 +165,26 @@ class ExportUtils {
         return $relatedObjects;
     }
     
-    private static function exportRelationField(int $productId, Concrete $fieldValue){
-        $relatedObject = array(
-            "id" => $fieldValue->getId(),
-            "class" => $fieldValue->getClassName(),
-            "created at" => date("Y-m-d H:i:s", $fieldValue->getCreationDate()),
-            "modified at" => date("Y-m-d H:i:s", $fieldValue->getModificationDate())
-        );
-        
-        if($fieldValue->getId() != $productId || $fieldValue->getClassName() != "Product"){
-            $classDefinition = $fieldValue->getClass();
+    private static function exportRelationField(int $productId, $fieldValue){
+        if($fieldValue instanceof Concrete){
+            $relatedObject = array(
+                "id" => $fieldValue->getId(),
+                "class" => $fieldValue->getClassName(),
+                "created at" => date("Y-m-d H:i:s", $fieldValue->getCreationDate()),
+                "modified at" => date("Y-m-d H:i:s", $fieldValue->getModificationDate())
+            );
 
-            $fieldDefinitions = $classDefinition->getFieldDefinitions();
+            if($fieldValue->getId() != $productId || $fieldValue->getClassName() != "Product"){
+                $classDefinition = $fieldValue->getClass();
 
-            foreach ($fieldDefinitions as $fieldDefinition) {
-                self::exportObjectField($productId, $fieldValue, $fieldDefinition, $relatedObject);
+                $fieldDefinitions = $classDefinition->getFieldDefinitions();
+
+                foreach ($fieldDefinitions as $fieldDefinition) {
+                    self::exportObjectField($productId, $fieldValue, $fieldDefinition, $relatedObject);
+                }
             }
+        }else{
+            Logger::warn("WARNING - exportRelationField - The export is defined only for objects");
         }
         
         return $relatedObject;

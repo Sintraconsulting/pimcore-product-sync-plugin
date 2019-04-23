@@ -3,6 +3,7 @@
 namespace SintraPimcoreBundle\Utils;
 
 use Pimcore\Logger;
+use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
@@ -11,9 +12,11 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Select;
 use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
+use Pimcore\Model\DataObject\Fieldcollection;
+use Pimcore\Model\DataObject\Fieldcollection\Data\AbstractData;
 use Pimcore\Model\DataObject\Localizedfield;
 use Pimcore\Model\DataObject\Product;
-
+use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 
 /**
@@ -50,7 +53,14 @@ class ExportUtils {
         $response[] = $productExport;
     }
 
-    private static function exportObjectField(int $productId, Concrete $object, Data $fieldDefinition, array &$objectExport) {
+    /**
+     * 
+     * @param int $productId
+     * @param Concrete|AbstractData $object
+     * @param Data $fieldDefinition
+     * @param array $objectExport
+     */
+    private static function exportObjectField(int $productId, $object, Data $fieldDefinition, array &$objectExport) {
         $objectReflection = new \ReflectionObject($object);
         
         $fieldName = $fieldDefinition->getName();
@@ -97,7 +107,11 @@ class ExportUtils {
                 break;
 
             case "fieldcollections":
-
+                $objectExport[$fieldName] = self::exportFieldcollection($productId, $fieldValue);
+                break;
+            
+            case "image":
+                $objectExport[$fieldName] = self::exportImageField($fieldValue);
                 break;
 
             default:
@@ -213,5 +227,32 @@ class ExportUtils {
         }
         
         return $localizedValues;
+    }
+    
+    private static function exportFieldcollection(int $productId, Fieldcollection $fieldValue = null){
+        $items = $fieldValue != null ? $fieldValue->getItems() : array();
+        
+        $fieldCollections = array();
+        
+        foreach ($items as $item) {
+            if($item instanceof AbstractData){
+                $fieldCollection = array();
+                
+                $definition = $item->getDefinition();
+                foreach ($definition->getFieldDefinitions() as $fieldDefinition) {
+                    self::exportObjectField($productId, $item, $fieldDefinition, $fieldCollection);
+                }
+                
+                $fieldCollections[] = $fieldCollection;
+            }
+        }
+        
+        return $fieldCollections;
+    }
+    
+    private static function exportImageField(Image $fieldValue){
+        return array(
+            "url" => BaseEcommerceConfig::getBaseUrl().$fieldValue->getRelativeFileSystemPath()
+        );
     }
 }

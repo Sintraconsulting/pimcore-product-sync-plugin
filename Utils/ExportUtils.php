@@ -7,6 +7,7 @@ use Pimcore\Model\Asset;
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Block;
 use Pimcore\Model\DataObject\ClassDefinition\Data\BooleanSelect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Country;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Countrymultiselect;
@@ -18,6 +19,7 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Select;
 use Pimcore\Model\DataObject\ClassDefinition\Data\TargetGroup;
 use Pimcore\Model\DataObject\ClassDefinition\Data\TargetGroupMultiselect;
 use Pimcore\Model\DataObject\Concrete;
+use Pimcore\Model\DataObject\Data\BlockElement;
 use Pimcore\Model\DataObject\Data\Consent;
 use Pimcore\Model\DataObject\Data\ExternalImage;
 use Pimcore\Model\DataObject\Data\Geopoint;
@@ -78,7 +80,7 @@ class ExportUtils {
     /**
      * 
      * @param int $productId
-     * @param Concrete|FieldcollectionAbstractData|ObjectbrickAbstractData $object
+     * @param Concrete|FieldcollectionAbstractData|ObjectbrickAbstractData|BlockElement $object
      * @param Data $fieldDefinition
      * @param array $objectExport
      */
@@ -87,7 +89,7 @@ class ExportUtils {
         
         $fieldName = $fieldDefinition->getName();
 
-        $getterMethod = $objectReflection->getMethod("get" . ucfirst($fieldName));
+        $getterMethod = (!($object instanceof BlockElement)) ? $objectReflection->getMethod("get" . ucfirst($fieldName)) : $objectReflection->getMethod("getData");
         $fieldValue = $getterMethod->invoke($object);
 
         $fieldType = $fieldDefinition->getFieldtype();
@@ -178,6 +180,11 @@ class ExportUtils {
             /**
              * STRUCTURED FIELDS
              */
+            
+            case "block":
+                $objectExport[$fieldName] = self::exportBlock($productId, $fieldDefinition, $level, $fieldValue);
+                break;
+            
             case "localizedfields":
                 $objectExport[$fieldName] = self::exportLocalizedField($fieldValue, $fieldDefinition);
                 break;
@@ -419,6 +426,45 @@ class ExportUtils {
 
 
     //STRUCTURED FIELDS
+    
+    /**
+     * 
+     * @param int $productId
+     * @param Data $fieldDefinition
+     * @param int $level
+     * @param BlockElement[][] $fieldValue
+     * @return array
+     */
+    private static function exportBlock(int $productId, Data $fieldDefinition, int $level, $fieldValue){
+        if(!($fieldDefinition instanceof Block)){
+            throw new \Exception("ERROR - exportBlockField - Invalid type '".$fieldDefinition->getFieldtype()."'. Expected 'block'");
+        }
+        
+        $blockElements = array();
+        
+        foreach ($fieldValue as $blockElement) {
+            
+            $block = array();
+
+            foreach ($blockElement as $blockField) {
+                self::exportBlockField($productId, $blockField, $fieldDefinition, $block, $level + 1);
+            }
+
+            $blockElements[] = $block;
+        }
+        
+        return $blockElements;
+    }
+    
+    private static function exportBlockField(int $productId, BlockElement $blockField, Block $fieldDefinition, array &$block, $level){
+        $blockFields = $fieldDefinition->getFieldDefinitions();
+        
+        foreach ($blockFields as $field) {
+            if($field->getName() == $blockField->getName()){
+                self::exportObjectField($productId, $blockField, $field, $block, $level);
+            }
+        }
+    }
     
     private static function exportLocalizedField(Localizedfield $fieldValue, Data $fieldDefinition){
         if(!($fieldDefinition instanceof Localizedfields)){

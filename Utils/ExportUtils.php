@@ -14,8 +14,10 @@ use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\AbstractData;
+use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use Pimcore\Model\DataObject\Localizedfield;
 use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 
@@ -60,7 +62,7 @@ class ExportUtils {
      * @param Data $fieldDefinition
      * @param array $objectExport
      */
-    private static function exportObjectField(int $productId, $object, Data $fieldDefinition, array &$objectExport) {
+    private static function exportObjectField(int $productId, $object, Data $fieldDefinition, array &$objectExport, int $level = 0) {
         $objectReflection = new \ReflectionObject($object);
         
         $fieldName = $fieldDefinition->getName();
@@ -93,12 +95,12 @@ class ExportUtils {
                 break;
 
             case "manyToOneRelation":
-                $objectExport[$fieldName] = self::exportRelationField($productId, $fieldValue);
+                $objectExport[$fieldName] = self::exportRelationField($productId, $fieldValue, $level);
                 break;
 
             case "manyToManyObjectRelation":
             case "advancedManyToManyObjectRelation":
-                $objectExport[$fieldName] = self::exportMultipleRelationsField($productId, $fieldValue);
+                $objectExport[$fieldName] = self::exportMultipleRelationsField($productId, $fieldValue, $level);
                 
                 break;
 
@@ -107,7 +109,7 @@ class ExportUtils {
                 break;
 
             case "fieldcollections":
-                $objectExport[$fieldName] = self::exportFieldcollection($productId, $fieldValue);
+                $objectExport[$fieldName] = self::exportFieldcollection($productId, $level, $fieldValue);
                 break;
             
             case "image":
@@ -146,11 +148,19 @@ class ExportUtils {
             
             foreach ($fieldValue as $value) {
                 $option = array_search($value, array_column($options, "value"));
-                $values[] = $options[$option];
+                if($option !== FALSE){
+                    $values[] = $options[$option];
+                }else{
+                    Logger::warn("WARNING - exportSelectField - Invalid field value '$value' for '".$fieldDefinition->getName()."'");
+                }
             }
         }else{
             $option = array_search($fieldValue, array_column($options, "value"));
-            $values = $options[$option];
+            if($option !== FALSE){
+                $values = $options[$option];
+            }else{
+                Logger::warn("WARNING - exportSelectField - Invalid field value '$fieldValue' for '".$fieldDefinition->getName()."'");
+            }
         }
         
         return $values;
@@ -171,18 +181,18 @@ class ExportUtils {
      * @param Concrete[] $fieldValue
      * @return array
      */
-    private static function exportMultipleRelationsField(int $productId, $fieldValue){
+    private static function exportMultipleRelationsField(int $productId, $fieldValue, int $level){
         $relatedObjects = array();
         
         foreach ($fieldValue as $value) {
-            $relatedObjects[] = self::exportRelationField($productId, $value);
+            $relatedObjects[] = self::exportRelationField($productId, $value, $level);
         }
         
         return $relatedObjects;
     }
     
-    private static function exportRelationField(int $productId, $fieldValue){
-        if($fieldValue instanceof Concrete){
+    private static function exportRelationField(int $productId, $fieldValue, int $level){
+        if($fieldValue instanceof Concrete && !($fieldValue instanceof TargetServer)){
             $relatedObject = array(
                 "id" => $fieldValue->getId(),
                 "class" => $fieldValue->getClassName(),
@@ -190,13 +200,16 @@ class ExportUtils {
                 "modified at" => date("Y-m-d H:i:s", $fieldValue->getModificationDate())
             );
 
-            if($fieldValue->getId() != $productId || $fieldValue->getClassName() != "Product"){
+            /**
+             * Avoid circular dependency loop
+             */
+            if($level < 10 && ($fieldValue->getId() != $productId || $fieldValue->getClassName() != "Product")){
                 $classDefinition = $fieldValue->getClass();
 
                 $fieldDefinitions = $classDefinition->getFieldDefinitions();
 
                 foreach ($fieldDefinitions as $fieldDefinition) {
-                    self::exportObjectField($productId, $fieldValue, $fieldDefinition, $relatedObject);
+                    self::exportObjectField($productId, $fieldValue, $fieldDefinition, $relatedObject, $level +1);
                 }
             }
         }else{
@@ -229,18 +242,21 @@ class ExportUtils {
         return $localizedValues;
     }
     
-    private static function exportFieldcollection(int $productId, Fieldcollection $fieldValue = null){
+    private static function exportFieldcollection(int $productId, $level, Fieldcollection $fieldValue = null){
         $items = $fieldValue != null ? $fieldValue->getItems() : array();
         
         $fieldCollections = array();
         
         foreach ($items as $item) {
-            if($item instanceof AbstractData){
+            /**
+             * Avoid circular dependency loop
+             */
+            if($level < 10 && $item instanceof AbstractData && !($item instanceof ServerObjectInfo)){
                 $fieldCollection = array();
                 
                 $definition = $item->getDefinition();
                 foreach ($definition->getFieldDefinitions() as $fieldDefinition) {
-                    self::exportObjectField($productId, $item, $fieldDefinition, $fieldCollection);
+                    self::exportObjectField($productId, $item, $fieldDefinition, $fieldCollection, $level + 1);
                 }
                 
                 $fieldCollections[] = $fieldCollection;

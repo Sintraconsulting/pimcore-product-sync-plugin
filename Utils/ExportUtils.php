@@ -10,6 +10,7 @@ use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\ClassDefinition\Data\BooleanSelect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Country;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Countrymultiselect;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Geopolygon;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Language;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Languagemultiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
@@ -20,6 +21,8 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\TargetGroupMultiselect;
 use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Data\Consent;
 use Pimcore\Model\DataObject\Data\ExternalImage;
+use Pimcore\Model\DataObject\Data\Geopoint;
+use Pimcore\Model\DataObject\Data\Geobounds;
 use Pimcore\Model\DataObject\Data\Hotspotimage;
 use Pimcore\Model\DataObject\Data\ImageGallery;
 use Pimcore\Model\DataObject\Data\ObjectMetadata;
@@ -106,7 +109,14 @@ class ExportUtils {
             case "datetime":
                 $objectExport[$fieldName] = date("Y-m-d H:i:s", strtotime($fieldValue));
                 break;
+            
+            case "rgbaColor":
+                $objectExport[$fieldName] = self::exportRgbaColorField($fieldValue);
+                break;
 
+            /**
+             * SELECT AND MULTISELECT FIELDS
+             */
             case "booleanSelect":
             case "select":
             case "multiselect":
@@ -117,6 +127,9 @@ class ExportUtils {
                 $objectExport[$fieldName] = self::exportSelectField($fieldValue, $fieldDefinition);
                 break;
             
+            /**
+             * CRM SPECIAL FIELDS
+             */
             case "targetGroup":
             case "targetGroupMultiselect":
                 $objectExport[$fieldName] = self::exportTargetGroupSelectField($fieldValue, $fieldDefinition);
@@ -126,10 +139,9 @@ class ExportUtils {
                 $objectExport[$fieldName] = self::exportConsentField($fieldValue);
                 break;
 
-            case "rgbaColor":
-                $objectExport[$fieldName] = self::exportRgbaColorField($fieldValue);
-                break;
-
+            /**
+             * OBJECTS RELATION FIELDS
+             */
             case "manyToOneRelation":
                 $objectExport[$fieldName] = self::exportRelationField($productId, $fieldValue, $level);
                 break;
@@ -143,7 +155,25 @@ class ExportUtils {
             case "advancedManyToManyRelation":
                 $objectExport[$fieldName] = self::exportAdvancedMultipleRelationsField($productId, $fieldValue, $level);
                 break;
-
+            
+            /**
+             * GEOGRAPHICAL FIELDS
+             */
+            case "geopoint":
+                $objectExport[$fieldName] = self::exportGeopointField($fieldValue);
+                break;
+            
+            case "geobounds":
+                $objectExport[$fieldName] = self::exportGeoboundsField($fieldValue);
+                break;
+            
+            case "geopolygon":
+                $objectExport[$fieldName] = self::exportGeopolygonField($fieldValue);
+                break;
+            
+            /**
+             * STRUCTURED FIELDS
+             */
             case "localizedfields":
                 $objectExport[$fieldName] = self::exportLocalizedField($fieldValue, $fieldDefinition);
                 break;
@@ -156,6 +186,9 @@ class ExportUtils {
                 $objectExport[$fieldName] = self::exportObjectBrick($productId, $level, $fieldValue);
                 break;
             
+            /**
+             * ASSETS FIELDS
+             */
             case "image":
                 $objectExport[$fieldName] = self::exportImageField($fieldValue);
                 break;
@@ -196,6 +229,17 @@ class ExportUtils {
         );
     }
     
+    private static function exportRgbaColorField(RgbaColor $fieldValue){
+        return array(
+            "rgb" => $fieldValue->getRgb(),
+            "rgba" => $fieldValue->getRgba(),
+            "hex" => $fieldValue->getHex(false, true),
+            "hexa" => $fieldValue->getHex(true, true),
+        );
+    }
+    
+    //SELECT AND MULTISELECT FIELDS
+    
     private static function exportSelectField($fieldValue, Data $fieldDefinition){
         if(!($fieldDefinition instanceof Select || $fieldDefinition instanceof Multiselect || $fieldDefinition instanceof BooleanSelect
                 || $fieldDefinition instanceof Country || $fieldDefinition instanceof Countrymultiselect 
@@ -229,6 +273,8 @@ class ExportUtils {
         return $values;
     }
     
+    //CRM SPECIAL FIELDS
+    
     private static function exportTargetGroupSelectField($fieldValue, Data $fieldDefinition){
         if(!($fieldDefinition instanceof TargetGroup || $fieldDefinition instanceof TargetGroupMultiselect)){
             throw new \Exception("ERROR - exportSelectField - Invalid type '".$fieldDefinition->getFieldtype().
@@ -259,14 +305,8 @@ class ExportUtils {
         );
     }
 
-    private static function exportRgbaColorField(RgbaColor $fieldValue){
-        return array(
-            "rgb" => $fieldValue->getRgb(),
-            "rgba" => $fieldValue->getRgba(),
-            "hex" => $fieldValue->getHex(false, true),
-            "hexa" => $fieldValue->getHex(true, true),
-        );
-    }
+    
+    //OBECTS RELATION FIELDS
     
     /**
      * 
@@ -330,6 +370,39 @@ class ExportUtils {
         
         return $relatedObject;
     }
+    
+    //GEOGRAPHICAL FIELDS
+    
+    private static function exportGeopointField(Geopoint $fieldValue){
+        return array(
+            "latitude" => $fieldValue->getLatitude(),
+            "longitude" => $fieldValue->getLongitude()
+        );
+    }
+    
+    private static function exportGeoboundsField(Geobounds $fieldValue){
+        return array(
+            "northeast" => self::exportGeopointField($fieldValue->getNorthEast()),
+            "soutwest" => self::exportGeopointField($fieldValue->getSouthWest())
+        );
+    }
+    
+    /**
+     * 
+     * @param Geopoint[] $fieldValue
+     */
+    private static function exportGeopolygonField($fieldValue){
+        $points = array();
+        
+        foreach ($fieldValue as $value) {
+            $points[] = self::exportGeopointField($value);
+        }
+        
+        return $points;
+    }
+
+
+    //STRUCTURED FIELDS
     
     private static function exportLocalizedField(Localizedfield $fieldValue, Data $fieldDefinition){
         if(!($fieldDefinition instanceof Localizedfields)){
@@ -401,6 +474,8 @@ class ExportUtils {
         
         return $objectBricks;
     }
+    
+    //ASSETS FIELDS
     
     private static function exportImageField(Image $fieldValue){
         return array(

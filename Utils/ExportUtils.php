@@ -7,6 +7,11 @@ use Pimcore\Model\Asset;
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
+use Pimcore\Model\DataObject\ClassDefinition\Data\BooleanSelect;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Country;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Countrymultiselect;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Language;
+use Pimcore\Model\DataObject\ClassDefinition\Data\Languagemultiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Multiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Select;
@@ -98,8 +103,13 @@ class ExportUtils {
                 $objectExport[$fieldName] = date("Y-m-d H:i:s", strtotime($fieldValue));
                 break;
 
+            case "booleanSelect":
             case "select":
             case "multiselect":
+            case "country":
+            case "countrymultiselect":
+            case "language":
+            case "languagemultiselect":
                 $objectExport[$fieldName] = self::exportSelectField($fieldValue, $fieldDefinition);
                 break;
 
@@ -174,8 +184,11 @@ class ExportUtils {
     }
     
     private static function exportSelectField($fieldValue, Data $fieldDefinition){
-        if(!($fieldDefinition instanceof Select || $fieldDefinition instanceof Multiselect)){
-            throw new \Exception("ERROR - exportSelectField - Invalid type '".$fieldDefinition->getFieldtype()."'. Expected either 'select' or 'multiselect'");
+        if(!($fieldDefinition instanceof Select || $fieldDefinition instanceof Multiselect || $fieldDefinition instanceof BooleanSelect
+                || $fieldDefinition instanceof Country || $fieldDefinition instanceof Countrymultiselect 
+                || $fieldDefinition instanceof Language || $fieldDefinition instanceof Languagemultiselect)){
+            throw new \Exception("ERROR - exportSelectField - Invalid type '".$fieldDefinition->getFieldtype().
+                    "'. Expected one between 'booleanSelect','select', 'multiselect', 'country', 'countrymultiselect', 'language' and 'languagemultiselect'");
         }
         
         $options = $fieldDefinition->getOptions();

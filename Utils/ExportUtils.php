@@ -15,7 +15,10 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Languagemultiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Multiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Select;
+use Pimcore\Model\DataObject\ClassDefinition\Data\TargetGroup;
+use Pimcore\Model\DataObject\ClassDefinition\Data\TargetGroupMultiselect;
 use Pimcore\Model\DataObject\Concrete;
+use Pimcore\Model\DataObject\Data\Consent;
 use Pimcore\Model\DataObject\Data\ExternalImage;
 use Pimcore\Model\DataObject\Data\Hotspotimage;
 use Pimcore\Model\DataObject\Data\ImageGallery;
@@ -31,6 +34,7 @@ use Pimcore\Model\DataObject\Objectbrick;
 use Pimcore\Model\DataObject\Objectbrick\Data\AbstractData as ObjectbrickAbstractData;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
+use Pimcore\Model\Tool\Targeting;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 
@@ -111,6 +115,15 @@ class ExportUtils {
             case "language":
             case "languagemultiselect":
                 $objectExport[$fieldName] = self::exportSelectField($fieldValue, $fieldDefinition);
+                break;
+            
+            case "targetGroup":
+            case "targetGroupMultiselect":
+                $objectExport[$fieldName] = self::exportTargetGroupSelectField($fieldValue, $fieldDefinition);
+                break;
+            
+            case "consent":
+                $objectExport[$fieldName] = self::exportConsentField($fieldValue);
                 break;
 
             case "rgbaColor":
@@ -216,6 +229,36 @@ class ExportUtils {
         return $values;
     }
     
+    private static function exportTargetGroupSelectField($fieldValue, Data $fieldDefinition){
+        if(!($fieldDefinition instanceof TargetGroup || $fieldDefinition instanceof TargetGroupMultiselect)){
+            throw new \Exception("ERROR - exportSelectField - Invalid type '".$fieldDefinition->getFieldtype().
+                    "'. Expected one between 'targetGroup' and 'targetGroupMultiselect'");
+        }
+        
+        $values = self::exportSelectField($fieldValue, $fieldDefinition);
+        
+        if(is_array($fieldValue)){
+            foreach ($values as $key => $value) {
+                $targetGroup = Targeting\TargetGroup::getById($value["value"]);
+                $values[$key]["threshold"] = $targetGroup->getThreshold();
+                $values[$key]["description"] = $targetGroup->getDescription();
+            }
+        }else{
+            $targetGroup = Targeting\TargetGroup::getById($values["value"]);
+            $values["threshold"] = $targetGroup->getThreshold();
+            $values["description"] = $targetGroup->getDescription();
+        }
+        
+        return $values;
+    }
+    
+    private static function exportConsentField(Consent $fieldValue){
+        return array(
+            "consent" => $fieldValue->getConsent(),
+            "note" => $fieldValue->getNote()
+        );
+    }
+
     private static function exportRgbaColorField(RgbaColor $fieldValue){
         return array(
             "rgb" => $fieldValue->getRgb(),

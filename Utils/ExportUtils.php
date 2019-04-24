@@ -28,8 +28,9 @@ use Pimcore\Model\DataObject\Data\Hotspotimage;
 use Pimcore\Model\DataObject\Data\ImageGallery;
 use Pimcore\Model\DataObject\Data\Link;
 use Pimcore\Model\DataObject\Data\ObjectMetadata;
-use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
+use Pimcore\Model\DataObject\Data\RgbaColor;
+use Pimcore\Model\DataObject\Data\StructuredTable;
 use Pimcore\Model\DataObject\Data\Video;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\AbstractData as FieldcollectionAbstractData;
@@ -195,6 +196,14 @@ class ExportUtils {
             
             case "objectbricks":
                 $objectExport[$fieldName] = self::exportObjectBrick($productId, $level, $fieldValue);
+                break;
+            
+            case "table":
+                $objectExport[$fieldName] = $fieldValue;
+                break;
+            
+            case "structuredTable":
+                $objectExport[$fieldName] = self::exportStructuredTable($fieldValue);
                 break;
             
             /**
@@ -535,6 +544,10 @@ class ExportUtils {
         }
         
         return $objectBricks;
+    }
+    
+    private static function exportStructuredTable(StructuredTable $fieldValue){
+        return $fieldValue->getData();
     }
     
     //ASSETS FIELDS

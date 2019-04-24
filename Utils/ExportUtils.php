@@ -3,6 +3,7 @@
 namespace SintraPimcoreBundle\Utils;
 
 use Pimcore\Logger;
+use Pimcore\Model\Asset;
 use Pimcore\Model\Asset\Image;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\ClassDefinition\Data;
@@ -10,8 +11,12 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Multiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Select;
 use Pimcore\Model\DataObject\Concrete;
+use Pimcore\Model\DataObject\Data\ExternalImage;
+use Pimcore\Model\DataObject\Data\Hotspotimage;
+use Pimcore\Model\DataObject\Data\ImageGallery;
 use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
+use Pimcore\Model\DataObject\Data\Video;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\AbstractData;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
@@ -101,7 +106,6 @@ class ExportUtils {
             case "manyToManyObjectRelation":
             case "advancedManyToManyObjectRelation":
                 $objectExport[$fieldName] = self::exportMultipleRelationsField($productId, $fieldValue, $level);
-                
                 break;
 
             case "localizedfields":
@@ -114,6 +118,22 @@ class ExportUtils {
             
             case "image":
                 $objectExport[$fieldName] = self::exportImageField($fieldValue);
+                break;
+            
+            case "externalImage":
+                $objectExport[$fieldName] = self::exportExternalImageField($fieldValue);
+                break;
+            
+            case "hotspotimage":
+                $objectExport[$fieldName] = self::exportHotspotImageField($fieldValue);
+                break;
+            
+            case "imageGallery":
+                $objectExport[$fieldName] = self::exportImageGalleryField($fieldValue);
+                break;
+            
+            case "video":
+                $objectExport[$fieldName] = self::exportVideoField($fieldValue);
                 break;
 
             default:
@@ -268,7 +288,52 @@ class ExportUtils {
     
     private static function exportImageField(Image $fieldValue){
         return array(
-            "url" => BaseEcommerceConfig::getBaseUrl().$fieldValue->getRelativeFileSystemPath()
+            "url" => BaseEcommerceConfig::getBaseUrl().urlencode_ignore_slash($fieldValue->getRelativeFileSystemPath())
         );
+    }
+    
+    private static function exportExternalImageField(ExternalImage $fieldValue){
+        return array(
+            "url" => $fieldValue->getUrl()
+        );
+    }
+    
+    public static function exportHotspotImageField(Hotspotimage $fieldValue){
+        $image = $fieldValue->getImage();
+        
+        return array(
+            "url" => BaseEcommerceConfig::getBaseUrl().urlencode_ignore_slash($image->getRelativeFileSystemPath()),
+            "crop" => $fieldValue->getCrop(),
+            "hotspots" => $fieldValue->getHotspots(),
+            "marker" => $fieldValue->getMarker()
+        );
+    }
+    
+    public static function exportImageGalleryField(ImageGallery $fieldValue){
+        $images = array();
+        
+        foreach ($fieldValue->getItems() as $image) {
+            $images[] = self::exportHotspotImageField($image);
+        }
+        
+        return $images;
+    }
+    
+    public static function exportVideoField(Video $fieldValue){
+        $type = $fieldValue->getType();
+        
+        $data = $fieldValue->getData();
+        
+        $video = array(
+            "type" => $type
+        );
+        
+        if($data instanceof Asset){ 
+            $video["url"] = BaseEcommerceConfig::getBaseUrl()."/var/assets".$data->getFullPath();
+        }else{
+            $video["id"] = $data;
+        }
+        
+        return $video;
     }
 }

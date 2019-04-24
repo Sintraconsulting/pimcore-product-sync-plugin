@@ -14,6 +14,7 @@ use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Data\ExternalImage;
 use Pimcore\Model\DataObject\Data\Hotspotimage;
 use Pimcore\Model\DataObject\Data\ImageGallery;
+use Pimcore\Model\DataObject\Data\ObjectMetadata;
 use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
 use Pimcore\Model\DataObject\Data\Video;
@@ -111,8 +112,13 @@ class ExportUtils {
                 break;
 
             case "manyToManyObjectRelation":
-            case "advancedManyToManyObjectRelation":
+            case "manyToManyRelation":
                 $objectExport[$fieldName] = self::exportMultipleRelationsField($productId, $fieldValue, $level);
+                break;
+            
+            case "advancedManyToManyObjectRelation":
+            case "advancedManyToManyRelation":
+                $objectExport[$fieldName] = self::exportAdvancedMultipleRelationsField($productId, $fieldValue, $level);
                 break;
 
             case "localizedfields":
@@ -217,6 +223,25 @@ class ExportUtils {
         
         foreach ($fieldValue as $value) {
             $relatedObjects[] = self::exportRelationField($productId, $value, $level);
+        }
+        
+        return $relatedObjects;
+    }
+    
+    /**
+     * 
+     * @param int $productId
+     * @param ObjectMetadata[] $fieldValue
+     * @return array
+     */
+    private static function exportAdvancedMultipleRelationsField(int $productId, $fieldValue, int $level){
+        $relatedObjects = array();
+        
+        foreach ($fieldValue as $value) {
+            $relatedObject = self::exportRelationField($productId, $value->getElement(), $level);
+            $relatedObject["metadata"] = $value->getData();
+            
+            $relatedObjects[] = $relatedObject;
         }
         
         return $relatedObjects;

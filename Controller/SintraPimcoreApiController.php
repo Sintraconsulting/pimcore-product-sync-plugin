@@ -58,7 +58,7 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         }
         
         foreach ($products->getObjects() as $product) {
-            ExportUtils::exportProduct($response, $product);
+            ExportUtils::exportProduct($response["products"], $product);
         }
 
         return new Response(json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));

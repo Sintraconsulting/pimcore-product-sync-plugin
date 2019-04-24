@@ -85,11 +85,16 @@ class ExportUtils {
                 break;
             
             case "quantityValue":
+            case "inputQuantityValue":
                 $objectExport[$fieldName] = self::exportQuantityValueField($fieldValue);
                 break;
 
             case "date":
                 $objectExport[$fieldName] = date("Y-m-d", strtotime($fieldValue));
+                break;
+            
+            case "datetime":
+                $objectExport[$fieldName] = date("Y-m-d H:i:s", strtotime($fieldValue));
                 break;
 
             case "select":

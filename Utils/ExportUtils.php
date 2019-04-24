@@ -18,6 +18,7 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Multiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Select;
 use Pimcore\Model\DataObject\ClassDefinition\Data\TargetGroup;
 use Pimcore\Model\DataObject\ClassDefinition\Data\TargetGroupMultiselect;
+use Pimcore\Model\DataObject\AbstractObject;
 use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Data\BlockElement;
 use Pimcore\Model\DataObject\Data\Consent;
@@ -73,6 +74,11 @@ class ExportUtils {
 
         foreach ($productFields as $fieldDefinition) {
             self::exportObjectField($productId, $product, $fieldDefinition, $productExport);
+        }
+        
+        $variants = $product->getChildren(array(AbstractObject::OBJECT_TYPE_VARIANT));
+        foreach ($variants as $variant) {
+            self::exportProduct($productExport["variants"], $variant);
         }
 
         $response[] = $productExport;

@@ -18,9 +18,11 @@ use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
 use Pimcore\Model\DataObject\Data\Video;
 use Pimcore\Model\DataObject\Fieldcollection;
-use Pimcore\Model\DataObject\Fieldcollection\Data\AbstractData;
+use Pimcore\Model\DataObject\Fieldcollection\Data\AbstractData as FieldcollectionAbstractData;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
 use Pimcore\Model\DataObject\Localizedfield;
+use Pimcore\Model\DataObject\Objectbrick;
+use Pimcore\Model\DataObject\Objectbrick\Data\AbstractData as ObjectbrickAbstractData;
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
@@ -63,7 +65,7 @@ class ExportUtils {
     /**
      * 
      * @param int $productId
-     * @param Concrete|AbstractData $object
+     * @param Concrete|FieldcollectionAbstractData|ObjectbrickAbstractData $object
      * @param Data $fieldDefinition
      * @param array $objectExport
      */
@@ -114,6 +116,10 @@ class ExportUtils {
 
             case "fieldcollections":
                 $objectExport[$fieldName] = self::exportFieldcollection($productId, $level, $fieldValue);
+                break;
+            
+            case "objectbricks":
+                $objectExport[$fieldName] = self::exportObjectBrick($productId, $level, $fieldValue);
                 break;
             
             case "image":
@@ -271,7 +277,7 @@ class ExportUtils {
             /**
              * Avoid circular dependency loop
              */
-            if($level < 10 && $item instanceof AbstractData && !($item instanceof ServerObjectInfo)){
+            if($level < 10 && $item instanceof FieldcollectionAbstractData && !($item instanceof ServerObjectInfo)){
                 $fieldCollection = array();
                 
                 $definition = $item->getDefinition();
@@ -284,6 +290,30 @@ class ExportUtils {
         }
         
         return $fieldCollections;
+    }
+    
+     private static function exportObjectbrick(int $productId, $level, Objectbrick $fieldValue = null){
+        $items = $fieldValue != null ? $fieldValue->getItems() : array();
+        
+        $objectBricks = array();
+        
+        foreach ($items as $item) {
+            /**
+             * Avoid circular dependency loop
+             */
+            if($level < 10 && $item instanceof ObjectbrickAbstractData ){
+                $objectBrick = array();
+                
+                $definition = $item->getDefinition();
+                foreach ($definition->getFieldDefinitions() as $fieldDefinition) {
+                    self::exportObjectField($productId, $item, $fieldDefinition, $objectBrick, $level + 1);
+                }
+                
+                $objectBricks[] = $objectBrick;
+            }
+        }
+        
+        return $objectBricks;
     }
     
     private static function exportImageField(Image $fieldValue){
@@ -330,6 +360,8 @@ class ExportUtils {
         
         if($data instanceof Asset){ 
             $video["url"] = BaseEcommerceConfig::getBaseUrl()."/var/assets".$data->getFullPath();
+            $video["title"] = $fieldValue->getTitle();
+            $video["description"] = $fieldValue->getDescription();
         }else{
             $video["id"] = $data;
         }

@@ -10,7 +10,6 @@ use Pimcore\Model\DataObject\ClassDefinition\Data;
 use Pimcore\Model\DataObject\ClassDefinition\Data\BooleanSelect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Country;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Countrymultiselect;
-use Pimcore\Model\DataObject\ClassDefinition\Data\Geopolygon;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Language;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Languagemultiselect;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Localizedfields;
@@ -25,6 +24,7 @@ use Pimcore\Model\DataObject\Data\Geopoint;
 use Pimcore\Model\DataObject\Data\Geobounds;
 use Pimcore\Model\DataObject\Data\Hotspotimage;
 use Pimcore\Model\DataObject\Data\ImageGallery;
+use Pimcore\Model\DataObject\Data\Link;
 use Pimcore\Model\DataObject\Data\ObjectMetadata;
 use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\QuantityValue;
@@ -108,6 +108,10 @@ class ExportUtils {
             
             case "datetime":
                 $objectExport[$fieldName] = date("Y-m-d H:i:s", strtotime($fieldValue));
+                break;
+            
+            case "link":
+                $objectExport[$fieldName] = self::exportLinkField($fieldValue);
                 break;
             
             case "rgbaColor":
@@ -229,6 +233,18 @@ class ExportUtils {
         );
     }
     
+    private static function exportLinkField(Link $fieldValue){
+        return array(
+            "text" => $fieldValue->getText(),
+            "title" => $fieldValue->getTitle(),
+            "path" => $fieldValue->getPath(),
+            "parameters" => $fieldValue->getParameters(),
+            "anchor" => $fieldValue->getAnchor(),
+            "href" => $fieldValue->getHref(),
+            "target" => $fieldValue->getTarget(),
+        );
+    }
+
     private static function exportRgbaColorField(RgbaColor $fieldValue){
         return array(
             "rgb" => $fieldValue->getRgb(),

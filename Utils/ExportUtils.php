@@ -240,7 +240,7 @@ class ExportUtils {
                 break;
             
             case "classificationstore":
-                $value = self::exportClassificationStore($productId, $fieldValue, $fieldDefinition, $level);
+                $value = self::exportClassificationStore($productId, $fieldValue, $level);
                 break;
             
             /**
@@ -665,7 +665,7 @@ class ExportUtils {
         return $fieldValue->getData();
     }
     
-    private static function exportClassificationStore($productId, Classificationstore $fieldValue, Data\Classificationstore $fieldDefinition, $level){
+    private static function exportClassificationStore($productId, Classificationstore $fieldValue, $level){
         $classificationStore = array();
         
         $items = $fieldValue->getItems();
@@ -682,8 +682,6 @@ class ExportUtils {
                 
                 if($keyConfig->getEnabled()){
                     $keyName = $keyConfig->getName();
-
-                    Logger::info("KEY DEFINITION: ".$keyConfig->getDefinition());
 
                     $classificationStore[$groupname][$keyName] = array();
 

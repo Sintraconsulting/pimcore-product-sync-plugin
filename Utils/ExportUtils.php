@@ -33,6 +33,7 @@ use Pimcore\Model\DataObject\Data\QuantityValue;
 use Pimcore\Model\DataObject\Data\RgbaColor;
 use Pimcore\Model\DataObject\Data\StructuredTable;
 use Pimcore\Model\DataObject\Data\Video;
+use Pimcore\Model\DataObject\Classificationstore;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\AbstractData as FieldcollectionAbstractData;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ServerObjectInfo;
@@ -101,6 +102,10 @@ class ExportUtils {
 
         $fieldType = $fieldDefinition->getFieldtype();
 
+        self::exportFieldValue($productId, $fieldDefinition, $fieldType, $fieldName, $fieldValue, $objectExport, $level);
+    }
+    
+    private static function exportFieldValue(int $productId, Data $fieldDefinition, $fieldType, $fieldName, $fieldValue, array &$objectExport, int $level){
         switch ($fieldType) {
             case "wysiwyg":
                 $objectExport[$fieldName] = htmlentities($fieldValue);
@@ -212,6 +217,10 @@ class ExportUtils {
                 $objectExport[$fieldName] = self::exportStructuredTable($fieldValue);
                 break;
             
+            case "classificationstore":
+                $objectExport[$fieldName] = self::exportClassificationStore($fieldValue, $fieldDefinition);
+                break;
+            
             /**
              * ASSETS FIELDS
              */
@@ -241,7 +250,7 @@ class ExportUtils {
                 if (in_array($realType, self::getSimpleTypes())) {
                     $objectExport[$fieldName] = $fieldValue;
                 } else {
-                    Logger::warn("WARNING - exportObjectField - Field type '$fieldType' not supported for export");
+                    Logger::warn("WARNING - exportFieldValue - Field type '$fieldType' not supported for export");
                 }
 
                 break;
@@ -556,6 +565,31 @@ class ExportUtils {
         return $fieldValue->getData();
     }
     
+    private static function exportClassificationStore(Classificationstore $fieldValue, Data\Classificationstore $fieldDefinition){
+        Logger::info("CLASSIFICATION STORE ITEMS: ".json_encode($fieldValue->getItems()));
+        
+        
+        
+        $classificationStore = array();
+        
+        $items = $fieldValue->getItems();
+            
+        foreach ($items as $groupId => $group) {
+            $groupConfig = Classificationstore\GroupConfig::getById($groupId);
+
+            $groupname = $groupConfig->getName();
+
+            $classificationStore[$groupname] = array();
+
+            foreach ($group as $keyId => $key) {
+                $keyConfig = Classificationstore\KeyConfig::getById($keyId);
+                $classificationStore[$groupname][$keyConfig->getName()] = $key;
+            }
+        }
+        
+        return $classificationStore;
+    }
+
     //ASSETS FIELDS
     
     private static function exportImageField(Image $fieldValue){

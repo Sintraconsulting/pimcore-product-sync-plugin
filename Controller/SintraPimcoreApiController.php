@@ -55,13 +55,27 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         
         if($timestamp != null && !empty($timestamp) && (is_numeric($timestamp) && (int)$timestamp == $timestamp)){
             $products->setCondition("o_modificationDate >= ?",$timestamp);
+            $filename = "products_$timestamp.json";
+        }else{
+            $filename = "products.json";
         }
         
         foreach ($products->getObjects() as $product) {
             ExportUtils::exportProduct($response["products"], $product);
         }
+        
+        $exportFolder = BaseEcommerceConfig::getExportFolder();
+        
+        if(!is_dir($exportFolder)){
+            mkdir($exportFolder, 0777, true);
+        }
+        
+        $fh = fopen($exportFolder.DIRECTORY_SEPARATOR.$filename, 'w') or die("can't open file '".$exportFolder.DIRECTORY_SEPARATOR.$filename."'");
+        $responseJson = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        fwrite($fh, $responseJson);
+        fclose($fh);
 
-        return new Response(json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return new Response("success");
     }
 
 }

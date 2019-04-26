@@ -122,6 +122,10 @@ class ExportUtils {
      * @return type
      */
     private static function exportFieldValue(int $productId, $fieldDefinition, $fieldType, $fieldValue, int $level){
+        if($fieldValue == null){
+            return null;
+        }
+        
         $value = null;
         
         switch ($fieldType) {

@@ -43,6 +43,7 @@ use Pimcore\Model\DataObject\Objectbrick\Data\AbstractData as ObjectbrickAbstrac
 use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\Tool\Targeting;
+use Pimcore\Tool;
 use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 
@@ -53,10 +54,16 @@ use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
  */
 class ExportUtils {
 
-    private static $simpleTypes = array("string", "int", "float", "double", "boolean");
+    private static $simplePhpTypes = array("string", "int", "float", "double", "boolean");
+    
+    private static $simplePimcoreTypes = array("input", "textarea", "numeric", "slider", "checkbox");
 
-    public static function getSimpleTypes() {
-        return self::$simpleTypes;
+    public static function getSimplePhpTypes() {
+        return self::$simplePhpTypes;
+    }
+    
+    public static function getSimplePimcoreTypes() {
+        return self::$simplePimcoreTypes;
     }
 
     public static function exportProduct(&$response, Product $product) {
@@ -102,34 +109,45 @@ class ExportUtils {
 
         $fieldType = $fieldDefinition->getFieldtype();
 
-        self::exportFieldValue($productId, $fieldDefinition, $fieldType, $fieldName, $fieldValue, $objectExport, $level);
+        $objectExport[$fieldName] = self::exportFieldValue($productId, $fieldDefinition, $fieldType, $fieldValue, $level);
     }
     
-    private static function exportFieldValue(int $productId, Data $fieldDefinition, $fieldType, $fieldName, $fieldValue, array &$objectExport, int $level){
+    /**
+     * 
+     * @param int $productId
+     * @param Data|array $fieldDefinition
+     * @param type $fieldType
+     * @param type $fieldValue
+     * @param int $level
+     * @return type
+     */
+    private static function exportFieldValue(int $productId, $fieldDefinition, $fieldType, $fieldValue, int $level){
+        $value = null;
+        
         switch ($fieldType) {
             case "wysiwyg":
-                $objectExport[$fieldName] = htmlentities($fieldValue);
+                $value = htmlentities($fieldValue);
                 break;
             
             case "quantityValue":
             case "inputQuantityValue":
-                $objectExport[$fieldName] = self::exportQuantityValueField($fieldValue);
+                $value = self::exportQuantityValueField($fieldValue);
                 break;
 
             case "date":
-                $objectExport[$fieldName] = date("Y-m-d", strtotime($fieldValue));
+                $value = date("Y-m-d", strtotime($fieldValue));
                 break;
             
             case "datetime":
-                $objectExport[$fieldName] = date("Y-m-d H:i:s", strtotime($fieldValue));
+                $value = date("Y-m-d H:i:s", strtotime($fieldValue));
                 break;
             
             case "link":
-                $objectExport[$fieldName] = self::exportLinkField($fieldValue);
+                $value = self::exportLinkField($fieldValue);
                 break;
             
             case "rgbaColor":
-                $objectExport[$fieldName] = self::exportRgbaColorField($fieldValue);
+                $value = self::exportRgbaColorField($fieldValue);
                 break;
 
             /**
@@ -142,7 +160,7 @@ class ExportUtils {
             case "countrymultiselect":
             case "language":
             case "languagemultiselect":
-                $objectExport[$fieldName] = self::exportSelectField($fieldValue, $fieldDefinition);
+                $value = self::exportSelectField($fieldValue, $fieldDefinition);
                 break;
             
             /**
@@ -150,43 +168,43 @@ class ExportUtils {
              */
             case "targetGroup":
             case "targetGroupMultiselect":
-                $objectExport[$fieldName] = self::exportTargetGroupSelectField($fieldValue, $fieldDefinition);
+                $value = self::exportTargetGroupSelectField($fieldValue, $fieldDefinition);
                 break;
             
             case "consent":
-                $objectExport[$fieldName] = self::exportConsentField($fieldValue);
+                $value = self::exportConsentField($fieldValue);
                 break;
 
             /**
              * OBJECTS RELATION FIELDS
              */
             case "manyToOneRelation":
-                $objectExport[$fieldName] = self::exportRelationField($productId, $fieldValue, $level);
+                $value = self::exportRelationField($productId, $fieldValue, $level);
                 break;
 
             case "manyToManyObjectRelation":
             case "manyToManyRelation":
-                $objectExport[$fieldName] = self::exportMultipleRelationsField($productId, $fieldValue, $level);
+                $value = self::exportMultipleRelationsField($productId, $fieldValue, $level);
                 break;
             
             case "advancedManyToManyObjectRelation":
             case "advancedManyToManyRelation":
-                $objectExport[$fieldName] = self::exportAdvancedMultipleRelationsField($productId, $fieldValue, $level);
+                $value = self::exportAdvancedMultipleRelationsField($productId, $fieldValue, $level);
                 break;
             
             /**
              * GEOGRAPHICAL FIELDS
              */
             case "geopoint":
-                $objectExport[$fieldName] = self::exportGeopointField($fieldValue);
+                $value = self::exportGeopointField($fieldValue);
                 break;
             
             case "geobounds":
-                $objectExport[$fieldName] = self::exportGeoboundsField($fieldValue);
+                $value = self::exportGeoboundsField($fieldValue);
                 break;
             
             case "geopolygon":
-                $objectExport[$fieldName] = self::exportGeopolygonField($fieldValue);
+                $value = self::exportGeopolygonField($fieldValue);
                 break;
             
             /**
@@ -194,67 +212,69 @@ class ExportUtils {
              */
             
             case "block":
-                $objectExport[$fieldName] = self::exportBlock($productId, $fieldDefinition, $level, $fieldValue);
+                $value = self::exportBlock($productId, $fieldDefinition, $level, $fieldValue);
                 break;
             
             case "localizedfields":
-                $objectExport[$fieldName] = self::exportLocalizedField($fieldValue, $fieldDefinition);
+                $value = self::exportLocalizedField($fieldValue, $fieldDefinition);
                 break;
 
             case "fieldcollections":
-                $objectExport[$fieldName] = self::exportFieldcollection($productId, $level, $fieldValue);
+                $value = self::exportFieldcollection($productId, $level, $fieldValue);
                 break;
             
             case "objectbricks":
-                $objectExport[$fieldName] = self::exportObjectBrick($productId, $level, $fieldValue);
+                $value = self::exportObjectBrick($productId, $level, $fieldValue);
                 break;
             
             case "table":
-                $objectExport[$fieldName] = $fieldValue;
+                $value = $fieldValue;
                 break;
             
             case "structuredTable":
-                $objectExport[$fieldName] = self::exportStructuredTable($fieldValue);
+                $value = self::exportStructuredTable($fieldValue);
                 break;
             
             case "classificationstore":
-                $objectExport[$fieldName] = self::exportClassificationStore($fieldValue, $fieldDefinition);
+                $value = self::exportClassificationStore($productId, $fieldValue, $fieldDefinition, $level);
                 break;
             
             /**
              * ASSETS FIELDS
              */
             case "image":
-                $objectExport[$fieldName] = self::exportImageField($fieldValue);
+                $value = self::exportImageField($fieldValue);
                 break;
             
             case "externalImage":
-                $objectExport[$fieldName] = self::exportExternalImageField($fieldValue);
+                $value = self::exportExternalImageField($fieldValue);
                 break;
             
             case "hotspotimage":
-                $objectExport[$fieldName] = self::exportHotspotImageField($fieldValue);
+                $value = self::exportHotspotImageField($fieldValue);
                 break;
             
             case "imageGallery":
-                $objectExport[$fieldName] = self::exportImageGalleryField($fieldValue);
+                $value = self::exportImageGalleryField($fieldValue);
                 break;
             
             case "video":
-                $objectExport[$fieldName] = self::exportVideoField($fieldValue);
+                $value = self::exportVideoField($fieldValue);
                 break;
 
             default:
-                $realType = $fieldDefinition->getPhpdocType();
+                $realType = ($fieldDefinition instanceof Data) ? $fieldDefinition->getPhpdocType() : $fieldDefinition["fieldtype"];
 
-                if (in_array($realType, self::getSimpleTypes())) {
-                    $objectExport[$fieldName] = $fieldValue;
+                if (in_array($realType, array_merge(self::getSimplePhpTypes(),self::getSimplePimcoreTypes()))) {
+                    $value = $fieldValue;
                 } else {
                     Logger::warn("WARNING - exportFieldValue - Field type '$fieldType' not supported for export");
                 }
 
                 break;
         }
+        
+        return $value;
     }
 
     private static function exportQuantityValueField(QuantityValue $fieldValue){
@@ -287,15 +307,33 @@ class ExportUtils {
     
     //SELECT AND MULTISELECT FIELDS
     
-    private static function exportSelectField($fieldValue, Data $fieldDefinition){
-        if(!($fieldDefinition instanceof Select || $fieldDefinition instanceof Multiselect || $fieldDefinition instanceof BooleanSelect
+    /**
+     * 
+     * @param type $fieldValue
+     * @param Data|array $fieldDefinition
+     * @return type
+     * @throws \Exception
+     */
+    private static function exportSelectField($fieldValue, $fieldDefinition){
+        if(!(is_array($fieldDefinition)) && !($fieldDefinition instanceof Select || $fieldDefinition instanceof Multiselect || $fieldDefinition instanceof BooleanSelect
                 || $fieldDefinition instanceof Country || $fieldDefinition instanceof Countrymultiselect 
                 || $fieldDefinition instanceof Language || $fieldDefinition instanceof Languagemultiselect)){
             throw new \Exception("ERROR - exportSelectField - Invalid type '".$fieldDefinition->getFieldtype().
                     "'. Expected one between 'booleanSelect','select', 'multiselect', 'country', 'countrymultiselect', 'language' and 'languagemultiselect'");
         }
         
-        $options = $fieldDefinition->getOptions();
+        if(is_array($fieldDefinition)){
+            $fieldName = $fieldDefinition["name"];
+            
+            if(array_key_exists("options", $fieldDefinition) && sizeof($fieldDefinition["options"]) > 0){
+                $options = $fieldDefinition["options"];
+            }else{
+                $options = self::getSelectOptionsForClassificationStore($fieldDefinition);
+            }
+        }else{
+            $fieldName = $fieldDefinition->getName();
+            $options = $fieldDefinition->getOptions();
+        }
         
         if(is_array($fieldValue)){
             $values = array();
@@ -305,7 +343,7 @@ class ExportUtils {
                 if($option !== FALSE){
                     $values[] = $options[$option];
                 }else{
-                    Logger::warn("WARNING - exportSelectField - Invalid field value '$value' for '".$fieldDefinition->getName()."'");
+                    Logger::warn("WARNING - exportSelectField - Invalid field value '$value' for '".$fieldName."'");
                 }
             }
         }else{
@@ -313,13 +351,71 @@ class ExportUtils {
             if($option !== FALSE){
                 $values = $options[$option];
             }else{
-                Logger::warn("WARNING - exportSelectField - Invalid field value '$fieldValue' for '".$fieldDefinition->getName()."'");
+                Logger::warn("WARNING - exportSelectField - Invalid field value '$fieldValue' for '".$fieldName."'");
             }
         }
         
         return $values;
     }
     
+    private static function getSelectOptionsForClassificationStore(array $fieldDefinition){
+        $options = array();
+        
+        $fieldType = $fieldDefinition["fieldtype"];
+        
+        if(in_array($fieldType, array('country', 'countrymultiselect'))){
+            $countries = \Pimcore::getContainer()->get('pimcore.locale')->getDisplayRegions();
+            asort($countries);
+
+            foreach ($countries as $short => $translation) {
+                if (strlen($short) == 2) {
+                    $options[] = [
+                        'key' => $translation,
+                        'value' => $short
+                    ];
+                }
+            }
+        }
+        
+        if(in_array($fieldType, array('language', 'languagemultiselect'))){
+            $validLanguages = (array) Tool::getValidLanguages();
+            $locales = Tool::getSupportedLocales();
+
+            foreach ($locales as $short => $translation) {
+                if ($fieldDefinition["onlySystemLanguages"]) {
+                    if (!in_array($short, $validLanguages)) {
+                        continue;
+                    }
+                }
+
+                $options[] = [
+                    'key' => $translation,
+                    'value' => $short
+                ];
+            }
+        }
+        
+        if($fieldType === 'booleanSelect'){
+            $options = array(
+                [
+                    'key' => $fieldDefinition["emptyLabel"],
+                    'value' => 0
+                ],
+                [
+                    'key' => $fieldDefinition["yesLabel"],
+                    'value' => 1
+                ],
+                [
+                    'key' => $fieldDefinition["noLabel"],
+                    'value' => -1
+                ]
+            );
+        }
+        
+        return $options;
+    }
+
+
     //CRM SPECIAL FIELDS
     
     private static function exportTargetGroupSelectField($fieldValue, Data $fieldDefinition){
@@ -565,11 +661,7 @@ class ExportUtils {
         return $fieldValue->getData();
     }
     
-    private static function exportClassificationStore(Classificationstore $fieldValue, Data\Classificationstore $fieldDefinition){
-        Logger::info("CLASSIFICATION STORE ITEMS: ".json_encode($fieldValue->getItems()));
-        
-        
-        
+    private static function exportClassificationStore($productId, Classificationstore $fieldValue, Data\Classificationstore $fieldDefinition, $level){
         $classificationStore = array();
         
         $items = $fieldValue->getItems();
@@ -583,7 +675,18 @@ class ExportUtils {
 
             foreach ($group as $keyId => $key) {
                 $keyConfig = Classificationstore\KeyConfig::getById($keyId);
-                $classificationStore[$groupname][$keyConfig->getName()] = $key;
+                
+                if($keyConfig->getEnabled()){
+                    $keyName = $keyConfig->getName();
+
+                    Logger::info("KEY DEFINITION: ".$keyConfig->getDefinition());
+
+                    $classificationStore[$groupname][$keyName] = array();
+
+                    foreach ($key as $lang => $value) {
+                        $classificationStore[$groupname][$keyName][$lang] = self::exportFieldValue($productId, json_decode($keyConfig->getDefinition(),true), $keyConfig->getType(), $value, $level);
+                    }
+                }
             }
         }
         

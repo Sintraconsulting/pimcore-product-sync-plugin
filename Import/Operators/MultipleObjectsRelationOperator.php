@@ -35,7 +35,8 @@ class MultipleObjectsRelationOperator extends ObjectRelationOperator {
      */
     public function process($element, &$target, array &$rowData, $colIndex, array &$context = array()) {
 
-        $values = explode("|", $rowData[$colIndex]);
+        $separator = array_key_exists("separator", $this->additionalData) ? $this->additionalData["separator"] : "|";
+        $values = explode($separator, $rowData[$colIndex]);
 
 
         $sourcefield = $this->additionalData["sourcefield"];

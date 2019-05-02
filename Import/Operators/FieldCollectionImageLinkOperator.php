@@ -3,10 +3,13 @@
 namespace SintraPimcoreBundle\Import\Operators;
 
 use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
+use Pimcore\Model\DataObject\Concrete;
+use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ExternalImageInfo;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
 use Pimcore\Model\DataObject\Data\ExternalImage;
+use Pimcore\Model\Asset\Folder;
 use Pimcore\Model\Asset\Image;
 
 /**
@@ -48,6 +51,7 @@ class FieldCollectionImageLinkOperator extends AbstractOperator {
                     break;
 
                 case "ImageInfo":
+                    $this->importImage($target, $images, $imageurl, $filename);
                     break;
 
                 default:
@@ -121,8 +125,90 @@ class FieldCollectionImageLinkOperator extends AbstractOperator {
         return $imageInfo;
     }
 
-    private function importImage(){
+    /**
+     * 
+     * @param Concrete $target
+     * @param Fieldcollection $images
+     * @param string $imageurl
+     * @param string $filename
+     */
+    private function importImage(&$target, $images, $imageurl, $filename){
+        $imageInfo = $this->retrieveImageInfo($images, $filename);
         
+        if($imageInfo == null){
+            $imageInfo = new ImageInfo();
+            
+            $image = $this->saveAsset($target, $imageurl, $filename);
+            $imageInfo->setImage($image);
+            
+            $images->add($imageInfo);
+        }else{
+            $image = $imageInfo->getImage();
+            
+            $image->setData(file_get_contents($imageurl));
+            $image->save();
+        }
+        
+        $target->setImages($images);
+    }
+    
+    /**
+     * Retrieve product's ImageInfo for the current image if exists
+     *
+     * @param Fieldcollection $productImages
+     * @param String $filename
+     * @return ImageInfo|null
+     */
+    private function retrieveImageInfo($productImages, $filename) {
+        $imageInfo = null;
+
+        foreach ($productImages as $productImageInfo) {
+            if($productImageInfo instanceof ImageInfo){
+                $image = $productImageInfo->getImage();
+                
+                if(strtolower($image->getFilename()) == strtolower($filename)){
+                    $imageInfo = $productImageInfo;
+                    break;
+                }
+            }
+        }
+
+        return $imageInfo;
+    }
+    
+    /**
+     * 
+     * @param Concrete $target
+     * @param string $filename
+     * @return Image
+     */
+    private function saveAsset($target, $imageurl, $filename) {
+        $assetFolder = Folder::getByPath("/".$target->getClassName());
+
+        if ($assetFolder === null) {
+            $assetFolder = new Folder();
+            $assetFolder->setParent(Folder::getByPath("/"));
+            $assetFolder->setFilename($target->getClassName());
+            $assetFolder->save();
+        }
+
+        $image = new Image();
+        
+        $image->setData(file_get_contents($imageurl));
+        $image->setParent($assetFolder);
+        $image->setFilename($filename);
+        
+        $headers = get_headers($imageurl, 1);
+        $image->setMimetype($headers["Content-Type"]);
+
+        if(method_exists($target, "getName")){
+            $image->addMetadata("title", "input", $target->getName());
+            $image->addMetadata("alt", "input", $target->getName());
+        }
+
+        $image->save();
+
+        return $image;
     }
 
 }

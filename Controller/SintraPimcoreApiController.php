@@ -46,23 +46,49 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
      * @Route("/export")
      */
     public function export(Request $request) {
+        $export = array();
         $response = array();
         
         $timestamp = $request->get("timestamp");
+        $exportAll = $request->get("exportAll");
+        $offset = $request->get("offset");
+        $limit = $request->get("limit");
         
         $products = new Product\Listing();
         $products->setObjectTypes(array(AbstractObject::OBJECT_TYPE_OBJECT));
         
         if($timestamp != null && !empty($timestamp) && (is_numeric($timestamp) && (int)$timestamp == $timestamp)){
             $products->setCondition("o_modificationDate >= ?",$timestamp);
-            $filename = "products_$timestamp.json";
-        }else{
-            $filename = "products.json";
+            $response["timestamp"] = $timestamp;
         }
         
-        foreach ($products->getObjects() as $product) {
-            ExportUtils::exportProduct($response["products"], $product);
+        if($exportAll != 1){
+            if(!($offset != null && !empty($offset) && (is_numeric($offset) && (int)$offset == $offset))){
+                $offset = 0;
+            }
+            
+            $products->setOffset($offset);
+            $response["offset"] = $offset;
+
+            if(!($limit != null && !empty($limit) && (is_numeric($limit) && (int)$limit == $limit))){
+                $limit = 100;
+            }
+            
+            $products->setLimit($limit);
+            $response["limit"] = $limit;
+            
+            $nextPage = clone($products);
+            $nextPage->setOffset($offset+$limit);
+            $response["nextPageExists"] = ($nextPage->getCount() > 0);
+        }else{
+            $response["nextPageExists"] = false;
         }
+
+        foreach ($products->getObjects() as $product) {
+            ExportUtils::exportProduct($export["products"], $product);
+        }
+        
+        $response["productsNumber"] = count($export["products"]);
         
         $exportFolder = BaseEcommerceConfig::getExportFolder();
         
@@ -70,12 +96,15 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
             mkdir($exportFolder, 0777, true);
         }
         
+        $filename = "products_".date("YmdHis").".json";
+        $response["filename"] = $filename;
+        
         $fh = fopen($exportFolder.DIRECTORY_SEPARATOR.$filename, 'w') or die("can't open file '".$exportFolder.DIRECTORY_SEPARATOR.$filename."'");
-        $responseJson = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        fwrite($fh, $responseJson);
+        $exportJson = json_encode($export, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        fwrite($fh, $exportJson);
         fclose($fh);
 
-        return new Response("success");
+        return new Response(json_encode($response));
     }
 
 }

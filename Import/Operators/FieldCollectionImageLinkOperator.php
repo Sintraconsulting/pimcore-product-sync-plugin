@@ -9,6 +9,7 @@ use Pimcore\Model\DataObject\Fieldcollection;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ExternalImageInfo;
 use Pimcore\Model\DataObject\Fieldcollection\Data\ImageInfo;
 use Pimcore\Model\DataObject\Data\ExternalImage;
+use Pimcore\Model\Asset;
 use Pimcore\Model\Asset\Folder;
 use Pimcore\Model\Asset\Image;
 
@@ -166,7 +167,7 @@ class FieldCollectionImageLinkOperator extends AbstractOperator {
             if($productImageInfo instanceof ImageInfo){
                 $image = $productImageInfo->getImage();
                 
-                if(strtolower($image->getFilename()) == strtolower($filename)){
+                if($image != null && strtolower($image->getFilename()) == strtolower($filename)){
                     $imageInfo = $productImageInfo;
                     break;
                 }
@@ -192,7 +193,7 @@ class FieldCollectionImageLinkOperator extends AbstractOperator {
             $assetFolder->save();
         }
 
-        $image = new Image();
+        $image = $this->getImage("/".$target->getClassName()."/".$filename);
         
         $image->setData(file_get_contents($imageurl));
         $image->setParent($assetFolder);
@@ -207,6 +208,23 @@ class FieldCollectionImageLinkOperator extends AbstractOperator {
         }
 
         $image->save();
+
+        return $image;
+    }
+    
+    private function getImage($path) {
+        $listing = new Asset\Listing();
+        $listing->setCondition("type", "image");
+        $listing->setCondition("CONCAT(path,filename) = ?", $path);
+        $listing->setLimit(1);
+
+        $assets = $listing->load();
+
+        if ($assets) {
+            $image = $assets[0];
+        } else {
+            $image = new Image();
+        }
 
         return $image;
     }

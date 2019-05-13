@@ -130,7 +130,7 @@ class ExportUtils {
         
         switch ($fieldType) {
             case "wysiwyg":
-                $value = htmlentities($fieldValue);
+                $value = $fieldValue;
                 break;
             
             case "quantityValue":

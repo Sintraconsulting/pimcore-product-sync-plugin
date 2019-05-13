@@ -1,0 +1,88 @@
+{
+	"products":[
+		{
+			"string": "value",
+			"numeric": 1,
+			"boolean": true,
+			"quantityvalue":{
+				"value": 123,
+				"unit": "€"
+			}
+			"select":{
+				"key": "abcd",
+				"value": 1
+			}
+			"multiselect":[
+				{
+					"key": "abcd",
+					"value": 1
+				},
+				{
+					"key": "efgh",
+					"value": 2
+				}
+			],
+			"color":{
+				"rgb": [223,131,50],
+				"rgba": [223,131,50,255],
+				"hex": "#df8332",
+				"hexa": "#df8332ff"
+			}
+			"localizedfields":[
+				"field": {
+					"en": "value",
+					"it": "valore",
+					"es": "valor",
+					"fr": "valeur"
+				}
+			]
+			"relations":[
+				{
+					"string": "value",
+					"numeric": 1,
+					"boolean": true,
+					"...": "..."
+				}
+			],
+			"fieldcollection":[
+				{
+					"string": "value",
+					"numeric": 1,
+					"boolean": true,
+					"...": "..."
+				}
+			],
+			"objectbricks":[
+				{
+					"string": "value",
+					"numeric": 1,
+					"boolean": true,
+					"...": "..."
+				}
+			],
+			"classificationstore":{
+				"group": {
+					"string": [
+						"default": "value",
+						"en": "value",
+						"it": "valore",
+						"es": "valor",
+						"fr": "valeur"
+					]
+					"...": "..."
+				}
+			},
+			"images":{
+				"url": "http://someurl.img"
+			},
+			"variants":[
+				{
+					"string": "value",
+					"numeric": 1,
+					"boolean": true,
+					"...": "..."
+				}
+			]
+		}
+	]
+}

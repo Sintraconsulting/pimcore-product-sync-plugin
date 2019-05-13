@@ -8,7 +8,7 @@ use Pimcore\DataObject\Import\ColumnConfig\Operator\AbstractOperator;
  *
  * @author Sintra Consulting
  */
-abstract class HTMLOperator extends AbstractOperator{
+class HTMLOperator extends AbstractOperator{
     
     private $additionalData;
     

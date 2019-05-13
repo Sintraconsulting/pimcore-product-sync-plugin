@@ -82,6 +82,8 @@ class ObjectRelationOperator extends AbstractOperator {
      * from a specific column and set it to a specific field.
      */
     protected function createNewObject($rowData, $value, $class, $relatedfield) {
+        $key = $value;
+        
         $folder = $this->additionalData["folder"];
 
         $objectFolder = Folder::getByPath("/" . $folder);
@@ -90,7 +92,6 @@ class ObjectRelationOperator extends AbstractOperator {
         $object = $objectClass->newInstance();
 
         $object->setParentId($objectFolder->getId());
-        $object->setKey(str_replace("/", "-", $value));
         $object->setPublished(1);
 
         $reflectionObject = new \ReflectionObject($object);
@@ -105,11 +106,15 @@ class ObjectRelationOperator extends AbstractOperator {
                 && method_exists($object, 'set' . ucfirst($descriptionfieldName))) {
             
             $descriptionValue = trim($rowData[$descriptionfieldIndex]);
+            
+            $key .= " - ".$descriptionValue;
 
             $setDescriptionMethod = $reflectionObject->getMethod('set' . ucfirst($descriptionfieldName));
             $setDescriptionMethod->invoke($object, $descriptionValue);
             
         }
+        
+        $object->setKey(str_replace("/", "-", $key));
 
         $object->save();
 

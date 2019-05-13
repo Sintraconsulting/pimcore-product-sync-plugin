@@ -3,7 +3,9 @@
 namespace SintraPimcoreBundle\Import\Resolvers\Product;
 
 use Pimcore\DataObject\Import\Resolver\AbstractResolver;
+use Pimcore\Model\DataObject\Concrete;
 use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\Folder;
 
 /**
  * Resolve product by Sku
@@ -17,6 +19,29 @@ class SkuResolver extends AbstractResolver{
     public function resolve(\stdClass $config, int $parentId, array $rowData){
         $params = json_decode($config->resolverSettings->params,true);
         $nameColumnId = $params["name_column_id"];
+
+        $parent = Concrete::getById($parentId);
+        
+        $subFolderColumnId = $params["subfolder_column_id"];
+        
+        if($parent != null && $subFolderColumnId != null && !empty($subFolderColumnId)){
+            
+            $subfolderName =trim(str_replace("/","-",$rowData[$subFolderColumnId]));
+            $subfolder = Folder::getByPath($parent->getFullPath()."/".$subfolderName);
+            
+            if ($subfolder != null) {
+                $parentId = $subfolder->getId();
+            } else {
+                $subfolder = new Folder();
+                $subfolder->setParentId($parent->getId());
+                $subfolder->setPath($parent->getFullPath()."/");
+                $subfolder->setKey($subfolderName);
+
+                $subfolder->save();
+
+                $parentId = $subfolder->getId();
+            }
+        }
         
         $columnId = $this->getIdColumn($config);
         

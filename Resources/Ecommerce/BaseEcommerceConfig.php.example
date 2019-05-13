@@ -8,12 +8,21 @@ class BaseEcommerceConfig {
     protected static $pimcoreBaseUrl = "http://your.pimcore.url";
     
     /**
+     * The folder in which export files will be placed
+     */
+    protected static $exportFolder = "/your/export/folder";
+    
+    /**
      * The custom log database table name that will be created after Bundle install
      */
     protected static $customLogTablename = "custom_log"; 
 
     public static function getBaseUrl(){
         return static::$pimcoreBaseUrl;
+    }
+    
+    public static function getExportFolder(){
+        return static::$exportFolder;
     }
     
     public static function getCustomLogTableName(){

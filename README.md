@@ -58,6 +58,7 @@ The service is paginated, and the following input parameters are managed:
 * **offset**: the number of skipped products (default is 0)
 * **limit**: the size of the export (default is 100)
 * **exportAll**: if 1, export the whole catalogue (ignore offset and limit)
+* **writeInFile**: if 1, the response will be write in a physical json file
 
 ## Output Response
 
@@ -69,7 +70,8 @@ There will be also a service response that help developers to manage future call
 * **limit**: the input limit parameter (or the default one)
 * **productsNumber**: the number of exported products
 * **nextPageExists**: tells if another page can be exported (with respect to offset and limit)
-* **filename**: name of the physical file that contains the exported products
+* **filename**: if in writeInFile mode, is the name of the physical file that contains the exported products
+* **data**: if not in the writeInFile mode, it contains the exported products data
 
 ## NOTES
 ### Not Managed Field Types (2019-05-13)

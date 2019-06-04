@@ -53,6 +53,7 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         $exportAll = $request->get("exportAll");
         $offset = $request->get("offset");
         $limit = $request->get("limit");
+        $writeInFile = $request->get("writeInFile");
         
         $products = new Product\Listing();
         $products->setObjectTypes(array(AbstractObject::OBJECT_TYPE_OBJECT));
@@ -90,20 +91,25 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         
         $response["productsNumber"] = count($export["products"]);
         
-        $exportFolder = BaseEcommerceConfig::getExportFolder();
+        $exportJson = json_encode($export, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        if($writeInFile != 1){
+            $response["data"] = $export;
+        }else{
+            $exportFolder = BaseEcommerceConfig::getExportFolder();
+            
+            if(!is_dir($exportFolder)){
+                mkdir($exportFolder, 0777, true);
+            }
         
-        if(!is_dir($exportFolder)){
-            mkdir($exportFolder, 0777, true);
+            $filename = "products_".date("YmdHis").".json";
+            $response["filename"] = $filename;
+            
+            $fh = fopen($exportFolder.DIRECTORY_SEPARATOR.$filename, 'w') or die("can't open file '".$exportFolder.DIRECTORY_SEPARATOR.$filename."'");
+            fwrite($fh, $exportJson);
+            fclose($fh);
         }
         
-        $filename = "products_".date("YmdHis").".json";
-        $response["filename"] = $filename;
-        
-        $fh = fopen($exportFolder.DIRECTORY_SEPARATOR.$filename, 'w') or die("can't open file '".$exportFolder.DIRECTORY_SEPARATOR.$filename."'");
-        $exportJson = json_encode($export, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        fwrite($fh, $exportJson);
-        fclose($fh);
-
         return new Response(json_encode($response));
     }
 

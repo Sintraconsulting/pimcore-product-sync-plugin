@@ -8,7 +8,7 @@ $baseUrl = BaseEcommerceConfig::getBaseUrl();
 
 $url = $baseUrl.'/sintra_pimcore/api/export';
 
-$options = getopt(null, ["timestamp:","exportAll:","offset:","limit:"]);
+$options = getopt(null, ["timestamp:","exportAll:","offset:","limit:","writeInFile:"]);
 
 if(array_key_exists("exportAll", $options)){
     $url .= "?exportAll=".$options["exportAll"];
@@ -26,6 +26,10 @@ if(array_key_exists("offset", $options)){
 
 if(array_key_exists("limit", $options)){
     $url .= "&limit=".$options["limit"];
+}
+
+if(array_key_exists("writeInFile", $options)){
+    $url .= "&writeInFile=".$options["writeInFile"];
 }
 
 $curl = curl_init();

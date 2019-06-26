@@ -72,6 +72,7 @@ class ExportUtils {
         
         $productExport = array(
             "id" => $productId,
+            "path" => $product->getFullPath(),
             "created at" => date("Y-m-d H:i:s", $product->getCreationDate()),
             "modified at" => date("Y-m-d H:i:s", $product->getModificationDate())
         );
@@ -81,6 +82,10 @@ class ExportUtils {
         $productFields = $productClassDefinition->getFieldDefinitions();
 
         foreach ($productFields as $fieldDefinition) {
+            if($fieldDefinition->getName() == "exportServers" && $fieldDefinition->getFieldtype() == "fieldcollections"){
+                continue;
+            }
+            
             self::exportObjectField($productId, $product, $fieldDefinition, $productExport);
         }
         
@@ -495,6 +500,7 @@ class ExportUtils {
             $relatedObject = array(
                 "id" => $fieldValue->getId(),
                 "class" => $fieldValue->getClassName(),
+                "path" => $fieldValue->getFullPath(),
                 "created at" => date("Y-m-d H:i:s", $fieldValue->getCreationDate()),
                 "modified at" => date("Y-m-d H:i:s", $fieldValue->getModificationDate())
             );

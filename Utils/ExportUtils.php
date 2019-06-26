@@ -497,10 +497,13 @@ class ExportUtils {
     
     private static function exportRelationField(int $productId, $fieldValue, int $level){
         if($fieldValue instanceof Concrete && !($fieldValue instanceof TargetServer)){
+            $parent = $fieldValue->getParent();
+            
             $relatedObject = array(
                 "id" => $fieldValue->getId(),
                 "class" => $fieldValue->getClassName(),
                 "path" => $fieldValue->getFullPath(),
+                "parent" => $parent->getFullPath(),
                 "created at" => date("Y-m-d H:i:s", $fieldValue->getCreationDate()),
                 "modified at" => date("Y-m-d H:i:s", $fieldValue->getModificationDate())
             );

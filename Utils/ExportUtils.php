@@ -708,13 +708,15 @@ class ExportUtils {
     
     private static function exportImageField(Image $fieldValue){
         return array(
-            "url" => BaseEcommerceConfig::getBaseUrl().urlencode_ignore_slash($fieldValue->getRelativeFileSystemPath())
+            "url" => BaseEcommerceConfig::getBaseUrl().urlencode_ignore_slash($fieldValue->getRelativeFileSystemPath()),
+            "filesize" => $fieldValue->getFileSize()
         );
     }
     
     private static function exportExternalImageField(ExternalImage $fieldValue){
         return array(
-            "url" => $fieldValue->getUrl()
+            "url" => $fieldValue->getUrl(),
+            "filesize" => getimagesize($fieldValue->getUrl())
         );
     }
     
@@ -723,6 +725,7 @@ class ExportUtils {
         
         return array(
             "url" => BaseEcommerceConfig::getBaseUrl().urlencode_ignore_slash($image->getRelativeFileSystemPath()),
+            "filesize" => $image->getFileSize(),
             "crop" => $fieldValue->getCrop(),
             "hotspots" => $fieldValue->getHotspots(),
             "marker" => $fieldValue->getMarker()

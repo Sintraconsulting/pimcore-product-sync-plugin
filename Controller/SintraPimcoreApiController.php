@@ -57,6 +57,7 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         
         $products = new Product\Listing();
         $products->setObjectTypes(array(AbstractObject::OBJECT_TYPE_OBJECT));
+        $products->setUnpublished(true);
         
         if($timestamp != null && !empty($timestamp) && (is_numeric($timestamp) && (int)$timestamp == $timestamp)){
             $products->setCondition("o_modificationDate >= ?",$timestamp);

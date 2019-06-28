@@ -715,9 +715,13 @@ class ExportUtils {
     }
     
     private static function exportExternalImageField(ExternalImage $fieldValue){
+        
+        $headers = get_headers($fieldValue->getUrl(), true);
+        $filesize = $headers['Content-Length'];
+
         return array(
             "url" => $fieldValue->getUrl(),
-            "filesize" => getimagesize($fieldValue->getUrl())
+            "filesize" => (int) $filesize
         );
     }
     

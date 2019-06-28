@@ -73,6 +73,7 @@ class ExportUtils {
         $productExport = array(
             "id" => $productId,
             "path" => $product->getFullPath(),
+            "published" => $product->getPublished(),
             "created at" => date("Y-m-d H:i:s", $product->getCreationDate()),
             "modified at" => date("Y-m-d H:i:s", $product->getModificationDate())
         );

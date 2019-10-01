@@ -16,7 +16,7 @@ Once you have [Installed Pimcore](https://github.com/Sintraconsulting/pimcore-pr
 ``` json
 "require": {
      "...": "...",
-     "phpclassic/php-shopify": "v1.0.2",
+     "phpclassic/php-shopify": "^1.0.2",
      "springimport/swagger-magento2-client": "*@dev"
 },
 ```

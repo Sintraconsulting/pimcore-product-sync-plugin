@@ -42,7 +42,7 @@ class BaseSyncController {
      * @throws \ReflectionException
      * @return mixed
      */
-    public function syncServerObjects(TargetServer $server, $class, $limit = 10, $customFilters = []) {
+    public function syncServerObjects($server, $class, $limit = 10, $customFilters = []) {
 
         $dataObjectService = SynchronizationUtils::getSynchronizationService($server, $class);
 
@@ -75,7 +75,7 @@ class BaseSyncController {
      * @param array $customFilters timing informations for execution. it override limit if present
      * @return array the ids of the objects to synchronize
      */
-    public function getServerToSyncObjects(TargetServer $server, $class, $limit, $customFilters = []) {
+    public function getServerToSyncObjects($server, $class, $limit, $customFilters = []) {
         /**
          * dynamically get syncronization info tablename starting from class definition.
          * take the field collection type from the exportServers field allowed types.
@@ -123,7 +123,7 @@ class BaseSyncController {
      * @param array $customFilters timing informations for execution.
      * @return String the synchronization result.
      */
-    protected function exportDataObjects(InterfaceService $dataObjectService, $dataObjects, TargetServer $server, $class, $customFilters = []) {
+    protected function exportDataObjects(InterfaceService $dataObjectService, $dataObjects, $server, $class, $customFilters = []) {
         $response = array(
             "started" => date("Y-m-d H:i:s"),
             "finished" => "",

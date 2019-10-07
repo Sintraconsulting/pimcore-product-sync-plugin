@@ -1,0 +1,259 @@
+{
+    "key": null,
+    "parentClass": "",
+    "title": null,
+    "group": null,
+    "layoutDefinitions": {
+        "fieldtype": "panel",
+        "labelWidth": 100,
+        "layout": null,
+        "border": false,
+        "icon": null,
+        "name": null,
+        "type": null,
+        "region": null,
+        "title": null,
+        "width": null,
+        "height": null,
+        "collapsible": false,
+        "collapsed": false,
+        "bodyStyle": null,
+        "datatype": "layout",
+        "permissions": null,
+        "childs": [
+            {
+                "fieldtype": "panel",
+                "labelWidth": 100,
+                "layout": null,
+                "border": false,
+                "icon": null,
+                "name": "Layout",
+                "type": null,
+                "region": null,
+                "title": null,
+                "width": null,
+                "height": null,
+                "collapsible": false,
+                "collapsed": false,
+                "bodyStyle": null,
+                "datatype": "layout",
+                "permissions": null,
+                "childs": [
+                    {
+                        "fieldtype": "checkbox",
+                        "defaultValue": 0,
+                        "queryColumnType": "tinyint(1)",
+                        "columnType": "tinyint(1)",
+                        "phpdocType": "boolean",
+                        "name": "required",
+                        "title": "Required",
+                        "tooltip": "",
+                        "mandatory": false,
+                        "noteditable": false,
+                        "index": false,
+                        "locked": false,
+                        "style": "",
+                        "permissions": null,
+                        "datatype": "data",
+                        "relationType": false,
+                        "invisible": false,
+                        "visibleGridView": false,
+                        "visibleSearch": false
+                    },
+                    {
+                        "fieldtype": "select",
+                        "options": [
+                            {
+                                "key": "Product",
+                                "value": "Product"
+                            },
+                            {
+                                "key": "Temp",
+                                "value": "Temp"
+                            }
+                        ],
+                        "width": "",
+                        "defaultValue": "",
+                        "optionsProviderClass": "SintraPimcoreBundle\\OptionsProviders\\SystemClassesOptionProvider",
+                        "optionsProviderData": "",
+                        "queryColumnType": "varchar",
+                        "columnType": "varchar",
+                        "columnLength": 190,
+                        "phpdocType": "string",
+                        "dynamicOptions": false,
+                        "name": "exportClass",
+                        "title": "Class",
+                        "tooltip": "",
+                        "mandatory": true,
+                        "noteditable": false,
+                        "index": false,
+                        "locked": false,
+                        "style": "",
+                        "permissions": null,
+                        "datatype": "data",
+                        "relationType": false,
+                        "invisible": false,
+                        "visibleGridView": false,
+                        "visibleSearch": false
+                    },
+                    {
+                        "fieldtype": "select",
+                        "options": [
+                            {
+                                "key": "PRODUCT - Sku",
+                                "value": "product_sku"
+                            },
+                            {
+                                "key": "PRODUCT - Product Name",
+                                "value": "product_name"
+                            },
+                            {
+                                "key": "PRODUCT - Price",
+                                "value": "product_price"
+                            },
+                            {
+                                "key": "PRODUCT - Short Description",
+                                "value": "product_short_description"
+                            },
+                            {
+                                "key": "PRODUCT - Color",
+                                "value": "product_color"
+                            },
+                            {
+                                "key": "TEMP - Sku",
+                                "value": "temp_sku"
+                            },
+                            {
+                                "key": "TEMP - Product Name",
+                                "value": "temp_name"
+                            },
+                            {
+                                "key": "TEMP - Price",
+                                "value": "temp_price"
+                            },
+                            {
+                                "key": "TEMP - Short Description",
+                                "value": "temp_short_description"
+                            },
+                            {
+                                "key": "TEMP - Color",
+                                "value": "temp_color"
+                            }
+                        ],
+                        "width": "",
+                        "defaultValue": "",
+                        "optionsProviderClass": "SintraPimcoreBundle\\OptionsProviders\\FieldMapProvider",
+                        "optionsProviderData": "",
+                        "queryColumnType": "varchar",
+                        "columnType": "varchar",
+                        "columnLength": 190,
+                        "phpdocType": "string",
+                        "dynamicOptions": false,
+                        "name": "objectField",
+                        "title": "Object Field",
+                        "tooltip": "",
+                        "mandatory": true,
+                        "noteditable": false,
+                        "index": false,
+                        "locked": false,
+                        "style": "",
+                        "permissions": null,
+                        "datatype": "data",
+                        "relationType": false,
+                        "invisible": false,
+                        "visibleGridView": false,
+                        "visibleSearch": false
+                    },
+                    {
+                        "fieldtype": "select",
+                        "options": [
+                            {
+                                "key": "Standard",
+                                "value": "standard"
+                            },
+                            {
+                                "key": "Reference",
+                                "value": "reference"
+                            }
+                        ],
+                        "width": "",
+                        "defaultValue": "",
+                        "optionsProviderClass": "",
+                        "optionsProviderData": "",
+                        "queryColumnType": "varchar",
+                        "columnType": "varchar",
+                        "columnLength": 190,
+                        "phpdocType": "string",
+                        "dynamicOptions": false,
+                        "name": "fieldType",
+                        "title": "Field Type",
+                        "tooltip": "",
+                        "mandatory": true,
+                        "noteditable": false,
+                        "index": false,
+                        "locked": false,
+                        "style": "",
+                        "permissions": null,
+                        "datatype": "data",
+                        "relationType": false,
+                        "invisible": false,
+                        "visibleGridView": false,
+                        "visibleSearch": false
+                    },
+                    {
+                        "fieldtype": "input",
+                        "width": null,
+                        "queryColumnType": "varchar",
+                        "columnType": "varchar",
+                        "columnLength": 190,
+                        "phpdocType": "string",
+                        "regex": "",
+                        "unique": false,
+                        "showCharCount": null,
+                        "name": "relatedField",
+                        "title": "Related Field",
+                        "tooltip": "",
+                        "mandatory": false,
+                        "noteditable": false,
+                        "index": false,
+                        "locked": false,
+                        "style": "",
+                        "permissions": null,
+                        "datatype": "data",
+                        "relationType": false,
+                        "invisible": false,
+                        "visibleGridView": false,
+                        "visibleSearch": false
+                    },
+                    {
+                        "fieldtype": "input",
+                        "width": null,
+                        "queryColumnType": "varchar",
+                        "columnType": "varchar",
+                        "columnLength": 190,
+                        "phpdocType": "string",
+                        "regex": "",
+                        "unique": false,
+                        "showCharCount": null,
+                        "name": "serverField",
+                        "title": "Server Field",
+                        "tooltip": "",
+                        "mandatory": true,
+                        "noteditable": false,
+                        "index": false,
+                        "locked": false,
+                        "style": "",
+                        "permissions": null,
+                        "datatype": "data",
+                        "relationType": false,
+                        "invisible": false,
+                        "visibleGridView": false,
+                        "visibleSearch": false
+                    }
+                ],
+                "locked": false
+            }
+        ],
+        "locked": false
+    }
+}

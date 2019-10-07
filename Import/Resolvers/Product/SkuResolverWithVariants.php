@@ -52,7 +52,14 @@ class SkuResolverWithVariants extends AbstractResolver{
                     break;
                 
                 case AbstractObject::OBJECT_TYPE_VARIANT:
-                    $product->setParentId($this->getProductParentId($config, $rowData));
+                    $parentId = $this->getProductParentId($config, $rowData);
+                    
+                    if($parentId != null){
+                        $product->setParentId($parentId);
+                    }else{
+                        throw new \Exception("SkuResolverWithVariants - ERROR - Parent object not found");
+                    }
+                    
                     break;
 
                 default:
@@ -84,7 +91,12 @@ class SkuResolverWithVariants extends AbstractResolver{
         $parent = $rowData[$parentColumnId];
         
         $productParent = Product::getBySku($parent)->current();
-        return $productParent->getId();
+        
+        if($productParent){
+            return $productParent->getId();
+        }
+        
+        return null;
     }
     
     private function getColumnIdFromlabel(\stdClass $config, $columnname){

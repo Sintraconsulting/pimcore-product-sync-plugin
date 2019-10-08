@@ -6,7 +6,7 @@ use Pimcore\Event\Model\DataObjectEvent;
 use Pimcore\Logger;
 use Pimcore\Model\DataObject\Concrete;
 use SintraPimcoreBundle\EventListener\General\ObjectListener;
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
+use Pimcore\Model\DataObject\SintraPimcoreBundleConfiguration;
 
 /**
  * Abstract class that invoke concrete listeners, passing the interested DataObject
@@ -161,12 +161,17 @@ abstract class AbstractObjectListener {
      * @param String $eventName
      */
     private static function checkForCustomListener($obj, $eventName, $dispatcherMethod, $saveVersionOnly = null) {
-        $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
-        $namespace = $customizationInfo["namespace"];
+        $customNamespace = null;
+        $configurationListing = new SintraPimcoreBundleConfiguration\Listing();
+        
+        if($configurationListing->getTotalCount() > 0){
+            $config = $configurationListing->current();
+            $customNamespace = $config->getCustomBundleNamespace();
+        }
 
-        if ($namespace != null && !empty($namespace)) {
-            Logger::info("AbstractObjectListener - Custom $eventName Event for namespace: " . $namespace);
-            $customObjectListenerClassName = '\\' . $namespace . '\\SintraPimcoreBundle\\EventListener\\ObjectListener';
+        if ($customNamespace != null && !empty($customNamespace)) {
+            Logger::info("AbstractObjectListener - Custom $eventName Event for namespace: " . $customNamespace);
+            $customObjectListenerClassName = '\\' . $customNamespace . '\\SintraPimcoreBundle\\EventListener\\ObjectListener';
 
             if (class_exists($customObjectListenerClassName)) {
                 $customObjectListenerClass = new \ReflectionClass($customObjectListenerClassName);

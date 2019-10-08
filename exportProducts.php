@@ -1,10 +1,9 @@
 <?php
 
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
-
-include_once 'Resources/Ecommerce/BaseEcommerceConfig.php';
-
-$baseUrl = BaseEcommerceConfig::getBaseUrl();
+/*
+ * Replace with your pimcore url
+ */
+$baseUrl = "http://pimcore-6.local:9090";
 
 $url = $baseUrl.'/sintra_pimcore/api/export';
 

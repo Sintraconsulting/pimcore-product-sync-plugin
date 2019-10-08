@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\Response;
 use SintraPimcoreBundle\Utils\GeneralUtils;
 use SintraPimcoreBundle\Utils\SynchronizationUtils;
 use Pimcore\Db;
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 /**
  * Controller for SintraPimcoreBundle
@@ -180,7 +179,7 @@ class SintraPimcoreController extends Controller implements AdminControllerInter
 
     private function logSynchronizationError($class, $message) {
         $db = Db::get();
-        $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
+        $db->insert("custom_log", array(
             "gravity" => "HIGH",
             "class" => "SintraPimcoreController",
             "action" => "syncObjectsAction",

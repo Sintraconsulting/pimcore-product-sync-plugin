@@ -11,6 +11,7 @@ use Pimcore\Migrations\MigrationManager;
 use Pimcore\Model\DataObject\ClassDefinition;
 use Pimcore\Model\DataObject\ClassDefinition\Service;
 use Pimcore\Model\DataObject\Fieldcollection;
+use Pimcore\Model\DataObject\Folder;
 use Pimcore\Model\DataObject\Objectbrick;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -42,6 +43,7 @@ class SintraPimcoreBundleInstaller extends MigrationInstaller{
     private $classesToInstall = [
             'Product' => 'SC_PROD',
             'TargetServer' => 'SC_TSRV',
+            'SintraPimcoreBundleConfiguration' => 'SC_SPBCONF',
     ];
     
     public function __construct(
@@ -59,6 +61,32 @@ class SintraPimcoreBundleInstaller extends MigrationInstaller{
         $this->installClasses();
         $this->installObjectBricks();
         $this->installTables($schema, $version);
+        
+        $configurationClassName = "SintraPimcoreBundleConfiguration";
+        $configurationFolder = "BundleConfigurations";
+        
+        $listingClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\" . $configurationClassName . "\\Listing");
+        $listing = $listingClass->newInstance();
+        
+        if($listing->getTotalCount() === 0){
+            $folder = Folder::getByPath("/".$configurationFolder);
+            
+            if($folder == null){
+                $folder = new Folder();
+                
+                $folder->setKey($configurationFolder);
+                $folder->setParent(Folder::getByPath("/"));
+                $folder->save();
+            }
+            
+            $configurationClass = new \ReflectionClass("\\Pimcore\\Model\\DataObject\\" . $configurationClassName);
+            $configuration = $configurationClass->newInstance();
+
+            $configuration->setParentId($folder->getId());
+            $configuration->setPublished(1);
+            $configuration->setKey($configurationClassName);
+            $configuration->save();
+        }
     }
 
     public function migrateUninstall(Schema $schema, Version $version) {

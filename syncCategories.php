@@ -1,10 +1,10 @@
 <?php
 
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
+/*
+ * Replace with your pimcore url
+ */
+$baseUrl = "http://pimcore-6.local:9090";
 
-include_once 'Resources/Ecommerce/BaseEcommerceConfig.php';
-
-$baseUrl = BaseEcommerceConfig::getBaseUrl();
 
 $url = $baseUrl.'/sintra_pimcore/sync_objects?class=Category';
 

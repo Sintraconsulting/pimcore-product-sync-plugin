@@ -8,7 +8,6 @@ use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Services\InterfaceService;
 use Pimcore\Logger;
 use Pimcore\Db;
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 use SintraPimcoreBundle\Utils\SynchronizationUtils;
 
 /**
@@ -47,7 +46,7 @@ class BaseSyncController {
         $dataObjectService = SynchronizationUtils::getSynchronizationService($server, $class);
 
         $syncController = SynchronizationUtils::getServerSynchronizationController($server);
-        # No custom module enabled in BaseEcommerceConfig's namespace.
+        # No custom module enabled in SintraPimcoreBundleConfiguration.
         if ($syncController === null) {
             # Default this controller
             $syncController = $this;
@@ -210,7 +209,7 @@ class BaseSyncController {
 
     protected function logSynchronizationError($servername, $productId, $message) {
         $db = Db::get();
-                $db->insert(BaseEcommerceConfig::getCustomLogTableName(), array(
+                $db->insert("custom_log", array(
                     "gravity" => "LOW",
                     "class" => "BaseSyncController",
                     "action" => "exportDataObjects",

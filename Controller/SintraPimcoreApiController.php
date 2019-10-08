@@ -6,11 +6,11 @@ use Pimcore\Bundle\AdminBundle\Controller\AdminControllerInterface;
 use Pimcore\Controller\Controller;
 use Pimcore\Model\DataObject\AbstractObject;
 use Pimcore\Model\DataObject\Product;
+use Pimcore\Model\DataObject\SintraPimcoreBundleConfiguration;
 use Pimcore\Logger;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 use SintraPimcoreBundle\Utils\ExportUtils;
 
 /**
@@ -49,11 +49,32 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         $export = array();
         $response = array();
         
+        $configurationListing = new SintraPimcoreBundleConfiguration\Listing();
+        
+        if($configurationListing->getTotalCount() === 0){
+            throw new \Exception("There is no object instance of SintraPimcoreBundleConfiguration class. "
+                    . "Please create that object and fill the required informations");
+        }
+        
+        $config = $configurationListing->current();
+        
+        $baseurl = $config->getPimcoreBaseUrl();
+        
+        if($baseurl == null || empty($baseurl)){
+            throw new \Exception("Pimcore base URL not configured in SintraPimcoreBundleConfiguration object instance");
+        }
+        
         $timestamp = $request->get("timestamp");
         $exportAll = $request->get("exportAll");
         $offset = $request->get("offset");
         $limit = $request->get("limit");
         $writeInFile = $request->get("writeInFile");
+        
+        $exportFolder = $config->getExportFolder();
+        
+        if($writeInFile == 1 && ($exportFolder == null || empty($exportFolder))){
+            throw new \Exception("Pimcore Export Folder not configured in SintraPimcoreBundleConfiguration object instance");
+        }
         
         $products = new Product\Listing();
         $products->setObjectTypes(array(AbstractObject::OBJECT_TYPE_OBJECT));
@@ -87,7 +108,7 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         }
 
         foreach ($products->getObjects() as $product) {
-            ExportUtils::exportProduct($export["products"], $product);
+            ExportUtils::exportProduct($export["products"], $product, $baseurl);
         }
         
         $response["productsNumber"] = count($export["products"]);
@@ -97,8 +118,6 @@ class SintraPimcoreApiController extends Controller implements AdminControllerIn
         if($writeInFile != 1){
             $response["data"] = $export;
         }else{
-            $exportFolder = BaseEcommerceConfig::getExportFolder();
-            
             if(!is_dir($exportFolder)){
                 mkdir($exportFolder, 0777, true);
             }

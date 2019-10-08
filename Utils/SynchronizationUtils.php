@@ -2,10 +2,10 @@
 
 namespace SintraPimcoreBundle\Utils;
 
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 use Pimcore\Model\DataObject\TargetServer;
 use SintraPimcoreBundle\Services\InterfaceService;
 use SintraPimcoreBundle\Controller\Sync\BaseSyncController;
+use Pimcore\Model\DataObject\SintraPimcoreBundleConfiguration;
 
 /**
  * Synchronizaton utils
@@ -25,13 +25,19 @@ class SynchronizationUtils {
      */
     public static function getSynchronizationService(TargetServer $targetServer, $class) {
         $serverType = $targetServer->getServer_type();
-
-        $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
-        $namespace = $customizationInfo["namespace"];
+        
+        $customNamespace = null;
+        $configurationListing = new SintraPimcoreBundleConfiguration\Listing();
+        
+        if($configurationListing->getTotalCount() > 0){
+            $config = $configurationListing->current();
+            $customNamespace = $config->getCustomBundleNamespace();
+        }
+        
         $serviceName = null;
 
-        if ($namespace) {
-            $serviceName = $namespace . '\SintraPimcoreBundle\Services\\' . ucfirst($serverType) . '\\' . ucfirst($serverType) . ucfirst($class) . 'Service';
+        if ($customNamespace != null && !empty($customNamespace)) {
+            $serviceName = $customNamespace . '\SintraPimcoreBundle\Services\\' . ucfirst($serverType) . '\\' . ucfirst($serverType) . ucfirst($class) . 'Service';
         }
 
         if ($serviceName == null || !class_exists($serviceName)) {
@@ -53,12 +59,19 @@ class SynchronizationUtils {
      * @throws \ReflectionException
      */
     public static function getBaseSynchronizationController() {
-        $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
-        $namespace = $customizationInfo["namespace"];
+        
+        $customNamespace = null;
+        $configurationListing = new SintraPimcoreBundleConfiguration\Listing();
+        
+        if($configurationListing->getTotalCount() > 0){
+            $config = $configurationListing->current();
+            $customNamespace = $config->getCustomBundleNamespace();
+        }
+        
         $controllerName = null;
 
-        if ($namespace) {
-            $controllerName = $namespace . '\SintraPimcoreBundle\Controller\Sync\CustomBaseSyncController';
+        if ($customNamespace) {
+            $controllerName = $customNamespace . '\SintraPimcoreBundle\Controller\Sync\CustomBaseSyncController';
         }
 
         $baseSyncController = null;
@@ -85,12 +98,18 @@ class SynchronizationUtils {
     public static function getServerSynchronizationController(TargetServer $targetServer) {
         $serverType = $targetServer->getServer_type();
 
-        $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
-        $namespace = $customizationInfo["namespace"];
+        $customNamespace = null;
+        $configurationListing = new SintraPimcoreBundleConfiguration\Listing();
+        
+        if($configurationListing->getTotalCount() > 0){
+            $config = $configurationListing->current();
+            $customNamespace = $config->getCustomBundleNamespace();
+        }
+        
         $controllerName = null;
 
-        if ($namespace) {
-            $controllerName = $namespace . '\SintraPimcoreBundle\Controller\Sync\\' . ucfirst($serverType) . 'SyncController';
+        if ($customNamespace) {
+            $controllerName = $customNamespace . '\SintraPimcoreBundle\Controller\Sync\\' . ucfirst($serverType) . 'SyncController';
         }else{
             $controllerName = '\SintraPimcoreBundle\Controller\Sync\\' . ucfirst($serverType) . 'SyncController';
         }

@@ -32,10 +32,12 @@ Tools -> Extensions
 
 Once you have structured your class, you can [Configure a TargetServer for Objects Synchronization](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/Configure-a-TargetServer-for-Objects-Synchronization).
 <br><br>
+Check how to [Create a New Bundle](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/Create-a-New-Bundle-(Plugin)) and [How to Customize SintraPimcoreBundle](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/How-to-Customize-SintraPimcoreBundle).
 # NEW FEATURE!!! Export Products Catalogue
 
 We provide an export service that allow you to get a complete json representation of your products catalogue.<br>
 This service has been created as a function inside a [Pimcore Controller](https://pimcore.com/docs/5.x/Development_Documentation/MVC/Controller.html); you can find the export signature in the [export_signature.json](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/blob/master/export_signature.json) file.
+<br><br>
 
 ## Request Input Parameters
 

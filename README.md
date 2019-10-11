@@ -24,18 +24,6 @@ In order to properly install the **SintraPimcoreBundle**, follow these steps. Th
 
 1. Clone the repository in the _src/SintraPimcoreBundle_ directory in your Pimcore installation
 
-1. Bulk import the configuration file that you will find inside the _Exports/_ folder in order to create Classes, FieldCollections and ObjectBricks needed  by the **SintraPimcoreBundle**.<br><br>
-Pimcore < v5.6.0 ----> structure_configuration.json<br>
-Pimcore >= v5.6.0 ---> structure_configuration_v5.6.json<br><br>
-CAUTION:<br>In case that you already have defined a Pimcore class named "Product", export the class configuration in order to re-upload that later. This is necessary because bulk import replace classes definitions if the class name match. <br>
-You can achieve this point directly on Pimcore interface selecting:
-Settings -> Data Objects -> Bulk Import 
-
-1. Duplicate the _Resources/Ecommerce/BaseEcommerceConfig.php.example_ file and remove the _.example_ extension.
-Edit the created _BaseEcommerceConfig.php_ file and set your own information.
-In order to override some **SintraPimcoreBundle** functionalities, properly set the custom bundle namespace.
-Check how to [Create a New Bundle](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/Create-a-New-Bundle-(Plugin)) and [How to Customize SintraPimcoreBundle](https://github.com/Sintraconsulting/pimcore-product-sync-plugin/wiki/How-to-Customize-SintraPimcoreBundle).
-
 1. Enable and Install the **SintraPimcoreBundle** by the Pimcore Extensions Manager.
 You can achieve this point directly on Pimcore interface selecting:
 Tools -> Extensions

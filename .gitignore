@@ -1,6 +1,1 @@
-Resources/Ecommerce/*
-!Resources/Ecommerce/BaseEcommerceConfig.php.example
-!Resources/Ecommerce/MagentoConfig.php.example
-Services/config/*
-!Services/config/product.json.example
 .idea

@@ -44,7 +44,6 @@ use Pimcore\Model\DataObject\Product;
 use Pimcore\Model\DataObject\TargetServer;
 use Pimcore\Model\Tool\Targeting;
 use Pimcore\Tool;
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
 
 
 /**
@@ -65,9 +64,20 @@ class ExportUtils {
     public static function getSimplePimcoreTypes() {
         return self::$simplePimcoreTypes;
     }
+    
+    private static $pimcoreBaseUrl;
+    
+    private static function setPimcoreBaseUrl($baseUrl){
+        self::$pimcoreBaseUrl = $baseUrl;
+    }
+    
+    private static function getPimcoreBaseUrl(){
+        return self::$pimcoreBaseUrl;
+    }
 
-    public static function exportProduct(&$response, Product $product) {
-
+    public static function exportProduct(&$response, Product $product, $baseurl) {
+        self::setPimcoreBaseUrl($baseurl);
+        
         $productId = $product->getId();
         
         $productExport = array(
@@ -92,7 +102,7 @@ class ExportUtils {
         
         $variants = $product->getChildren(array(AbstractObject::OBJECT_TYPE_VARIANT));
         foreach ($variants as $variant) {
-            self::exportProduct($productExport["variants"], $variant);
+            self::exportProduct($productExport["variants"], $variant, $baseurl);
         }
 
         $response[] = $productExport;
@@ -709,7 +719,7 @@ class ExportUtils {
     
     private static function exportImageField(Image $fieldValue){
         return array(
-            "url" => BaseEcommerceConfig::getBaseUrl().urlencode_ignore_slash($fieldValue->getRelativeFileSystemPath()),
+            "url" => self::getPimcoreBaseUrl().urlencode_ignore_slash($fieldValue->getRelativeFileSystemPath()),
             "filesize" => $fieldValue->getFileSize()
         );
     }
@@ -729,7 +739,7 @@ class ExportUtils {
         $image = $fieldValue->getImage();
         
         return array(
-            "url" => BaseEcommerceConfig::getBaseUrl().urlencode_ignore_slash($image->getRelativeFileSystemPath()),
+            "url" => self::getPimcoreBaseUrl().urlencode_ignore_slash($image->getRelativeFileSystemPath()),
             "filesize" => $image->getFileSize(),
             "crop" => $fieldValue->getCrop(),
             "hotspots" => $fieldValue->getHotspots(),
@@ -757,7 +767,7 @@ class ExportUtils {
         );
         
         if($data instanceof Asset){ 
-            $video["url"] = BaseEcommerceConfig::getBaseUrl()."/var/assets".$data->getFullPath();
+            $video["url"] = self::getPimcoreBaseUrl()."/var/assets".$data->getFullPath();
             $video["title"] = $fieldValue->getTitle();
             $video["description"] = $fieldValue->getDescription();
         }else{

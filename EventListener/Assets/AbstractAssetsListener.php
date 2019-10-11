@@ -6,7 +6,7 @@ use Pimcore\Event\Model\AssetEvent;
 use Pimcore\Model\Asset;
 use Pimcore\Logger;
 use SintraPimcoreBundle\EventListener\Assets\AssetsListener;
-use SintraPimcoreBundle\Resources\Ecommerce\BaseEcommerceConfig;
+use Pimcore\Model\DataObject\SintraPimcoreBundleConfiguration;
 use ReflectionClass;
 
 /**
@@ -53,12 +53,17 @@ abstract class AbstractAssetsListener {
      * @param String $eventName
      */
     private static function checkForCustomListener($asset, $eventName) {
-        $customizationInfo = BaseEcommerceConfig::getCustomizationInfo();
-        $namespace = $customizationInfo["namespace"];
+        $customNamespace = null;
+        $configurationListing = new SintraPimcoreBundleConfiguration\Listing();
+        
+        if($configurationListing->getTotalCount() > 0){
+            $config = $configurationListing->current();
+            $customNamespace = $config->getCustomBundleNamespace();
+        }
 
-        if ($namespace != null && !empty($namespace)) {
-            Logger::info("AbstractAssetsListener - Custom $eventName Event for namespace: " . $namespace);
-            $customAssetsListenerClassName = '\\' . $namespace . '\\SintraPimcoreBundle\\EventListener\\Assets\\AssetsListener';
+        if ($customNamespace != null && !empty($customNamespace)) {
+            Logger::info("AbstractAssetsListener - Custom $eventName Event for namespace: " . $customNamespace);
+            $customAssetsListenerClassName = '\\' . $customNamespace . '\\SintraPimcoreBundle\\EventListener\\Assets\\AssetsListener';
 
             if (class_exists($customAssetsListenerClassName)) {
                 $customAssetsListenerClass = new ReflectionClass($customAssetsListenerClassName);
